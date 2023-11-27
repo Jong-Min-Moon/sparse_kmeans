@@ -13,5 +13,5 @@ cluster_est(cluster_two_est) = -1;
 mean_og = mean(cluster_true == cluster_est);
 mean_flipped = mean(cluster_true == -cluster_est);
 if mean_og < mean_flipped
-    cluster_est = -cluster_est
+    cluster_est = -cluster_est;
 end
