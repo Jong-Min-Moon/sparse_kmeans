@@ -6,7 +6,7 @@ A_now = (x_now * x_now')/ n;
 Z_now = kmeans_sdp(A_now, K);     
 cluster_est_now = estimate_cluster(Z_now, rounding, n, cluster_true);
 cluster_acc_before_thres = max( mean(cluster_true ==  cluster_est_now), mean(cluster_true == -cluster_est_now));
-fprintf("p = %i, acc before thres: %n", p, cluster_acc_before_thres);
+fprintf("p = %i, acc before thres: %n\n", p, cluster_acc_before_thres);
     
 % iterate
 for iter = 1:n_iter
@@ -14,7 +14,7 @@ for iter = 1:n_iter
     % 1. estimate cluster means
     n_g1_now = sum(cluster_est_now == 1);
     n_g2_now = sum(cluster_est_now ==-1);
-    fprintf("cluter 1:%i, cluster 2:%i", n_g1_now, n_g2_now )
+    fprintf("n_G1=%i, n_G2 =%i\n", n_g1_now, n_g2_now )
 
     if max(n_g1_now, n_g2_now) ==n
         fprintf("all observations are clustered into one group")
