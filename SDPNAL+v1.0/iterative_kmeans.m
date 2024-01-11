@@ -1,5 +1,6 @@
 function cluster_acc = iterative_kmeans(x, sigma, K, p, n_iter, rounding, n, cluster_true)     
 %data generation
+% modified 11/30/2023
 
 x_now = x;
 A_now = (x_now * x_now')/ n;
