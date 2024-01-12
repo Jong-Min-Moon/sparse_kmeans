@@ -1,4 +1,4 @@
-function cluster_init = ESSC(x, K, rounding)
+function cluster_init = ESSC(x, K)
 n = size(x,1);
 p = size(x,2);
 H_hat = (x * x');

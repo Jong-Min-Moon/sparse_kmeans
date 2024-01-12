@@ -3,9 +3,16 @@ function cluster_acc = iterative_kmeans_ESSC_init_ver_01_11_24_parallel(x, sigma
 % created 01/11/2024
 n = size(x,1);
 p = size(x,2);
+H_hat = (x * x');
+[V,D] = eig(H_hat);
+[d,ind] = sort(diag(D));
+Ds = D(ind,ind);
+Vs = V(:,ind);
+[idx,C] = kmeans(Vs(:,1:10),K);
+cluster_est_now = idx .* (idx ~= 2) + (idx == 2)* (-1);
+cluster_est_now = cluster_est_now'
 thres = sqrt(2 * log(p) );
 
-cluster_est_now = ESSC(x, K);
 cluster_acc_before_thres = max( mean(cluster_true ==  cluster_est_now), mean(cluster_true == -cluster_est_now));
 %fprintf("\np = %i, acc_init: %f \n", p, cluster_acc_before_thres);
 n_g1_now = sum(cluster_est_now == 1);
