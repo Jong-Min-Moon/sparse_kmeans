@@ -1,17 +1,18 @@
-function cluster_acc = iterative_kmeans_ver_11_30_23(x, sigma, K, p, n_iter, rounding, n, cluster_true)     
+function cluster_acc = iterative_kmeans_hc_init_ver_01_11_24(x, sigma, K, n_iter, rounding, cluster_true)     
 %data generation
-% modified 11/30/2023
+% created 01/11/2024
+n = size(x,1);
+p = size(x,2);
+thres = sqrt(2 * log(p) );
 
-x_now = x;
-A_now = (x_now * x_now')/ n;
-Z_now = kmeans_sdp(A_now, K);     
-cluster_est_now = estimate_cluster(Z_now, rounding, n, cluster_true);
+Z = linkage(x, 'ward');
+cluster_est_now = cluster(Z, 'Maxclust',K)';
+cluster_est_now = cluster_est_now .* (cluster_est_now ~= 2) + (cluster_est_now == 2)* (-1);
 cluster_acc_before_thres = max( mean(cluster_true ==  cluster_est_now), mean(cluster_true == -cluster_est_now));
 fprintf("\np = %i, acc_init: %f \n", p, cluster_acc_before_thres);
 n_g1_now = sum(cluster_est_now == 1);
 n_g2_now = sum(cluster_est_now ==-1); 
 fprintf("n_{G1}_init = %i, n_{G1}_init = %i\n", n_g1_now, n_g2_now )
-thres = sqrt(2 * log(p) );
 fprintf("threshold: (%f)\n", thres)
 % iterate
 for iter = 1:n_iter

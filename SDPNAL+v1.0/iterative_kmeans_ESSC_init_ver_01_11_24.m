@@ -1,11 +1,11 @@
-function cluster_acc = iterative_kmeans_random_init_ver_01_11_24(x, sigma, K, n_iter, n_init, rounding, cluster_true)     
+function cluster_acc = iterative_kmeans_ESSC_init_ver_01_11_24(x, sigma, K, n_iter, rounding, cluster_true)     
 %data generation
 % created 01/11/2024
 n = size(x,1);
 p = size(x,2);
 thres = sqrt(2 * log(p) );
 
-cluster_est_now = random_init(x, sigma, K, n_init);
+cluster_est_now = ESSC(x, K, rounding);
 cluster_acc_before_thres = max( mean(cluster_true ==  cluster_est_now), mean(cluster_true == -cluster_est_now));
 fprintf("\np = %i, acc_init: %f \n", p, cluster_acc_before_thres);
 n_g1_now = sum(cluster_est_now == 1);
