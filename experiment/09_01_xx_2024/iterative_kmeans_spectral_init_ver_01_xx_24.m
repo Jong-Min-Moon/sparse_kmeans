@@ -1,9 +1,9 @@
-function cluster_acc = iterative_kmeans_spectral_init_ver_01_11_24(x, sigma, K, n_iter, rounding, cluster_true)     
+function cluster_acc = iterative_kmeans_spectral_init_ver_01_xx_24(x, sigma, K, n_iter, rounding, cluster_true)     
 %data generation
 % created 01/11/2024
 n = size(x,1);
 p = size(x,2);
-H_hat = (x * x');
+H_hat = (x * x')/n;
 [V,D] = eig(H_hat);
 [d,ind] = sort(diag(D), "descend");
 Ds = D(ind,ind);
