@@ -5,11 +5,11 @@ rounding = 1e-4;
 cluster_true = [repelem(1,n/2), repelem(-1,n/2)];
 n_iter = 15; 
 
-p = 3000;
+p = 4000;
 
 sep =3.5;
 s_init = 10;
-s_vec = 10:30;
+s_vec = 10:25;
 M = sqrt(sep^2 / 4 / s_init);
 n_rep = 100;
 
@@ -35,4 +35,4 @@ for i = 1:length(s_vec)
         % iterate
     end
 end
-csvwrite('spectral_init_p_3000_s_trend_micro.csv',clustering_acc_mat)
+csvwrite('spectral_init_sep35_p_4000_s_trend_micro.csv',clustering_acc_mat)
