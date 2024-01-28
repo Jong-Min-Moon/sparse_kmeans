@@ -74,22 +74,13 @@ for iter = 1:n_iter
         break
     end
     
+    Sigma_s_hat_now = Sigma(s_hat,s_hat);
+    X_tilde_now  = X_tilde(s_hat,:);  
 
-
-
-
-    
-    
-    if strcmp(sdp_method, 'basic') 
-            Sigma_s_hat_now = Sigma(s_hat,s_hat);
-            X_tilde_now  = X_tilde(s_hat,:);
-        Z_now = kmeans_sdp( X_tilde_now' * Sigma_s_hat_now * X_tilde_now/ n, K);
-    elseif strcmp(sdp_method, 'bm')
-            Sigma_s_hat_now = zeros(size(Sigma));
-    Sigma_s_hat_now(s_hat,s_hat) = Sigma(s_hat,s_hat);
-    X_tilde_now = zeros(size(X_tilde));
-    X_tilde_now(s_hat,:)  = X_tilde(s_hat,:);
+    if n_entries_survived >= 4
         Z_now = BM_cluster( Sigma_s_hat_now^(1/2 ) * X_tilde_now/ n, K);
+    else
+        Z_now = kmeans_sdp( X_tilde_now' * Sigma_s_hat_now * X_tilde_now/ n, K);       
     end
     [U_sdp,~,~] = svd(Z_now);
     U_top_k = U_sdp(:,1:K);
