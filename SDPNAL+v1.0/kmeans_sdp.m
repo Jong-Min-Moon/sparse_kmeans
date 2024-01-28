@@ -36,8 +36,8 @@ function X=kmeans_sdp(P, k)
 N=size(P,2);
 
 % Construction of distance squared matrix.
-D = -P'*P;
-
+%D = -P'*P;
+D = -P;
 % SDP definition for SDPNAL+
 n=N;
 C{1}=D;

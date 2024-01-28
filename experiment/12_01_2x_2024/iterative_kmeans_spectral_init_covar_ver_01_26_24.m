@@ -80,9 +80,11 @@ for iter = 1:n_iter
     
     
     A_now = X_tilde_now' * Sigma_s_hat_now * X_tilde_now;
- 
-    Z_now = kmeans_sdp( A_now/ n, K);     
-    cluster_est_now = estimate_cluster(Z_now, rounding, n, cluster_true);
+    Z_now = kmeans_sdp( A_now/ n, K); 
+    [U_sdp,~,~] = svd(Z_now);
+    U_top_k = U_sdp(:,1:K);
+    Label_SDP = kmeansplus(U_top_k',K)';  % label
+    cluster_est_now = Label_SDP .* (Label_SDP ~= 2) + (Label_SDP == 2)* (-1);    
         
     cluster_acc_now = max( ...
                     mean(cluster_true == cluster_est_now), ...
