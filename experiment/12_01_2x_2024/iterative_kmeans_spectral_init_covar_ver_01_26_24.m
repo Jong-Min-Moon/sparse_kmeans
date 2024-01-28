@@ -40,7 +40,9 @@ if verbose
 end
 cluster_acc_now = cluster_acc_before_thres;
 for iter = 1:n_iter
-    fprintf("\n%i th thresholding\n\n", iter)
+    if verbose
+        fprintf("\n%i th thresholding\n\n", iter)
+    end
     % 1. estimate cluster means
 
 
