@@ -1,3 +1,5 @@
+
+addpath(genpath('/mnt/nas/users/user213/sparse_kmeans'))
 p=10000;
 Delta=5;
 s = 10;
@@ -52,12 +54,13 @@ x_noiseless = [ mu_1_mat  mu_2_mat ];%each column is one observation
 x_noisy = x_noiseless +  mvnrnd(zeros(p,1), Sigma, n)';
 
 for j = 1:100
+tic
     fprintf("iteration: (%i)th \n", j)
     %data generation
     rng(j)
     x_noisy = x_noiseless +  mvnrnd(zeros(p,1), Sigma, n)';%each column is one observation
     clustering_acc_mat(j) = iterative_kmeans_spectral_init_covar_ver_01_26_24(x_noisy, Sigma, K, 6, rounding, cluster_true, 'spec', false);
-   
+toc   
         % iterate        
 end
 csvwrite('C:/Users/Jongmin/Documents/GitHub/sparse_kmeans/experiment/12_01_2x_2024/del5_p10000.csv',clustering_acc_mat)
