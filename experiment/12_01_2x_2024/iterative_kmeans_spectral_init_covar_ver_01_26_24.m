@@ -77,11 +77,11 @@ for iter = 1:n_iter
     Sigma_s_hat_now = Sigma(s_hat,s_hat);
     X_tilde_now  = X_tilde(s_hat,:);  
 
-    if n_entries_survived >= 4
-        Z_now = BM_cluster( Sigma_s_hat_now^(1/2 ) * X_tilde_now/ n, K);
-    else
+    %if n_entries_survived >= 4
+    %    Z_now = BM_cluster( Sigma_s_hat_now^(1/2 ) * X_tilde_now/ n, K);
+    %else
         Z_now = kmeans_sdp( X_tilde_now' * Sigma_s_hat_now * X_tilde_now/ n, K);       
-    end
+    %end
     [U_sdp,~,~] = svd(Z_now);
     U_top_k = U_sdp(:,1:K);
     [cluster_est_now,C] = kmeans(U_top_k,K);  % label
