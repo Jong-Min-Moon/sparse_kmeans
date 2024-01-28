@@ -47,7 +47,7 @@ ynew = @(U,y) y + beta*(U*(U'*one) - one);
 
 gradAugL = @(U,y) -2*X'*(X*U) + ynew(U,y)*(one'*U) + one*(ynew(U,y)'*U);
 
-
+%gradAugL = @(U,y) -2*A*U + ynew(U,y)*(one'*U) + one*(ynew(U,y)'*U);
 %% Implement algorithm
 
 y = zeros(n,1); % Intialization for dual variables

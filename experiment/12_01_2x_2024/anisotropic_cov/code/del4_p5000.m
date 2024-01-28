@@ -1,5 +1,5 @@
 p=5000;
-Delta=5;
+Delta=4;
 s = 10;
 n_rep = 100;
 
@@ -58,8 +58,8 @@ for j = 1:100
     %data generation
     
     x_noisy = x_noiseless +  mvnrnd(zeros(p,1), Sigma, n)';%each column is one observation
-    clustering_acc_mat(j) = iterative_kmeans_spectral_init_covar_ver_01_26_24(x_noisy, Sigma, K, 6, cluster_true, 'spec', true, 'bm');
+    clustering_acc_mat(j) = iterative_kmeans_spectral_init_covar_ver_01_26_24(x_noisy, Sigma, K, 10, cluster_true, 'spec', false, 'basic');
     toc
         % iterate        
 end
-csvwrite('C:/Users/Jongmin/Documents/GitHub/sparse_kmeans/experiment/12_01_2x_2024/del5_p5000.csv',clustering_acc_vec_del5_p5000_rho05)
+csvwrite('C:/Users/Jongmin/Documents/GitHub/sparse_kmeans/experiment/12_01_2x_2024/del4_p5000.csv',clustering_acc_mat)
