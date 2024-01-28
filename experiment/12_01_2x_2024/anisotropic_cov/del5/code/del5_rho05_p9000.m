@@ -1,7 +1,10 @@
-
 addpath(genpath('/mnt/nas/users/user213/sparse_kmeans'))
 feature("numcores")
-p=10000;
+maxNumCompThreads(1);
+% standard code for del5_rho05
+
+
+p=9000;
 Delta=5;
 s = 10;
 n_rep = 100;
@@ -54,14 +57,18 @@ mu_2_mat = repmat(mu_2, 1, n/2);%each column is one observation
 x_noiseless = [ mu_1_mat  mu_2_mat ];%each column is one observation 
 x_noisy = x_noiseless +  mvnrnd(zeros(p,1), Sigma, n)';
 
-for j = 1:100
-tic
-    fprintf("iteration: (%i)th \n", j)
-    %data generation
+for j = 1:n_rep
+    fprintf("iteration: (%i)th \n\n", j)
     rng(j)
+    tic
+    %data generation
+    
     x_noisy = x_noiseless +  mvnrnd(zeros(p,1), Sigma, n)';%each column is one observation
-    clustering_acc_mat(j) = iterative_kmeans_spectral_init_covar_ver_01_26_24(x_noisy, Sigma, K, 6, rounding, cluster_true, 'spec', false);
-toc   
+    clustering_acc_mat(j) = iterative_kmeans_spectral_init_covar_ver_01_26_24(x_noisy, Sigma, K, 10, cluster_true, 'spec', false, 'basic');
+    acc_so_far =  clustering_acc_mat(1:j);
+    fprintf( "mean acc so far: %f",  mean( acc_so_far ) );
+
+    toc
         % iterate        
 end
-csvwrite('C:/Users/Jongmin/Documents/GitHub/sparse_kmeans/experiment/12_01_2x_2024/del5_p10000.csv',clustering_acc_mat)
+csvwrite('/mnt/nas/users/user213/sparse_kmeans/experiment/12_01_2x_2024/anisotropic_cov/del5/result/del5_rho05_p9000.csv',clustering_acc_mat)

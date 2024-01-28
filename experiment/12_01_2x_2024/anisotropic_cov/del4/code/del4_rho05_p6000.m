@@ -1,6 +1,6 @@
 addpath(genpath('/mnt/nas/users/user213/sparse_kmeans'))
 feature("numcores")
-
+maxNumCompThreads(1);
 
 
 p=6000;
@@ -64,7 +64,8 @@ for j = 1:n_rep
     
     x_noisy = x_noiseless +  mvnrnd(zeros(p,1), Sigma, n)';%each column is one observation
     clustering_acc_mat(j) = iterative_kmeans_spectral_init_covar_ver_01_26_24(x_noisy, Sigma, K, 10, cluster_true, 'spec', false, 'basic');
-    fprintf("mean acc so far: %f", mean(clustering_acc_mat(1:j))
+    acc_so_far =  clustering_acc_mat(1:j);
+    fprintf( "mean acc so far: %f",  mean( acc_so_far ) );
 
     toc
         % iterate        
