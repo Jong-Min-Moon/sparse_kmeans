@@ -4,9 +4,9 @@ maxNumCompThreads(2);
 % standard code for del5_rho08
 
 
-p=5000;
-Delta=5;
-rho = 0.8;
+p=9000
+Delta=5
+rho = 0.8
 
 s = 10;
 n_rep = 100;
@@ -73,4 +73,5 @@ for j = 1:n_rep
     toc
         % iterate        
 end
-csvwrite('/mnt/nas/users/user213/sparse_kmeans/experiment/12_01_2x_2024/anisotropic_cov/del5/result/del5_rho08_p5000.csv',clustering_acc_mat)
+filename = strcat('/mnt/nas/users/user213/sparse_kmeans/experiment/12_01_2x_2024/anisotropic_cov/del', string(Delta), '/result/del',string(Delta), '_rho', erase(string(rho), ".") , '_p', string(p), '.csv');
+csvwrite(filename, clustering_acc_mat)
