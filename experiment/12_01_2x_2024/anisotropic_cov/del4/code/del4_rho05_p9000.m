@@ -1,14 +1,22 @@
+addpath(genpath('/mnt/nas/users/user213/sparse_kmeans'))
+feature("numcores")
+maxNumCompThreads(2);
+% standard code for del4_rho02
+
+
 p=9000;
 Delta=4;
+rho = 0.5;
+
 s = 10;
 n_rep = 100;
-rho = 0.5;
+
 
 n=200;
 K=2;
 rounding = 1e-4;
 cluster_true = [repelem(1,n/2), repelem(-1,n/2)];
-n_iter = 10;
+n_iter = 10; 
 
 
 
@@ -51,7 +59,7 @@ mu_2_mat = repmat(mu_2, 1, n/2);%each column is one observation
 x_noiseless = [ mu_1_mat  mu_2_mat ];%each column is one observation 
 x_noisy = x_noiseless +  mvnrnd(zeros(p,1), Sigma, n)';
 
-for j = 1:100
+for j = 1:n_rep
     fprintf("iteration: (%i)th \n\n", j)
     rng(j)
     tic
@@ -59,10 +67,11 @@ for j = 1:100
     
     x_noisy = x_noiseless +  mvnrnd(zeros(p,1), Sigma, n)';%each column is one observation
     clustering_acc_mat(j) = iterative_kmeans_spectral_init_covar_ver_01_26_24(x_noisy, Sigma, K, 10, cluster_true, 'spec', false, 'basic');
+    acc_so_far =  clustering_acc_mat(1:j);
+    fprintf( "mean acc so far: %f",  mean( acc_so_far ) );
+
     toc
-        acc_so_far =  clustering_acc_mat(1:j);
-    fprintf( "mean acc so far: %f\n",  mean( acc_so_far ) );
         % iterate        
 end
-%csvwrite('C:/Users/Jongmin/Documents/GitHub/sparse_kmeans/experiment/12_01_2x_2024/del4_p9000.csv',clustering_acc_mat)
-csvwrite('"C:\Users/Jongmin/Documents/GitHub/sparse_kmeans/experiment/12_01_2x_2024/anisotropic_cov/del4/result/del4_rho05_p9000.csv',clustering_acc_mat)
+filename = strcat('/mnt/nas/users/user213/sparse_kmeans/experiment/12_01_2x_2024/anisotropic_cov/del', string(Delta), '/result/del',string(Delta), '_rho', erase(string(rho), ".") , '_p', string(p), '.csv');
+csvwrite(filename, clustering_acc_mat)
