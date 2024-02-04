@@ -59,14 +59,14 @@ mu_2_mat = repmat(mu_2, 1, n/2);%each column is one observation
 x_noiseless = [ mu_1_mat  mu_2_mat ];%each column is one observation 
 x_noisy = x_noiseless +  mvnrnd(zeros(p,1), Sigma, n)';
 
-for j = 1:n_rep
+for j = 1:1
     fprintf("iteration: (%i)th \n\n", j)
     rng(j)
     tic
     %data generation
     
     x_noisy = x_noiseless +  mvnrnd(zeros(p,1), Sigma, n)';%each column is one observation
-    clustering_acc_mat(j) = iterative_kmeans_spectral_init_covar_ver_01_26_24(x_noisy, Sigma, K, 10, cluster_true, 'spec', false, 'basic');
+    clustering_acc_mat(j) = iterative_kmeans_spectral_init_covar_ver_01_26_24(x_noisy, Sigma, K, 10, cluster_true, 'spec', true, 'basic');
     acc_so_far =  clustering_acc_mat(1:j);
     fprintf( "mean acc so far: %f",  mean( acc_so_far ) );
 
