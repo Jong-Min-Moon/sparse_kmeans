@@ -73,4 +73,5 @@ for j = 1:1
     toc
         % iterate        
 end
-csvwrite('/mnt/nas/users/user213/sparse_kmeans/experiment/12_01_2x_2024/anisotropic_cov/del5/result/del5_rho08_p5000.csv',clustering_acc_mat)
+filename = strcat('/mnt/nas/users/user213/sparse_kmeans/experiment/12_01_2x_2024/anisotropic_cov/del', string(Delta), '/result/del',string(Delta), '_rho', erase(string(rho), ".") , '_p', string(p), '.csv');
+csvwrite(filename, clustering_acc_mat)

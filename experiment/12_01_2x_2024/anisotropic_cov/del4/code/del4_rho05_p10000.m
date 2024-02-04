@@ -3,9 +3,9 @@ feature("numcores")
 maxNumCompThreads(1);
 
 
-p=10000;
-Delta=5;
-s = 10;
+p=10000
+Delta=4
+s = 10
 n_rep = 100;
 
 
