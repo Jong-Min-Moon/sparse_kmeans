@@ -23,7 +23,7 @@ cluster_est_now = cluster_est_now .* (cluster_est_now ~= 2) + (cluster_est_now =
 cluster_est_now = cluster_est_now';
 
 thres = sqrt(2 * log(p) );
-Omega = inv(Sigma)
+Omega = inv(Sigma);
 Omega_diag = diag(Omega);
 X_tilde =   Omega  *  x;
 X_tilde_now =     X_tilde;
@@ -79,11 +79,9 @@ for iter = 1:n_iter
     Sigma_s_hat_now = Sigma(s_hat,s_hat);
     X_tilde_now  = X_tilde(s_hat,:);  
 
-    %if n_entries_survived >= 4
-    %    Z_now = BM_cluster( Sigma_s_hat_now^(1/2 ) * X_tilde_now/ n, K);
-    %else
-        Z_now = kmeans_sdp( X_tilde_now' * Sigma_s_hat_now * X_tilde_now/ n, K);       
-    %end
+  
+    Z_now = kmeans_sdp( X_tilde_now' * Sigma_s_hat_now * X_tilde_now/ n, K);       
+
     [U_sdp,~,~] = svd(Z_now);
     U_top_k = U_sdp(:,1:K);
     [cluster_est_now,C] = kmeans(U_top_k,K);  % label

@@ -1,3 +1,7 @@
+rho = 8;
+p = 1500
+Delta = 4
+path_result = '/mnt/nas/users/user213/sparse_kmeans/experiment/13_02_09_2024/AR1/result/rho8_Delta4_p1500.csv'
 
 %p=
 %Delta=

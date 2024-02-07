@@ -18,7 +18,7 @@ echo "code_dir = ${code_dir}"
 
 rho=8
 Delta=4
-for p in {800..9600..800}
+for p in {1500..9000..1500}
 do
     #filename of code
     filename_code="rho${rho}_Delta${Delta}_p${p}"
@@ -52,6 +52,8 @@ do
     mv ${code_dir}/temp_job ${code_dir}/${filename_code}.job
 
     sbatch ${code_dir}/${filename_code}.job
+
+
 done
 
 
