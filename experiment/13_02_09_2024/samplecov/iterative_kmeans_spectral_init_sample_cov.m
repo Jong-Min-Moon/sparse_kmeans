@@ -59,15 +59,15 @@ for iter = 1:n_iter
     X_mean_g1_now = mean(X_g1_now, 2);
     X_mean_g2_now = mean(X_g2_now, 2);
     Sigma_est_now =  [(X_g1_now - X_mean_g1_now) (X_g2_now - X_mean_g2_now)] * [(X_g1_now - X_mean_g1_now) (X_g2_now - X_mean_g2_now)]';
-       
-            
+    Omega_est_now = inv(Sigma_est_now);
+    Omega_est_now_diag = diag(Omega_est_now)
     
     
   
             
     % 2. threshold the data matrix
     mean_diff_now = linsolve(Sigma_est_now, (X_mean_g1_now - X_mean_g2_now));
-    abs_diff = abs(mean_diff_now)./diag(Sigma) * sqrt( n_g1_now*n_g2_now/n );
+    abs_diff = abs(mean_diff_now)./sqrt(Omega_est_now_diag) * sqrt( n_g1_now*n_g2_now/n );
     abs_diff_sort = -sort(-abs_diff);
     top_10 = abs_diff_sort(1:10);
 

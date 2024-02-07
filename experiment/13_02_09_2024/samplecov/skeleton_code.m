@@ -5,7 +5,7 @@
 rho = rho /10
 addpath(genpath('/mnt/nas/users/user213/sparse_kmeans'))
 feature("numcores")
-maxNumCompThreads(2);
+maxNumCompThreads(1);
 
 
 
@@ -40,8 +40,10 @@ for j=1:p
         end
     end
 end
+rng(1)
 
-try chol(Sigma)
+
+try chol(Omega)
     disp('Matrix is symmetric positive definite.')
 catch ME
     disp('Matrix is not symmetric positive definite')
@@ -58,15 +60,13 @@ mu_0 = Sigma*mu_0_tilde;
 mu_1 = -mu_0;
 mu_2 = mu_0;
 
-beta = linsolve(Sigma, (mu_1-mu_2));
+beta = Omega * (mu_1-mu_2);
 fprintf( "delta confirmed: %f", sqrt( (mu_1-mu_2)' * beta ))
 norm((mu_1-mu_2))
 tic
 
-% norm(mu_1 - mu_2)
 
 
-% parallel for loop
 
 mu_1_mat = repmat(mu_1,  1, n/2); %each column is one observation
 mu_2_mat = repmat(mu_2, 1, n/2);%each column is one observation
