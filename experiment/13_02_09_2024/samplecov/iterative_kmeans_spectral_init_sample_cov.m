@@ -1,4 +1,4 @@
-function cluster_acc = iterative_kmeans_spectral_init_sample_cov(x, Sigma, K, n_iter, cluster_true, init_method, verbose, sdp_method) 
+function cluster_acc = iterative_kmeans_spectral_init_sample_cov(x, K, n_iter, cluster_true, init_method, verbose, sdp_method) 
 % Sigma = UNknown covariance matrix
 %data generation
 % created 01/26/2024
@@ -8,6 +8,8 @@ sdp_method
 % spectral initialization
 n = size(x,2);
 p = size(x,1);
+thres = sqrt(2 * log(p) );
+
 if strcmp(init_method, 'spec')
     H_hat = (x' * x)/n;
     [V,D] = eig(H_hat);
@@ -21,9 +23,6 @@ elseif strcmp(init_method, "hc")
 end
 cluster_est_now = cluster_est_now .* (cluster_est_now ~= 2) + (cluster_est_now == 2)* (-1);
 cluster_est_now = cluster_est_now';
-
-thres = sqrt(2 * log(p) );
-
 
 
 cluster_acc_before_thres = max( mean(cluster_true ==  cluster_est_now), mean(cluster_true == -cluster_est_now));
@@ -46,7 +45,7 @@ for iter = 1:n_iter
     % 1. estimate cluster means
 
 
-    if max(n_g1_now, n_g2_now) ==n
+    if max(n_g1_now, n_g2_now) == n
         %fprintf("all observations are clustered into one group")
         cluster_acc = 0.5;
         return 
@@ -58,16 +57,15 @@ for iter = 1:n_iter
     
     X_mean_g1_now = mean(X_g1_now, 2);
     X_mean_g2_now = mean(X_g2_now, 2);
-    Sigma_est_now =  [(X_g1_now - X_mean_g1_now) (X_g2_now - X_mean_g2_now)] * [(X_g1_now - X_mean_g1_now) (X_g2_now - X_mean_g2_now)]';
+    Sigma_est_now =  [(X_g1_now - X_mean_g1_now) (X_g2_now - X_mean_g2_now)] * [(X_g1_now - X_mean_g1_now) (X_g2_now - X_mean_g2_now)]' / (n-1);
     Omega_est_now = inv(Sigma_est_now);
     Omega_est_now_diag = diag(Omega_est_now)
-    
     
   
             
     % 2. threshold the data matrix
-    mean_diff_now = linsolve(Sigma_est_now, (X_mean_g1_now - X_mean_g2_now));
-    abs_diff = abs(mean_diff_now)./sqrt(Omega_est_now_diag) * sqrt( n_g1_now*n_g2_now/n );
+    signal_est_now = linsolve(Sigma_est_now, (X_mean_g1_now - X_mean_g2_now));
+    abs_diff = abs(signal_est_now)./sqrt(Omega_est_now_diag) * sqrt( n_g1_now*n_g2_now/n );
     abs_diff_sort = -sort(-abs_diff);
     top_10 = abs_diff_sort(1:10);
 
@@ -84,11 +82,10 @@ for iter = 1:n_iter
     X_tilde_now = linsolve(Sigma_est_now, x);
     X_tilde_now  = X_tilde_now(s_hat,:);  
 
-    %if n_entries_survived >= 4
-    %    Z_now = BM_cluster( Sigma_s_hat_now^(1/2 ) * X_tilde_now/ n, K);
-    %else
-        Z_now = kmeans_sdp( X_tilde_now' * Sigma_hat_s_hat_now * X_tilde_now/ n, K);       
-    %end
+
+    Z_now = kmeans_sdp( X_tilde_now' * Sigma_hat_s_hat_now * X_tilde_now/ n, K);       
+    
+    % final thresholding
     [U_sdp,~,~] = svd(Z_now);
     U_top_k = U_sdp(:,1:K);
     [cluster_est_now,C] = kmeans(U_top_k,K);  % label

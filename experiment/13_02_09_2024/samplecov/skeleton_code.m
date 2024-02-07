@@ -35,12 +35,12 @@ for j=1:p
     for l = 1:p
         if j==l
             Omega(j,l) = 1;
-        elseif abs(j-l) <3
+        elseif abs(j-l) ==1
             Omega(j,l) = rho;
         end
     end
 end
-rng(1)
+
 
 
 try chol(Omega)
@@ -50,9 +50,6 @@ catch ME
 end
 
 Sigma = inv(Omega);
-
-
-
 M = Delta/2/ sqrt( sum( Sigma(1:s,1:s),"all") )
 sparse_mean = [repelem(1,s), repelem(0,p-s)]'; %column vector
 mu_0_tilde =  M * sparse_mean;
@@ -80,7 +77,7 @@ for j = 1:n_rep
     %data generation
     
     x_noisy = x_noiseless +  mvnrnd(zeros(p,1), Sigma, n)';%each column is one observation
-    clustering_acc_mat(j) = iterative_kmeans_spectral_init_sample_cov(x_noisy, Sigma, K, 10, cluster_true, 'spec', false, 'basic');
+    clustering_acc_mat(j) = iterative_kmeans_spectral_init_sample_cov(x_noisy, K, 10, cluster_true, 'spec', false, 'basic');
     acc_so_far =  clustering_acc_mat(1:j);
     fprintf( "mean acc so far: %f\n",  mean( acc_so_far ) );
 

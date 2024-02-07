@@ -16,7 +16,7 @@ code_dir="/mnt/nas/users/user213/${project_name}/experiment/${meeting_date}/${ex
 echo "code_dir = ${code_dir}"
 
 
-rho=5
+rho=0.45
 Delta=5
 for p in {100..1000..100}
 do
