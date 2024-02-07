@@ -2,7 +2,7 @@
 %p=
 %Delta=
 %rho = 
-rho = rho /10
+rho = rho /100
 addpath(genpath('/mnt/nas/users/user213/sparse_kmeans'))
 feature("numcores")
 maxNumCompThreads(1);
