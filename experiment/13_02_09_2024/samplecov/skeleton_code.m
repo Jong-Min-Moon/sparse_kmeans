@@ -43,7 +43,7 @@ end
 
 
 
-try chol(Omega)
+try chol(Omega);
     disp('Matrix is symmetric positive definite.')
 catch ME
     disp('Matrix is not symmetric positive definite')
