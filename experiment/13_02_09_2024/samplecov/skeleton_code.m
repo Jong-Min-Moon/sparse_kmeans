@@ -5,20 +5,20 @@
 rho = rho /100
 addpath(genpath('/mnt/nas/users/user213/sparse_kmeans'))
 feature("numcores")
-maxNumCompThreads(1);
+maxNumCompThreads(2);
 
 
 
 
 s = 10;
-n_rep = 100;
+n_rep = 20;
 
 
 n=500;
 K=2;
 rounding = 1e-4;
 cluster_true = [repelem(1,n/2), repelem(-1,n/2)];
-n_iter = 10; 
+n_iter = 5; 
 
 
 

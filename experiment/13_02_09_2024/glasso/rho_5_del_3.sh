@@ -4,7 +4,7 @@
 
 project_name="sparse_kmeans"
 meeting_date="13_02_09_2024"
-experiment_name="samplecov"
+experiment_name="glasso"
 extension_code="m"
 extension_result="csv"
 tool="/usr/local/MATLAB/R2023b/bin/matlab"
@@ -17,8 +17,8 @@ echo "code_dir = ${code_dir}"
 
 
 rho=5
-Delta=4
-for p in {50..450..50}
+Delta=3
+for p in 360
 do
     #filename of code
     filename_code="rho${rho}_Delta${Delta}_p${p}"
