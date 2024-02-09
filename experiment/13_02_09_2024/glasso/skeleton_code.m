@@ -11,14 +11,14 @@ maxNumCompThreads(1);
 
 
 s = 10;
-n_rep = 100;
+n_rep = 20;
 
 
 n=500;
 K=2;
 rounding = 1e-4;
 cluster_true = [repelem(1,n/2), repelem(-1,n/2)];
-n_iter = 10; 
+n_iter = 4; 
 
 
 
@@ -42,12 +42,6 @@ for j=1:p
 end
 
 
-
-try chol(Omega);
-    disp('Matrix is symmetric positive definite.')
-catch ME
-    disp('Matrix is not symmetric positive definite')
-end
 
 Sigma = inv(Omega);
 M = Delta/2/ sqrt( sum( Sigma(1:s,1:s),"all") )
@@ -77,7 +71,7 @@ for j = 1:n_rep
     %data generation
     
     x_noisy = x_noiseless +  mvnrnd(zeros(p,1), Sigma, n)';%each column is one observation
-    clustering_acc_mat(j) = iterative_kmeans_spectral_init_sample_cov(x_noisy, K, s,n_iter, cluster_true, 'hc', false, 'basic');
+    clustering_acc_mat(j) = iterative_kmeans_spectral_init_glasso(x_noisy, K, s,n_iter, cluster_true, 'hc', false, 'basic');
     acc_so_far =  clustering_acc_mat(1:j);
     fprintf( "mean acc so far: %f\n",  mean( acc_so_far ) );
 

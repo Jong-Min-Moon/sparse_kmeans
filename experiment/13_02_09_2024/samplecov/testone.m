@@ -15,14 +15,14 @@ maxNumCompThreads(2);
 
 
 s = 10;
-n_rep = 100;
+n_rep = 1;
 
 
 n=500;
 K=2;
 rounding = 1e-4;
 cluster_true = [repelem(1,n/2), repelem(-1,n/2)];
-n_iter = 10; 
+n_iter = 1; 
 
 
 
@@ -34,10 +34,7 @@ clustering_acc_mat = repelem(0, n_rep );
 
 
 Omega = zeros([p,p]);
-rho_vec = [0.05, 0.15, 0.2, 0.35, 0.4, 0.45]
-p_vec = [100,200,300,400,500,600,700,800,900,1000]
-for rho = rho_vec
-    for p = p_vec
+
         for j=1:p
             for l = 1:p
                 if j==l
@@ -53,8 +50,7 @@ for rho = rho_vec
         catch ME
             disp('Matrix is not symmetric positive definite')
         end
-    end
-end
+
 
 Sigma = inv(Omega);
 M = Delta/2/ sqrt( sum( Sigma(1:s,1:s),"all") )
@@ -77,7 +73,6 @@ tic
 mu_1_mat = repmat(mu_1,  1, n/2); %each column is one observation
 mu_2_mat = repmat(mu_2, 1, n/2);%each column is one observation
 x_noiseless = [ mu_1_mat  mu_2_mat ];%each column is one observation 
-x_noisy = x_noiseless +  mvnrnd(zeros(p,1), Sigma, n)';
 
 for j = 1:n_rep
     fprintf("iteration: (%i)th \n\n", j)
@@ -86,7 +81,7 @@ for j = 1:n_rep
     %data generation
     
     x_noisy = x_noiseless +  mvnrnd(zeros(p,1), Sigma, n)';%each column is one observation
-    clustering_acc_mat(j) = iterative_kmeans_spectral_init_sample_cov(x_noisy, Sigma, K, 10, cluster_true, 'spec', false, 'basic');
+    clustering_acc_mat(j) = iterative_kmeans_spectral_init_sample_cov(x_noisy, K,s, 10, cluster_true, 'hc', false, 'basic');
     acc_so_far =  clustering_acc_mat(1:j);
     fprintf( "mean acc so far: %f\n",  mean( acc_so_far ) );
 
@@ -94,4 +89,3 @@ for j = 1:n_rep
         % iterate        
 end
 
-csvwrite(path_result, clustering_acc_mat)

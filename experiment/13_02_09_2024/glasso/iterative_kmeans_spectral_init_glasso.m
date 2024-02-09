@@ -69,18 +69,17 @@ for iter = 1:n_iter
     X_mean_g2_now = mean(X_g2_now, 2);
     sample_cov =  [(X_g1_now - X_mean_g1_now) (X_g2_now - X_mean_g2_now)] * [(X_g1_now - X_mean_g1_now) (X_g2_now - X_mean_g2_now)]' / (n-1);
     
-    lambda_vec = [0.2, 0.4, 0.6, 0.8];
-    bic_vec = [0,0,0,0];
-    for i = 1:4
-    	lambda = lambda_vec(i);
-    	[Omega_est_now, Sigma_est_glasso_now] = graphicalLasso(sample_cov, lambda);
-    	bic_vec(i) = bic(Sigma_est_glasso_now, Omega_est_now, n, p);
-    end
-    [lambda_sort, lambda_sort_index]= sort(bic_vec)
-    [Omega_est_now, Sigma_est_now] = graphicalLasso(sample_cov, lambda_sort(4));
+    %bic_vec = [0,0,0,0];
+    %for i = 1:4
+    %	lambda = lambda_vec(i);
+    %	[Omega_est_now, Sigma_est_glasso_now] = graphicalLasso(sample_cov, lambda);
+    %	bic_vec(i) = bic(Sigma_est_glasso_now, Omega_est_now, n, p);
+    %end
+    %[lambda_sort, lambda_sort_index]= sort(bic_vec)
+    Omega_est_now = L1precisionBCD(sample_cov, 0.1);
+    Sigma_est_now = inv(Omega_est_now);
     %heatmap(Omega_est_now)
-    Omega_est_now_diag = diag(Omega_est_now)/n/3;
-    Omega_est_now_diag(1)
+    Omega_est_now_diag = diag(Omega_est_now);
   
             
     % 2. threshold the data matrix

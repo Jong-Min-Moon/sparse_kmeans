@@ -9,7 +9,6 @@ Delta = 4
 rho = rho /10
 %addpath(genpath('/mnt/nas/users/user213/sparse_kmeans'))
 feature("numcores")
-maxNumCompThreads(2);
 
 
 
@@ -66,7 +65,6 @@ tic
 mu_1_mat = repmat(mu_1,  1, n/2); %each column is one observation
 mu_2_mat = repmat(mu_2, 1, n/2);%each column is one observation
 x_noiseless = [ mu_1_mat  mu_2_mat ];%each column is one observation 
-x_noisy = x_noiseless +  mvnrnd(zeros(p,1), Sigma, n)';
 
 for j = 1:n_rep
     fprintf("iteration: (%i)th \n\n", j)
