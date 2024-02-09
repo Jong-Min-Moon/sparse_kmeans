@@ -14,7 +14,7 @@ s = 10;
 n_rep = 100;
 
 
-n=200;
+n=500;
 K=2;
 rounding = 1e-4;
 cluster_true = [repelem(1,n/2), repelem(-1,n/2)];
@@ -77,7 +77,7 @@ for j = 1:n_rep
     %data generation
     
     x_noisy = x_noiseless +  mvnrnd(zeros(p,1), Sigma, n)';%each column is one observation
-    clustering_acc_mat(j) = iterative_kmeans_spectral_init_sample_cov(x_noisy, K, 10, cluster_true, 'spec', false, 'basic');
+    clustering_acc_mat(j) = iterative_kmeans_spectral_init_sample_cov(x_noisy, K, s,n_iter, cluster_true, 'hc', false, 'basic');
     acc_so_far =  clustering_acc_mat(1:j);
     fprintf( "mean acc so far: %f\n",  mean( acc_so_far ) );
 

@@ -1,4 +1,4 @@
-function cluster_acc = iterative_kmeans_spectral_init_sample_cov(x, K, s, n_iter, cluster_true, init_method, verbose, sdp_method) 
+function cluster_acc = iterative_kmeans_spectral_init_glasso(x, K, s, n_iter, cluster_true, init_method, verbose, sdp_method) 
 % Sigma = UNknown covariance matrix
 %data generation
 % created 01/26/2024
@@ -20,7 +20,6 @@ if strcmp(init_method, 'spec')
 elseif strcmp(init_method, "hc")
     Z = linkage(x', 'ward');
     cluster_est_now = cluster(Z, 'Maxclust',K);
-    cluster_est_now = cluster_est_now .* (cluster_est_now ~= 2) + (cluster_est_now == 2)* (-1);
 elseif strcmp(init_method, "SDP")
     Sigma_est_now = cov(x');
     X_tilde_now = linsolve(Sigma_est_now, x);
@@ -30,13 +29,10 @@ elseif strcmp(init_method, "SDP")
     [U_sdp,~,~] = svd(Z_now);
     U_top_k = U_sdp(:,1:K);
     [cluster_est_now,C] = kmeans(U_top_k,K);  % label
-    cluster_est_now = cluster_est_now .* (cluster_est_now ~= 2) + (cluster_est_now == 2)* (-1);    
-    cluster_est_now = cluster_est_now';   
 
 end
 cluster_est_now = cluster_est_now .* (cluster_est_now ~= 2) + (cluster_est_now == 2)* (-1);
 cluster_est_now = cluster_est_now';
-
 
 cluster_acc_before_thres = max( mean(cluster_true ==  cluster_est_now), mean(cluster_true == -cluster_est_now));
 
@@ -71,19 +67,28 @@ for iter = 1:n_iter
     
     X_mean_g1_now = mean(X_g1_now, 2);
     X_mean_g2_now = mean(X_g2_now, 2);
-    Sigma_est_now =  [(X_g1_now - X_mean_g1_now) (X_g2_now - X_mean_g2_now)] * [(X_g1_now - X_mean_g1_now) (X_g2_now - X_mean_g2_now)]' / (n-1);
-    Omega_est_now = inv(Sigma_est_now);
-    %heatmap(Omega_est_now)
-    Omega_est_now_diag = diag(Omega_est_now);
+    sample_cov =  [(X_g1_now - X_mean_g1_now) (X_g2_now - X_mean_g2_now)] * [(X_g1_now - X_mean_g1_now) (X_g2_now - X_mean_g2_now)]' / (n-1);
     
+    lambda_vec = [0.2, 0.4, 0.6, 0.8];
+    bic_vec = [0,0,0,0];
+    for i = 1:4
+    	lambda = lambda_vec(i);
+    	[Omega_est_now, Sigma_est_glasso_now] = graphicalLasso(sample_cov, lambda);
+    	bic_vec(i) = bic(Sigma_est_glasso_now, Omega_est_now, n, p);
+    end
+    [lambda_sort, lambda_sort_index]= sort(bic_vec)
+    [Omega_est_now, Sigma_est_now] = graphicalLasso(sample_cov, lambda_sort(4));
+    %heatmap(Omega_est_now)
+    Omega_est_now_diag = diag(Omega_est_now)/n/3;
+    Omega_est_now_diag(1)
   
             
     % 2. threshold the data matrix
-    signal_est_now = linsolve(Sigma_est_now, (X_mean_g1_now - X_mean_g2_now));
-    abs_diff = abs(signal_est_now)./sqrt(Omega_est_now_diag) * sqrt( n_g1_now*n_g2_now/n )
+    signal_est_now = Omega_est_now* (X_mean_g1_now - X_mean_g2_now);
+    abs_diff = abs(signal_est_now)./sqrt(Omega_est_now_diag) * sqrt( n_g1_now*n_g2_now/n );
     [abs_diff_sort, abs_diff_sort_idx]= sort(abs_diff, "descend");
-    top_10 =  abs_diff_sort(1:10);
-    top_10_idx = abs_diff_sort_idx(1:10);
+    top_10 =  abs_diff_sort(1:10)
+    top_10_idx = abs_diff_sort_idx(1:10)
 
     
     s_hat = abs_diff > thres;
@@ -91,6 +96,7 @@ for iter = 1:n_iter
     n_entries_survived = sum(s_hat);
 
     if n_entries_survived == 0
+        disp("no entry survived")
         cluster_acc = 0.5;
         break
     end

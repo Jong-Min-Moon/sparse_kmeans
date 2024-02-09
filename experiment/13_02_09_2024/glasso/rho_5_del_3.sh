@@ -18,7 +18,7 @@ echo "code_dir = ${code_dir}"
 
 rho=5
 Delta=4
-for p in {200..2000..200}
+for p in {50..450..50}
 do
     #filename of code
     filename_code="rho${rho}_Delta${Delta}_p${p}"
