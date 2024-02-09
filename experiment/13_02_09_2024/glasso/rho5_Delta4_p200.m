@@ -1,3 +1,7 @@
+rho = 5;
+p = 300
+Delta = 4
+path_result = '/mnt/nas/users/user213/sparse_kmeans/experiment/13_02_09_2024/samplecov/result/rho5_Delta4_p200.csv'
 
 %p=
 %Delta=
@@ -11,14 +15,14 @@ maxNumCompThreads(1);
 
 
 s = 10;
-n_rep = 100;
+n_rep = 1;
 
 
 n=500;
 K=2;
 rounding = 1e-4;
 cluster_true = [repelem(1,n/2), repelem(-1,n/2)];
-n_iter = 10; 
+n_iter = 1; 
 
 
 
@@ -77,7 +81,7 @@ for j = 1:n_rep
     %data generation
     
     x_noisy = x_noiseless +  mvnrnd(zeros(p,1), Sigma, n)';%each column is one observation
-    clustering_acc_mat(j) = iterative_kmeans_spectral_init_sample_cov(x_noisy, K, s,n_iter, cluster_true, 'hc', false, 'basic');
+    clustering_acc_mat(j) = iterative_kmeans_spectral_init_sample_cov(x_noisy, K, s, n_iter, cluster_true, 'spec', true, 'basic');
     acc_so_far =  clustering_acc_mat(1:j);
     fprintf( "mean acc so far: %f\n",  mean( acc_so_far ) );
 
