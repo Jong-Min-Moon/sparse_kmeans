@@ -1,4 +1,4 @@
-function cluster_acc = iterative_kmeans_spectral_init_glasso(x, K, s, n_iter, cluster_true, init_method, verbose, sdp_method) 
+function cluster_acc = iterative_kmeans_spectral_init_glasso(x, K, n_iter, Omega, s, cluster_true, init_method, verbose, sdp_method) 
 % Sigma = UNknown covariance matrix
 %data generation
 % created 01/26/2024
@@ -48,6 +48,11 @@ if verbose
     
 end
 cluster_acc_now = cluster_acc_before_thres;
+
+CONDA_BIN_PATH="/home/jongmin/miniconda3/bin";
+ENV_PATH="/home/jongmin/miniconda3/envs/kmeans";
+command = CONDA_BIN_PATH+"/activate " + ENV_PATH;
+system(command)
 for iter = 1:n_iter
     if verbose
         fprintf("\n%i th thresholding\n\n", iter)
@@ -67,27 +72,24 @@ for iter = 1:n_iter
     
     X_mean_g1_now = mean(X_g1_now, 2);
     X_mean_g2_now = mean(X_g2_now, 2);
-    sample_cov =  [(X_g1_now - X_mean_g1_now) (X_g2_now - X_mean_g2_now)] * [(X_g1_now - X_mean_g1_now) (X_g2_now - X_mean_g2_now)]' / (n-1);
-    
-    %bic_vec = [0,0,0,0];
-    %for i = 1:4
-    %	lambda = lambda_vec(i);
-    %	[Omega_est_now, Sigma_est_glasso_now] = graphicalLasso(sample_cov, lambda);
-    %	bic_vec(i) = bic(Sigma_est_glasso_now, Omega_est_now, n, p);
-    %end
-    %[lambda_sort, lambda_sort_index]= sort(bic_vec)
-    Omega_est_now = L1precisionBCD(sample_cov, 0.1);
-    Sigma_est_now = inv(Omega_est_now);
-    %heatmap(Omega_est_now)
+    data_py = [(X_g1_now - X_mean_g1_now) (X_g2_now - X_mean_g2_now)]';
+    data_scaled = data_py./(std(data_py,0,1));
+    mat2np(data_scaled, 'data_scaled.pkl', 'float64')
+    command = "/home/jongmin/miniconda3/envs/kmeans" + "/bin/" + "python glasso_ebic.py"
+    tic
+    system(command)
+    toc
+    load('cov.mat')
     Omega_est_now_diag = diag(Omega_est_now);
-  
-            
+    norm(Omega - Omega_est_now, "fro")
+    count_support_diff(Omega, Omega_est_now)
+
     % 2. threshold the data matrix
     signal_est_now = Omega_est_now* (X_mean_g1_now - X_mean_g2_now);
     abs_diff = abs(signal_est_now)./sqrt(Omega_est_now_diag) * sqrt( n_g1_now*n_g2_now/n );
     [abs_diff_sort, abs_diff_sort_idx]= sort(abs_diff, "descend");
-    top_10 =  abs_diff_sort(1:10)
-    top_10_idx = abs_diff_sort_idx(1:10)
+    top_10 =  abs_diff_sort(1:10);
+    top_10_idx = abs_diff_sort_idx(1:10);
 
     
     s_hat = abs_diff > thres;
@@ -99,13 +101,14 @@ for iter = 1:n_iter
         cluster_acc = 0.5;
         break
     end
-    
-    Sigma_hat_s_hat_now = Sigma_est_now(s_hat,s_hat);
-    X_tilde_now = linsolve(Sigma_est_now, x);
+    data_filtered = data_py(:,s_hat);
+    Sigma_hat_s_hat_now = data_filtered' * data_filtered;
+    X_tilde_now = Omega_est_now * x;
     X_tilde_now  = X_tilde_now(s_hat,:);  
 
-
-    Z_now = kmeans_sdp( X_tilde_now' * Sigma_hat_s_hat_now * X_tilde_now/ n, K);       
+    tic
+    Z_now = kmeans_sdp( X_tilde_now' * Sigma_hat_s_hat_now * X_tilde_now/ n, K);
+    toc
     
     % final thresholding
     [U_sdp,~,~] = svd(Z_now);
@@ -123,8 +126,8 @@ for iter = 1:n_iter
         fprintf("\n%i entries survived \n",n_entries_survived)
         fprintf("right : (%i)\n", sum(s_hat(1:s)))
         fprintf("wrong : (%i)\n", sum(s_hat(s+1:end)))
-        fprintf("normalized difference top 10 max: (%f)\n", top_10)
-        fprintf("normalized difference top 10 max index: (%i)\n", top_10_idx)
+        %fprintf("normalized difference top 10 max: (%f)\n", top_10)
+        %fprintf("normalized difference top 10 max index: (%i)\n", top_10_idx)
         fprintf("n_{G1}_now = %i, n_{G1}_now = %i\n", n_g1_now, n_g2_now )
         fprintf("acc_now= %f", cluster_acc_now);
 
