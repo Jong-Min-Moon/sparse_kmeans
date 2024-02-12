@@ -1,14 +1,24 @@
-function cluster_acc = iterative_kmeans_spectral_init_glasso(x, K, n_iter, Omega, s, cluster_true, init_method, verbose, sdp_method) 
+function [cluster_acc, norm_fro, supp_diff, false_discov, true_discov, false_discov_top5, omega_est_time, x_tilde_est_time, sdp_solve_time] = iterative_kmeans_spectral_init_glasso(x, K, n_iter, Omega, s, cluster_true, init_method, verbose, sdp_method, CONDA_BIN_PATH, ENV_PATH, pkl_path, mat_path, ebic_path) 
 % Sigma = UNknown covariance matrix
 %data generation
 % created 01/26/2024
 init_method
 sdp_method
 
+
 % spectral initialization
 n = size(x,2);
 p = size(x,1);
 thres = sqrt(2 * log(p) );
+
+norm_fro = zeros(n_iter);
+supp_diff = zeros(n_iter);
+false_discov = zeros(n_iter);
+true_discov = zeros(n_iter);
+false_discov_top5 = zeros(n_iter);
+omega_est_time = zeros(n_iter);
+x_tilde_est_time = zeros(n_iter);
+sdp_solve_time = zeros(n_iter);
 
 if strcmp(init_method, 'spec')
     H_hat = (x' * x)/n;
@@ -49,8 +59,6 @@ if verbose
 end
 cluster_acc_now = cluster_acc_before_thres;
 
-CONDA_BIN_PATH="/home/jongmin/miniconda3/bin";
-ENV_PATH="/home/jongmin/miniconda3/envs/kmeans";
 command = CONDA_BIN_PATH+"/activate " + ENV_PATH;
 system(command)
 for iter = 1:n_iter
@@ -74,22 +82,28 @@ for iter = 1:n_iter
     X_mean_g2_now = mean(X_g2_now, 2);
     data_py = [(X_g1_now - X_mean_g1_now) (X_g2_now - X_mean_g2_now)]';
     data_scaled = data_py./(std(data_py,0,1));
-    mat2np(data_scaled, 'data_scaled.pkl', 'float64')
-    command = "/home/jongmin/miniconda3/envs/kmeans" + "/bin/" + "python glasso_ebic.py"
+    system("rm -f data_scaled.pkl");
+    system("rm -f cov.mat");
+    mat2np(data_scaled, pkl_path, 'float64');
+    command = ENV_PATH + "/bin/" + "python " + ebic_path;
+    pause(3);
     tic
-    system(command)
-    toc
-    load('cov.mat')
-    Omega_est_now_diag = diag(Omega_est_now);
-    norm(Omega - Omega_est_now, "fro")
-    count_support_diff(Omega, Omega_est_now)
+    system(command);
+    omega_est_time(iter) = toc;
+    pause(3);
+    load(mat_path);
+
+    % quality of Omega estimation
+    norm_fro(iter) = norm(Omega - Omega_est_now, "fro");
+    supp_diff(iter) = count_support_diff(Omega, Omega_est_now);
 
     % 2. threshold the data matrix
     signal_est_now = Omega_est_now* (X_mean_g1_now - X_mean_g2_now);
+    Omega_est_now_diag = diag(Omega_est_now);
     abs_diff = abs(signal_est_now)./sqrt(Omega_est_now_diag) * sqrt( n_g1_now*n_g2_now/n );
     [abs_diff_sort, abs_diff_sort_idx]= sort(abs_diff, "descend");
-    top_10 =  abs_diff_sort(1:10);
-    top_10_idx = abs_diff_sort_idx(1:10);
+    discov_idx_sorted = abs_diff_sort_idx(abs_diff_sort>thres);
+    false_discov_idx_sorted = discov_idx_sorted(discov_idx_sorted>s);
 
     
     s_hat = abs_diff > thres;
@@ -101,14 +115,17 @@ for iter = 1:n_iter
         cluster_acc = 0.5;
         break
     end
+
+    tic
     data_filtered = data_py(:,s_hat);
-    Sigma_hat_s_hat_now = data_filtered' * data_filtered;
+    Sigma_hat_s_hat_now = data_filtered' * data_filtered / (n-1);
     X_tilde_now = Omega_est_now * x;
-    X_tilde_now  = X_tilde_now(s_hat,:);  
+    X_tilde_now  = X_tilde_now(s_hat,:);  %feature selection
+    x_tilde_est_time(iter) = toc;
 
     tic
     Z_now = kmeans_sdp( X_tilde_now' * Sigma_hat_s_hat_now * X_tilde_now/ n, K);
-    toc
+    sdp_solve_time(iter) = toc;
     
     % final thresholding
     [U_sdp,~,~] = svd(Z_now);
@@ -122,10 +139,15 @@ for iter = 1:n_iter
                     );
     n_g1_now = sum(cluster_est_now == 1);
     n_g2_now = sum(cluster_est_now ==-1);
+
+    false_discov_top5(iter) = strjoin(arrayfun(@(x) num2str(x), false_discov_idx_sorted(1:5) ,'UniformOutput',false),'_')
+    fprintf("right : (%i)\n", sum(s_hat(1:s)))
+    fprintf("wrong : (%i)\n", sum(s_hat(s+1:end)))  
+    false_discov(iter) = sum(s_hat(1:s));
+    true_discov(iter) = sum(s_hat(s+1:end));
     if verbose
         fprintf("\n%i entries survived \n",n_entries_survived)
-        fprintf("right : (%i)\n", sum(s_hat(1:s)))
-        fprintf("wrong : (%i)\n", sum(s_hat(s+1:end)))
+
         %fprintf("normalized difference top 10 max: (%f)\n", top_10)
         %fprintf("normalized difference top 10 max index: (%i)\n", top_10_idx)
         fprintf("n_{G1}_now = %i, n_{G1}_now = %i\n", n_g1_now, n_g2_now )

@@ -73,7 +73,7 @@ for j = 1:n_rep
     %data generation
     
     x_noisy = x_noiseless +  mvnrnd(zeros(p,1), Sigma, n)';%each column is one observation
-    clustering_acc_mat(j) = iterative_kmeans_spectral_init_glasso(x_noisy, K,n_iter,s, cluster_true, 'hc', true, 'basic');
+    clustering_acc_mat(j) = iterative_kmeans_spectral_init_glasso(x_noisy, K,n_iter,s, cluster_true, 'hc', true, 'basic', "/opt/miniconda/bin", "/mnt/nas/users/user213/.conda/envs/kmeans");
     acc_so_far =  clustering_acc_mat(1:j);
     fprintf( "mean acc so far: %f\n",  mean( acc_so_far ) );
 
