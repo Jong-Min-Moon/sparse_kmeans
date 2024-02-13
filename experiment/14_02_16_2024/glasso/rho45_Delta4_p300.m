@@ -1,3 +1,18 @@
+pkl_path = '/mnt/nas/users/user213/sparse_kmeans/experiment/14_02_16_2024/glasso/rho45_Delta4_p300.pkl'
+mat_path = '/mnt/nas/users/user213/sparse_kmeans/experiment/14_02_16_2024/glasso/rho45_Delta4_p300.mat'
+ebic_path = '/mnt/nas/users/user213/sparse_kmeans/experiment/14_02_16_2024/glasso/rho45_Delta4_p300.py'
+rho = 45;
+p = 300
+Delta = 4
+path_result = '/mnt/nas/users/user213/sparse_kmeans/experiment/14_02_16_2024/glasso/result/rho45_Delta4_p300.csv'
+path_normfromat= '/mnt/nas/users/user213/sparse_kmeans/experiment/14_02_16_2024/glasso/result/rho45_Delta4_p300_normfromat.csv'
+path_suppdiff= '/mnt/nas/users/user213/sparse_kmeans/experiment/14_02_16_2024/glasso/result/rho45_Delta4_p300_suppdiff.csv'
+path_falsediscov= '/mnt/nas/users/user213/sparse_kmeans/experiment/14_02_16_2024/glasso/result/rho45_Delta4_p300_falsediscov.csv'
+path_truediscov= '/mnt/nas/users/user213/sparse_kmeans/experiment/14_02_16_2024/glasso/result/rho45_Delta4_p300_truediscov.csv'
+path_falsediscovtop5= '/mnt/nas/users/user213/sparse_kmeans/experiment/14_02_16_2024/glasso/result/rho45_Delta4_p300_falsediscovtop5.csv'
+path_omegaesttime= '/mnt/nas/users/user213/sparse_kmeans/experiment/14_02_16_2024/glasso/result/rho45_Delta4_p300_omegaesttime.csv'
+path_xtildeesttime= '/mnt/nas/users/user213/sparse_kmeans/experiment/14_02_16_2024/glasso/result/rho45_Delta4_p300_xtildeesttime.csv'
+path_sdpsolvetime= '/mnt/nas/users/user213/sparse_kmeans/experiment/14_02_16_2024/glasso/result/rho45_Delta4_p300_sdpsolvetime.csv'
 
 %p=
 %Delta=

@@ -11,14 +11,14 @@ n = size(x,2);
 p = size(x,1);
 thres = sqrt(2 * log(p) );
 
-norm_fro = zeros(n_iter);
-supp_diff = zeros(n_iter);
-false_discov = zeros(n_iter);
-true_discov = zeros(n_iter);
-false_discov_top5 = zeros(n_iter);
-omega_est_time = zeros(n_iter);
-x_tilde_est_time = zeros(n_iter);
-sdp_solve_time = zeros(n_iter);
+norm_fro = zeros(1,n_iter);
+supp_diff = zeros(1,n_iter);
+false_discov = zeros(1,n_iter);
+true_discov = zeros(1,n_iter);
+false_discov_top5 = repelem("0", n_iter);
+omega_est_time = zeros(1,n_iter);
+x_tilde_est_time = zeros(1,n_iter);
+sdp_solve_time = zeros(1,n_iter);
 
 if strcmp(init_method, 'spec')
     H_hat = (x' * x)/n;
@@ -140,8 +140,12 @@ for iter = 1:n_iter
     n_g1_now = sum(cluster_est_now == 1);
     n_g2_now = sum(cluster_est_now ==-1);
 
-    false_discov_top5(iter) = strjoin(arrayfun(@(x) num2str(x), false_discov_idx_sorted(1:5) ,'UniformOutput',false),'_')
-    fprintf("right : (%i)\n", sum(s_hat(1:s)))
+    top_num = min(5, length(false_discov_idx_sorted));
+    if top_num > 0
+        false_discov_top5(iter) = strjoin(arrayfun(@(x) num2str(x), false_discov_idx_sorted(1:top_num) ,'UniformOutput',false),'_')
+    end
+    
+        fprintf("right : (%i)\n", sum(s_hat(1:s)))
     fprintf("wrong : (%i)\n", sum(s_hat(s+1:end)))  
     false_discov(iter) = sum(s_hat(1:s));
     true_discov(iter) = sum(s_hat(s+1:end));
@@ -157,3 +161,12 @@ for iter = 1:n_iter
     % end one iteration
 end % end of iterative algorithm
 cluster_acc = cluster_acc_now
+cluster_acc
+norm_fro
+supp_diff
+false_discov
+true_discov
+false_discov_top5
+omega_est_time
+x_tilde_est_time
+sdp_solve_time
