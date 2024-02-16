@@ -1,9 +1,9 @@
 rho = 5;
 p = 9000
-Delta = 4
-path_result = '/Users/jmmoon/Documents/GitHub/sparse_kmeans/experiment/14_02_16_2024/AR1_discovery/rho5_Delta4_p9000.csv'
-path_false_discov = '/Users/jmmoon/Documents/GitHub/sparse_kmeans/experiment/14_02_16_2024/AR1_discovery/rho5_Delta4_p9000_false_discov.csv'
-path_true_discov  = '/Users/jmmoon/Documents/GitHub/sparse_kmeans/experiment/14_02_16_2024/AR1_discovery/rho5_Delta4_p9000_true_discov.csv'
+Delta = 5
+path_result = '/Users/jmmoon/Documents/GitHub/sparse_kmeans/experiment/14_02_16_2024/AR1_discovery/rho5_Delta5_p9000.csv'
+path_false_discov = '/Users/jmmoon/Documents/GitHub/sparse_kmeans/experiment/14_02_16_2024/AR1_discovery/rho5_Delta5_p9000_false_discov.csv'
+path_true_discov  = '/Users/jmmoon/Documents/GitHub/sparse_kmeans/experiment/14_02_16_2024/AR1_discovery/rho5_Delta5_p9000_true_discov.csv'
 
 rho = rho /10
 
