@@ -1,10 +1,15 @@
-function cluster_acc = iterative_kmeans_spectral_init_covar_ver_01_26_24(x, Sigma, K, n_iter, cluster_true, init_method, verbose, sdp_method) 
+function [cluster_acc, false_discov, true_discov] = iterative_kmeans_spectral_init_covar_ver_02_16_24(x, K, n_iter, Sigma, s, cluster_true, init_method, verbose, sdp_method) 
+
+ 
 % Sigma = known covariance matrix
 %data generation
 % created 01/26/2024
 % modified 02/06/2024
+% modified 02/16/2024
 init_method
 sdp_method
+false_discov = repelem(0,n_iter);
+true_discov = repelem(0,n_iter);
 % spectral initialization
 n = size(x,2);
 p = size(x,1);
@@ -98,7 +103,9 @@ for iter = 1:n_iter
         fprintf("normalized difference top 10 max: (%f) * sigma \n", top_10)
         fprintf("n_{G1}_now = %i, n_{G1}_now = %i\n", n_g1_now, n_g2_now )
         fprintf("acc_now= %f", cluster_acc_now);
-        disp(find(s_hat))
+        %disp(find(s_hat))
+    false_discov(iter) = sum(s_hat(s+1:end))
+    true_discov(iter) =  sum(s_hat(1:s))
     end
     % end one iteration
 end % end of iterative algorithm
