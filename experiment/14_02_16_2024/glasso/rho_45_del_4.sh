@@ -3,7 +3,7 @@
 #
 
 project_name="sparse_kmeans"
-meeting_date="13_02_09_2024"
+meeting_date="14_02_16_2024"
 experiment_name="glasso"
 extension_code="m"
 extension_result="csv"
@@ -18,7 +18,7 @@ echo "code_dir = ${code_dir}"
 
 rho=45
 Delta=4
-for p in 360
+for p in 100 200 300 400
 do
     #filename of code
     filename_code="rho${rho}_Delta${Delta}_p${p}"
@@ -27,18 +27,37 @@ do
     #filename of result
     path_result="${code_dir}/result/${filename_code}.${extension_result}"
 
+    #python file
+    touch ${code_dir}/temp_py
+    cat ${code_dir}/glasso_skeleton.py                                           >> ${code_dir}/temp_py
+    echo "data = np.load('${code_dir}/${filename_code}.pkl', allow_pickle=True)" >> ${code_dir}/temp_py
+    echo "model.fit(data)"                                                       >> ${code_dir}/temp_py
+    echo "savedict = {'Omega_est_now' : model.precision_}"                       >> ${code_dir}/temp_py
+    echo "sio.savemat('${code_dir}/${filename_code}.mat', savedict)"             >> ${code_dir}/temp_py
+    mv ${code_dir}/temp_py ${code_dir}/${filename_code}.py
+
+
+
 
 
     # code
     touch ${code_dir}/temp_code
+    echo "pkl_path = '${code_dir}/${filename_code}.pkl'"  >> ${code_dir}/temp_code
+    echo "mat_path = '${code_dir}/${filename_code}.mat'" >> ${code_dir}/temp_code
+    echo "ebic_path = '${code_dir}/${filename_code}.py'" >> ${code_dir}/temp_code
     echo "rho = ${rho};" >> ${code_dir}/temp_code
     echo "p = ${p}" >> ${code_dir}/temp_code
     echo "Delta = ${Delta}" >> ${code_dir}/temp_code
-    echo "path_result = '${path_result}'" >> ${code_dir}/temp_code
-
+    echo "path_result = '${path_result}'" >> ${code_dir}/temp_code 
+    for param in normfromat suppdiff falsediscov truediscov falsediscovtop5 omegaesttime xtildeesttime sdpsolvetime
+    do
+        echo "path_${param}= '${code_dir}/result/${filename_code}_${param}.${extension_result}'" >> ${code_dir}/temp_code
+    done
+    path_result="${code_dir}/result/${filename_code}.${extension_result}"
     cat ${code_dir}/skeleton_code.${extension_code} >> ${code_dir}/temp_code
     mv ${code_dir}/temp_code ${code_dir}/${filename_code}.${extension_code}
 
+    
 
 
     # job
