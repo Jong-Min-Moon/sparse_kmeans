@@ -1,4 +1,4 @@
-function cluster_acc = iterative_kmeans_spectral_init_glasso(x, K, n_iter, Omega, s, cluster_true, init_method, verbose, sdp_method) 
+function cluster_acc = iterative_kmeans_spectral_init_ISEE(x, K, n_iter, Omega, s, cluster_true, init_method, verbose, sdp_method) 
 % Sigma = UNknown covariance matrix
 %data generation
 % created 01/26/2024
@@ -67,27 +67,79 @@ for iter = 1:n_iter
     end
     
     % covariance estimation
-    X_g1_now = x(:, (cluster_est_now ==  1)); 
-    X_g2_now = x(:, (cluster_est_now ==  -1));
-    
-    X_mean_g1_now = mean(X_g1_now, 2);
-    X_mean_g2_now = mean(X_g2_now, 2);
-    data_py = [(X_g1_now - X_mean_g1_now) (X_g2_now - X_mean_g2_now)]';
-    data_scaled = data_py./(std(data_py,0,1));
-    mat2np(data_scaled, 'data_scaled.pkl', 'float64')
-    command = "/home/jongmin/miniconda3/envs/kmeans" + "/bin/" + "python glasso_ebiec.py"
-    tic
-    system(command)
-    toc
-    load('cov.mat')
-    Omega_est_now(1:5,1:5)
-    Omega_est_now_diag = diag(Omega_est_now);
-    norm(Omega - Omega_est_now, "fro")
-    count_support_diff(Omega, Omega_est_now)
+    cluter_code = [1,-1];
+n_regression = floor(p/2)
+Omega_diag_hat_even = repelem(0,p/2);
+Omega_diag_hat_odd = repelem(0,p/2);
+mean_now_even = repelem(p/2,n);
+mean_now_odd = repelem(p/2,n);
+noise_now_even = repelem(p,n);
+noise_now_odd = repelem(p,n);
+parfor i = 1 : n_regression
+    alpha_Al = zeros([2,2]);
+    E_Al = zeros([2,n]);
+
+    for cluster = 1:2
+        clutser_code_now = cluter_code(cluster);
+        g_now = cluster_est_now == clutser_code_now;
+        x_noisy_g_now = x_noisy(:,g_now);
+        for j = 1:2
+            boolean_now = (1:p) == (2*(i-1)+j);
+            response_now = x_noisy_g_now(boolean_now,:)';
+            predictor_now = x_noisy_g_now(~boolean_now, :)';
+            model_lasso = glm_gaussian(response_now, predictor_now); 
+            fit = penalized(model_lasso, @p_lasso);
+            AIC = goodness_of_fit('aic', fit);
+            [_, min_aic_idx] = min(AIC);
+            beta = fit.beta(:,min_aic_idx);
+            slope = beta(2:end);
+            intercept = beta(1);
+            E_Al(j,g_now) = response_now - intercept- predictor_now * slope;
+            alpha_Al(j, cluster) = intercept;
+        end
+
+        
+        
+        
+        
+    end
+    %estimation
+    Omega_hat_Al = inv(E_Al*E_Al')*n; % 2 x 2
+    diag_Omega_hat_Al = diag(Omega_hat_Al);
+    noise_Al = Omega_hat_Al*E_Al; % 2 * n
+    mean_Al = zeros([2,n]);
+    for cluster = 1:2
+        clutser_code_now = cluter_code(cluster);
+        g_now = cluster_est_now == clutser_code_now;
+        n_now = sum(g_now);
+        mean_Al(:,g_now) = repmat(Omega_hat_Al*alpha_Al(:,cluster), [1,n_now]);
+    end
+    %Omega_diag_hat( output_index ) = diag(Omega_hat_Al);
+    k = i+1;
+    Omega_diag_hat_odd( i ) = diag_Omega_hat_Al(1);
+    Omega_diag_hat_even( i) = diag_Omega_hat_Al(2);
+    mean_now_odd( i,:) = mean_Al(1,:);
+    mean_now_even( i,:) = mean_Al(2,:);
+    noise_now_odd( i,:) = noise_Al(1,:);
+    noise_now_even( i,:) = noise_Al(2,:);
+end
+even_idx =mod((1:p),2)==0;
+odd_idx = mod((1:p),2)==1;
+Omega_diag_hat = repelem(0,p)
+Omega_diag_hat(odd_idx) = Omega_diag_hat_odd;
+Omega_diag_hat(even_idx) = Omega_diag_hat_even;
+
+mean_now = repelem(p,n);
+mean_now(odd_idx,:) = mean_now_odd;
+mean_now(even_idx,:) = mean_now_even;
+noise_now(odd_idx,:) = noise_now_odd;
+noise_now(even_idx,:) = noise_now_even;
+x_tilde_now = mean_now + noise_now;
+
 
     % 2. threshold the data matrix
-    signal_est_now = Omega_est_now* (X_mean_g1_now - X_mean_g2_now);
-    abs_diff = abs(signal_est_now)./sqrt(Omega_est_now_diag) * sqrt( n_g1_now*n_g2_now/n );
+    signal_est_now = mean( x_tilde_now(:, cluster_est_now==1), 2) - mean( x_tilde_now(:, cluster_est_now==-1), 2)
+    abs_diff = abs(signal_est_now)./sqrt(Omega_diag_hat) * sqrt( n_g1_now*n_g2_now/n );
     [abs_diff_sort, abs_diff_sort_idx]= sort(abs_diff, "descend");
     top_10 =  abs_diff_sort(1:10);
     top_10_idx = abs_diff_sort_idx(1:10);
@@ -102,13 +154,22 @@ for iter = 1:n_iter
         cluster_acc = 0.5;
         break
     end
+
+    %estimate sigma hat s
+    X_g1_now = x(:, (cluster_est_now ==  1)); 
+    X_g2_now = x(:, (cluster_est_now ==  -1)); 
+    X_mean_g1_now = mean(X_g1_now, 2);
+    X_mean_g2_now = mean(X_g2_now, 2);
+    data_py = [(X_g1_now - X_mean_g1_now) (X_g2_now - X_mean_g2_now)]';
     data_filtered = data_py(:,s_hat);
     Sigma_hat_s_hat_now = data_filtered' * data_filtered/(n-1);
-    X_tilde_now = Omega_est_now * x;
-    X_tilde_now  = X_tilde_now(s_hat,:);  
+
+
+ 
+    x_tilde_now_s  = x_tilde_now(s_hat,:);  
 
     tic
-    Z_now = kmeans_sdp( X_tilde_now' * Sigma_hat_s_hat_now * X_tilde_now/ n, K);
+    Z_now = kmeans_sdp( x_tilde_now_s' * Sigma_hat_s_hat_now * x_tilde_now_s/ n, K);
     toc
     
     % final thresholding
