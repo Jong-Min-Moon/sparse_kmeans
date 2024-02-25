@@ -1,8 +1,7 @@
-function [] = ISEE_bicluster(x_noisy, K, n_iter, Omega, s, cluster_true, init_method, verbose, sdp_method) 
+function [mean_now, noise_now, Omega_diag_hat] = ISEE_bicluster(x_noisy, cluster_est_now) 
 
 p = size(x_noisy,1);
 n = size(x_noisy,2);
-cluter_code = [1,-1];
 n_regression = floor(p/2);
 
 Omega_diag_hat_even = repelem(0,p/2);
@@ -18,22 +17,13 @@ noise_now_odd = zeros(p/2,n);
 noise_now = zeros(p,n);
 
 
-
-
-
-
-cluster_est_now = cluster_true;
-
-
-
-tic
 parfor i = 1 : n_regression
     alpha_Al = zeros([2,2]);
     E_Al = zeros([2,n]);
 
     for cluster = 1:2
-        clutser_code_now = cluter_code(cluster);
-        g_now = cluster_est_now == clutser_code_now;
+        cluster_now = sign(cluster/2-0.7);
+        g_now = (cluster_est_now == cluster_now);
         x_noisy_g_now = x_noisy(:,g_now);
         predictor_boolean = ((1:p) == (2*(i-1)+1)) | ((1:p) == (2*(i-1)+2));
         predictor_now = x_noisy_g_now(~predictor_boolean, :)';
@@ -51,20 +41,15 @@ parfor i = 1 : n_regression
             E_Al(j,g_now) = response_now - intercept- predictor_now * slope;
             alpha_Al(j, cluster) = intercept;
         end
-    
-        
-        
-        
     end
     %estimation
     Omega_hat_Al = inv(E_Al*E_Al')*n;% 2 x 2
-    disp(Omega_hat_Al)
     diag_Omega_hat_Al = diag(Omega_hat_Al);
     noise_Al = Omega_hat_Al*E_Al; % 2 * n
     mean_Al = zeros([2,n]);
     for cluster = 1:2
-        clutser_code_now = cluter_code(cluster);
-        g_now = cluster_est_now == clutser_code_now;
+        cluster_now = sign(cluster/2-0.7);
+        g_now = cluster_est_now == cluster_now;
         n_now = sum(g_now);
         mean_Al(:,g_now) = repmat(Omega_hat_Al*alpha_Al(:,cluster), [1,n_now]);
     end
@@ -92,8 +77,6 @@ mean_now(odd_idx,:) = mean_now_odd;
 mean_now(even_idx,:) = mean_now_even;
 noise_now(odd_idx,:) = noise_now_odd;
 noise_now(even_idx,:) = noise_now_even;
-x_tilde_now = mean_now + noise_now;
 
 
 
-(x_tilde_now' - X_tilde_true)./X_tilde_true

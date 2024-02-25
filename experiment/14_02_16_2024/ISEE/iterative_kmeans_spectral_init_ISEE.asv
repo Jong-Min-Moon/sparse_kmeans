@@ -71,19 +71,18 @@ for iter = 1:n_iter
         cluster_acc = 0.5;
         return 
     end
-    tic
-    [mean_now, noise_now, Omega_diag_hat] = ISEE_bicluster(x, cluster_est_now);
-    omega_est_time(iter) = toc
+    
+    [mean_now, noise_now] = ISEE_bicluster(x_noisy, cluster_est_now) 
     x_tilde_now = mean_now + noise_now;
     diff_x_tilde(iter) = norm(x_tilde_now-Omega_x, "fro")
     % 2. threshold the data matrix
 
-    %signal_est_now = mean( mean_now(:, cluster_est_now==1), 2) - mean( mean_now(:, cluster_est_now==-1), 2);
-    %abs_diff = signal_est_now;
-    %thres = 0.1;
+    signal_est_now = mean( mean_now(:, cluster_est_now==1), 2) - mean( mean_now(:, cluster_est_now==-1), 2);
+    abs_diff = signal_est_now;
+    thres = 0.1;
 
-    signal_est_now = mean( x_tilde_now(:, cluster_est_now==1), 2) - mean( x_tilde_now(:, cluster_est_now==-1), 2);   
-    abs_diff = abs(signal_est_now')./sqrt(Omega_diag_hat) * sqrt( n_g1_now*n_g2_now/n );
+    %signal_est_now = mean( x_tilde_now(:, cluster_est_now==1), 2) - mean( x_tilde_now(:, cluster_est_now==-1), 2);   
+    %abs_diff = abs(signal_est_now')./sqrt(Omega_diag_hat) * sqrt( n_g1_now*n_g2_now/n );
     [abs_diff_sort, abs_diff_sort_idx]= sort(abs_diff, "descend");
     discov_idx_sorted = abs_diff_sort_idx(abs_diff_sort>thres);
     false_discov_idx_sorted = discov_idx_sorted(discov_idx_sorted>s);

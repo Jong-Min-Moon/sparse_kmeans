@@ -1,18 +1,22 @@
-pkl_path = '/Users/jmmoon/Documents/GitHub/sparse_kmeans/experiment/14_02_16_2024/glasso/rho45_Delta4_p400.pkl'
-mat_path = '/Users/jmmoon/Documents/GitHub/sparse_kmeans/experiment/14_02_16_2024/glasso/rho45_Delta4_p400.mat'
-ebic_path = '/Users/jmmoon/Documents/GitHub/sparse_kmeans/experiment/14_02_16_2024/glasso/rho45_Delta4_p400.py'
-rho = 20;
-p = 300
+rho = 45;
 Delta = 4
-path_result = '/Users/jmmoon/Documents/GitHub/sparse_kmeans/experiment/14_02_16_2024/glasso/result/rho45_Delta4_p400.csv'
-path_normfromat= '/Users/jmmoon/Documents/GitHub/sparse_kmeans/experiment/14_02_16_2024/glasso/result/rho45_Delta4_p400_normfromat.csv'
-path_suppdiff= '/Users/jmmoon/Documents/GitHub/sparse_kmeans/experiment/14_02_16_2024/glasso/result/rho45_Delta4_p400_suppdiff.csv'
-path_falsediscov= '/Users/jmmoon/Documents/GitHub/sparse_kmeans/experiment/14_02_16_2024/glasso/result/rho45_Delta4_p400_falsediscov.csv'
-path_truediscov= '/Users/jmmoon/Documents/GitHub/sparse_kmeans/experiment/14_02_16_2024/glasso/result/rho45_Delta4_p400_truediscov.csv'
-path_falsediscovtop5= '/Users/jmmoon/Documents/GitHub/sparse_kmeans/experiment/14_02_16_2024/glasso/result/rho45_Delta4_p400_falsediscovtop5.csv'
-path_omegaesttime= '/Users/jmmoon/Documents/GitHub/sparse_kmeans/experiment/14_02_16_2024/glasso/result/rho45_Delta4_p400_omegaesttime.csv'
-path_xtildeesttime= '/Users/jmmoon/Documents/GitHub/sparse_kmeans/experiment/14_02_16_2024/glasso/result/rho45_Delta4_p400_xtildeesttime.csv'
-path_sdpsolvetime= '/Users/jmmoon/Documents/GitHub/sparse_kmeans/experiment/14_02_16_2024/glasso/result/rho45_Delta4_p400_sdpsolvetime.csv'
+p = 400
+
+
+
+pkl_path = '/Users/jmmoon/Documents/GitHub/sparse_kmeans/experiment/14_02_16_2024/ISEE/rho45_Delta4_p400.pkl'
+mat_path = '/Users/jmmoon/Documents/GitHub/sparse_kmeans/experiment/14_02_16_2024/ISEE/rho45_Delta4_p400.mat'
+ebic_path = '/Users/jmmoon/Documents/GitHub/sparse_kmeans/experiment/14_02_16_2024/ISEE/rho45_Delta4_p400.py'
+
+path_result = '/Users/jmmoon/Documents/GitHub/sparse_kmeans/experiment/14_02_16_2024/ISEE/result/rho45_Delta4_p400.csv'
+path_normfromat= '/Users/jmmoon/Documents/GitHub/sparse_kmeans/experiment/14_02_16_2024/ISEE/result/rho45_Delta4_p400_normfromat.csv'
+path_suppdiff= '/Users/jmmoon/Documents/GitHub/sparse_kmeans/experiment/14_02_16_2024/ISEE/result/rho45_Delta4_p400_suppdiff.csv'
+path_falsediscov= '/Users/jmmoon/Documents/GitHub/sparse_kmeans/experiment/14_02_16_2024/ISEE/result/rho45_Delta4_p400_falsediscov.csv'
+path_truediscov= '/Users/jmmoon/Documents/GitHub/sparse_kmeans/experiment/14_02_16_2024/ISEE/result/rho45_Delta4_p400_truediscov.csv'
+path_falsediscovtop5= '/Users/jmmoon/Documents/GitHub/sparse_kmeans/experiment/14_02_16_2024/ISEE/result/rho45_Delta4_p400_falsediscovtop5.csv'
+path_omegaesttime= '/Users/jmmoon/Documents/GitHub/sparse_kmeans/experiment/14_02_16_2024/ISEE/result/rho45_Delta4_p400_omegaesttime.csv'
+path_xtildeesttime= '/Users/jmmoon/Documents/GitHub/sparse_kmeans/experiment/14_02_16_2024/ISEE/result/rho45_Delta4_p400_xtildeesttime.csv'
+path_sdpsolvetime= '/Users/jmmoon/Documents/GitHub/sparse_kmeans/experiment/14_02_16_2024/ISEE/result/rho45_Delta4_p400_sdpsolvetime.csv'
 
 %p=
 %Delta=
@@ -24,14 +28,14 @@ rho = rho /100
 
 
 s = 10;
-n_rep = 20;
+n_rep = 100;
 
 
 n=500;
 K=2;
 rounding = 1e-4;
 cluster_true = [repelem(1,n/2), repelem(-1,n/2)];
-n_iter = 4; 
+n_iter = 6; 
 
 
 
@@ -42,17 +46,8 @@ n_iter = 4;
 
 
 
-Omega = zeros([p,p]);
+Omega = eye(p) + diag(rho*ones(p-1,1), 1) + diag(rho*ones(p-1,1), -1);
 
-for j=1:p
-    for l = 1:p
-        if j==l
-            Omega(j,l) = 1;
-        elseif abs(j-l) ==1
-            Omega(j,l) = rho;
-        end
-    end
-end
 
 
 
