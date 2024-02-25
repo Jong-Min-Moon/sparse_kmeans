@@ -71,87 +71,19 @@ for iter = 1:n_iter
         cluster_acc = 0.5;
         return 
     end
-    
-    cluter_code = [1,-1];
-n_regression = floor(p/2)
-Omega_diag_hat_even = repelem(0,p/2);
-Omega_diag_hat_odd = repelem(0,p/2);
-mean_now_even = repelem(p/2,n);
-mean_now_odd = repelem(p/2,n);
-noise_now_even = repelem(p,n);
-noise_now_odd = repelem(p,n);
-tic
-parfor i = 1 : n_regression
-    alpha_Al = zeros([2,2]);
-    E_Al = zeros([2,n]);
-
-    for cluster = 1:2
-        clutser_code_now = cluter_code(cluster);
-        g_now = cluster_est_now == clutser_code_now;
-        x_noisy_g_now = x(:,g_now);
-        for j = 1:2
-            boolean_now = (1:p) == (2*(i-1)+j);
-            response_now = x_noisy_g_now(boolean_now,:)';
-            predictor_now = x_noisy_g_now(~boolean_now, :)';
-            model_lasso = glm_gaussian(response_now, predictor_now); 
-            fit = penalized(model_lasso, @p_lasso);
-            AIC = goodness_of_fit('aic', fit);
-            [min_aic, min_aic_idx] = min(AIC);
-            beta = fit.beta(:,min_aic_idx);
-            slope = beta(2:end);
-            intercept = beta(1);
-            E_Al(j,g_now) = response_now - intercept- predictor_now * slope;
-            alpha_Al(j, cluster) = intercept;
-        end
-
-        
-        
-        
-        
-    end
-    %estimation
-    Omega_hat_Al = inv(E_Al*E_Al')*n; % 2 x 2
-    diag_Omega_hat_Al = diag(Omega_hat_Al);
-    noise_Al = Omega_hat_Al*E_Al; % 2 * n
-    mean_Al = zeros([2,n]);
-    for cluster = 1:2
-        clutser_code_now = cluter_code(cluster);
-        g_now = cluster_est_now == clutser_code_now;
-        n_now = sum(g_now);
-        mean_Al(:,g_now) = repmat(Omega_hat_Al*alpha_Al(:,cluster), [1,n_now]);
-    end
-    %Omega_diag_hat( output_index ) = diag(Omega_hat_Al);
-    k = i+1;
-    Omega_diag_hat_odd( i ) = diag_Omega_hat_Al(1);
-    Omega_diag_hat_even( i) = diag_Omega_hat_Al(2);
-    mean_now_odd( i,:) = mean_Al(1,:);
-    mean_now_even( i,:) = mean_Al(2,:);
-    noise_now_odd( i,:) = noise_Al(1,:);
-    noise_now_even( i,:) = noise_Al(2,:);
-end
-toc
-even_idx =mod((1:p),2)==0;
-odd_idx = mod((1:p),2)==1;
-Omega_diag_hat = repelem(0,p);
-Omega_diag_hat(odd_idx) = Omega_diag_hat_odd;
-Omega_diag_hat(even_idx) = Omega_diag_hat_even;
-diff_omega_diag(iter) = norm(Omega_diag_hat - diag(Omega))
-
-mean_now = repelem(p,n);
-mean_now(odd_idx,:) = mean_now_odd;
-mean_now(even_idx,:) = mean_now_even;
-noise_now(odd_idx,:) = noise_now_odd;
-noise_now(even_idx,:) = noise_now_even;
-x_tilde_now = mean_now + noise_now;
-diff_x_tilde(iter) = norm(x_tilde_now-Omega_x, "fro")
+    tic
+    [mean_now, noise_now, Omega_diag_hat] = ISEE_bicluster(x, cluster_est_now);
+    omega_est_time(iter) = toc
+    x_tilde_now = mean_now + noise_now;
+    diff_x_tilde(iter) = norm(x_tilde_now-Omega_x, "fro")
     % 2. threshold the data matrix
 
-    signal_est_now = mean( mean_now(:, cluster_est_now==1), 2) - mean( mean_now(:, cluster_est_now==-1), 2);
-    abs_diff = signal_est_now;
-    thres = 0.1;
+    %signal_est_now = mean( mean_now(:, cluster_est_now==1), 2) - mean( mean_now(:, cluster_est_now==-1), 2);
+    %abs_diff = signal_est_now;
+    %thres = 0.1;
 
-    %signal_est_now = mean( x_tilde_now(:, cluster_est_now==1), 2) - mean( x_tilde_now(:, cluster_est_now==-1), 2);   
-    %abs_diff = abs(signal_est_now')./sqrt(Omega_diag_hat) * sqrt( n_g1_now*n_g2_now/n );
+    signal_est_now = mean( x_tilde_now(:, cluster_est_now==1), 2) - mean( x_tilde_now(:, cluster_est_now==-1), 2);   
+    abs_diff = abs(signal_est_now')./sqrt(Omega_diag_hat) * sqrt( n_g1_now*n_g2_now/n );
     [abs_diff_sort, abs_diff_sort_idx]= sort(abs_diff, "descend");
     discov_idx_sorted = abs_diff_sort_idx(abs_diff_sort>thres);
     false_discov_idx_sorted = discov_idx_sorted(discov_idx_sorted>s);
