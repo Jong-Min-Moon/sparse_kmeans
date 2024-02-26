@@ -1,7 +1,7 @@
 
-%p=
+p=
 %Delta=
-%rho = 
+rho = 45
 rho = rho /100
 addpath(genpath('/mnt/nas/users/user213/sparse_kmeans'))
 feature("numcores")
@@ -11,18 +11,18 @@ maxNumCompThreads(4);
 
 
 s = 10;
-n_rep = 100;
+n_rep = 20;
 
 
 n=500;
 K=2;
 rounding = 1e-4;
 cluster_true = [repelem(1,n/2), repelem(-1,n/2)];
-n_iter = 6; 
+n_iter = 4; 
 
 
 
-
+clustering_acc_mat = repelem(0, n_rep );
 
 
 
@@ -54,7 +54,7 @@ mu_2 = mu_0;
 beta = Omega * (mu_1-mu_2);
 fprintf( "delta confirmed: %f", sqrt( (mu_1-mu_2)' * beta ))
 norm((mu_1-mu_2))
-
+tic
 
 
 
@@ -64,38 +64,19 @@ mu_2_mat = repmat(mu_2, 1, n/2);%each column is one observation
 x_noiseless = [ mu_1_mat  mu_2_mat ];%each column is one observation 
 x_noisy = x_noiseless +  mvnrnd(zeros(p,1), Sigma, n)';
 
-
-clustering_acc_mat = zeros(n_rep);
-norm_fro_mat = zeros(n_rep, n_iter);
-supp_diff = zeros(n_rep, n_iter);
-false_discov = zeros(n_rep, n_iter);
-true_discov = zeros(n_rep, n_iter);
-false_discov_top5 = repmat("0", [n_rep, n_iter]);
-omega_est_time = zeros(n_rep, n_iter);
-x_tilde_est_time = zeros(n_rep, n_iter);
-sdp_solve_time = zeros(n_rep, n_iter);
-
 for j = 1:n_rep
     fprintf("iteration: (%i)th \n\n", j)
-    rng(j);
-
+    rng(j)
+    tic
     %data generation
+    
     x_noisy = x_noiseless +  mvnrnd(zeros(p,1), Sigma, n)';%each column is one observation
-    [clustering_acc_mat(j), norm_fro_mat(j,:), supp_diff(j,:), false_discov(j,:), true_discov(j,:), false_discov_top5(j,:), omega_est_time(j,:), x_tilde_est_time(j,:), sdp_solve_time(j,:)]= iterative_kmeans_spectral_init_glasso(x_noisy, K,n_iter, Omega, s, cluster_true, 'hc', true, 'basic', "/opt/miniconda/bin", "/mnt/nas/users/user213/.conda/envs/kmeans", pkl_path, mat_path, ebic_path);
+    clustering_acc_mat(j) = iterative_kmeans_spectral_init_glasso(x_noisy, K, s,n_iter, cluster_true, 'hc', false, 'basic');
     acc_so_far =  clustering_acc_mat(1:j);
     fprintf( "mean acc so far: %f\n",  mean( acc_so_far ) );
 
-
+    toc
         % iterate        
 end
 
 csvwrite(path_result, clustering_acc_mat)
-csvwrite(path_normfromat, norm_fro_mat)
-csvwrite(path_suppdiff, supp_diff)
-csvwrite(path_falsediscov, false_discov)
-csvwrite(path_truediscov, true_discov)
-csvwrite(path_falsediscovtop5, false_discov_top5)
-csvwrite(path_omegaesttime, omega_est_time)
-csvwrite(path_xtildeesttime, x_tilde_est_time)
-csvwrite(sdp_solve_time, path_sdpsolvetime)
-

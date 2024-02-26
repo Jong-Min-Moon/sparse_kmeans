@@ -118,7 +118,11 @@ for iter = 1:n_iter
 
     tic
     data_filtered = data_py(:,s_hat);
+<<<<<<< HEAD
+    Sigma_hat_s_hat_now = data_filtered' * data_filtered/(n-1);
+=======
     Sigma_hat_s_hat_now = data_filtered' * data_filtered / (n-1);
+>>>>>>> ae554d7645a21218e49e9cddc69cca5c92bed035
     X_tilde_now = Omega_est_now * x;
     X_tilde_now  = X_tilde_now(s_hat,:);  %feature selection
     x_tilde_est_time(iter) = toc;
