@@ -5,7 +5,7 @@
 rho = rho /100
 addpath(genpath('/mnt/nas/users/user213/sparse_kmeans'))
 feature("numcores")
-maxNumCompThreads(2);
+maxNumCompThreads(4);
 
 
 
