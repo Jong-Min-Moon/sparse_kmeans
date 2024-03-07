@@ -1,19 +1,33 @@
+pc = parallel.cluster.Local;
+job_folder = fullfile('/scratch1/',getenv('USER'),getenv('SLURM_JOB_ID'));
+mkdir(job_folder);
+set(pc,'JobStorageLocation',job_folder);
+ncores = str2num(getenv('SLURM_CPUS_PER_TASK')) - 1;
+pool = parpool(pc,ncores)
+
 rho = 20;
 Delta = 5
 p = 400
 
 cluster_home = '/home1/jongminm'
-addpath(genpath( strcat(cluster_home, '/sparse_kmeans')))
+project_name = 'sparse_kmeans'
+path_project = strcat(cluster_home, '/',project_name);
+addpath(genpath( path_project ))
+meeting_date = '17_03_08_2024'
+experiment_name = 'ISEE_noisy'
+path_result = strcat(path_project, '/', meeting_date, '/', experiment_name, 'result')
+try_name = strcat('rho', string(rho), '_Delta', string(Delta), '_p', string(p))
+path_file_noext = strcat(path_result, '/', try_name)
 
-path_result = strcat( '/home1/jongminm', '/sparse_kmeans/experiment/14_02_16_2024/ISEE/result/rho20_Delta5_p400.csv')
-path_normfromat= strcat( '/home1/jongminm', '/sparse_kmeans/experiment/14_02_16_2024/ISEE/result/rho20_Delta5_p400_normfromat.csv')
-path_suppdiff= strcat( '/home1/jongminm', '/sparse_kmeans/experiment/14_02_16_2024/ISEE/result/rho20_Delta5_p400_suppdiff.csv')
-path_falsediscov= strcat( '/home1/jongminm', '/sparse_kmeans/experiment/14_02_16_2024/ISEE/result/rho20_Delta5_p400_falsediscov.csv')
-path_truediscov= strcat( '/home1/jongminm', '/sparse_kmeans/experiment/14_02_16_2024/ISEE/result/rho20_Delta5_p400_truediscov.csv')
-path_falsediscovtop5= strcat( '/home1/jongminm', '/sparse_kmeans/experiment/14_02_16_2024/ISEE/result/rho20_Delta5_p400_falsediscovtop5.csv')
-path_omegaesttime= strcat( '/home1/jongminm', '/sparse_kmeans/experiment/14_02_16_2024/ISEE/result/rho20_Delta5_p400_omegaesttime.csv')
-path_xtildeesttime= strcat( '/home1/jongminm', '/sparse_kmeans/experiment/14_02_16_2024/ISEE/result/rho20_Delta5_p400_xtildeesttime.csv')
-path_sdpsolvetime= strcat( '/home1/jongminm', '/sparse_kmeans/experiment/14_02_16_2024/ISEE/result/rho20_Delta5_p400_sdpsolvetime.csv')
+path_result = strcat(path_file_noext, '.csv')
+path_normfromat= strcat( path_file_noext, '_normfromat.csv')
+path_suppdiff= strcat( path_file_noext, '_suppdiff.csv')
+path_falsediscov= strcat( path_file_noext, '_falsediscov.csv')
+path_truediscov= strcat( path_file_noext, '_truediscov.csv')
+path_falsediscovtop5= strcat( path_file_noext, '_falsediscovtop5.csv')
+path_omegaesttime= strcat( path_file_noext, '_omegaesttime.csv')
+path_xtildeesttime= strcat( path_file_noext, '_xtildeesttime.csv')
+path_sdpsolvetime= strcat( path_file_noext, '_sdpsolvetime.csv')
 
 
 rho = rho /100

@@ -1,4 +1,4 @@
-function [mean_now, noise_now, Omega_diag_hat] = ISEE_bicluster(x_noisy, cluster_est_now) 
+function [mean_now, noise_now, Omega_diag_hat'] = ISEE_bicluster(x_noisy, cluster_est_now) 
 
 p = size(x_noisy,1);
 n = size(x_noisy,2);
@@ -62,7 +62,7 @@ parfor i = 1 : n_regression
     noise_now_odd( i,:) = noise_Al(1,:);
     noise_now_even( i,:) = noise_Al(2,:);
 end
-toc
+%toc
 
 
 
