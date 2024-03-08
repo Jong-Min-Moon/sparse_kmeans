@@ -20,32 +20,43 @@ norm((mu_1-mu_2))
 
 mu_1_mat = repmat(mu_1,  1, n/2); %each column is one observation
 mu_2_mat = repmat(mu_2, 1, n/2);%each column is one observation
-x_noiseless = [ mu_1_mat  mu_2_mat ];%each column is one observation 
-
-
+x_noiseless = [ mu_1_mat  mu_2_mat ];%each column is one observation
 rng(rep)
+x_noisy = x_noiseless +  mvnrnd(zeros(p,1), Sigma, n)';%data generation. each column is one observation
 
 fprintf("replication: (%i)th \n\n", rep)
 
-%data generation
-x_noisy = x_noiseless +  mvnrnd(zeros(p,1), Sigma, n)';%each column is one observation
-    
-x, K, n_iter, init_method
-[cluster_est, diff_x_tilde, diff_omega_diag, entries_survived, omega_est_time, sdp_solve_time]= iterative_kmeans_ISEE_hpc(x_noisy, K, n_iter, init_method);
-    acc_so_far =  clustering_acc_mat(1:j);
-    fprintf( "mean acc so far: %f\n",  mean( acc_so_far ) );
+[cluster_est_mat, diff_x_tilde, diff_omega_diag, entries_survived, omega_est_time, sdp_solve_time]= iterative_kmeans_ISEE_hpc(x_noisy, K, n_iter, init_method);
 
-
+acc_vec = get_acc(cluster_est_mat)
+fprintf( strcat( "acc =", join(repelem("%f ", length(acc_vec))), "\n"),  acc_vec );
+[discov_true_vec, discov_false_vec] = get_discovery(entries_survived, s);
+discov_true_vec
+discov_false_vec
         % iterate        
-end
 
-csvwrite(path_result, clustering_acc_mat)
-csvwrite(path_normfromat, norm_fro_mat)
-csvwrite(path_suppdiff, supp_diff)
-csvwrite(path_falsediscov, false_discov)
-csvwrite(path_truediscov, true_discov)
-csvwrite(path_falsediscovtop5, false_discov_top5)
-csvwrite(path_omegaesttime, omega_est_time)
-csvwrite(path_xtildeesttime, x_tilde_est_time)
-csvwrite(sdp_solve_time, path_sdpsolvetime)
+import java.util.TimeZone 
+n = now
+ds = datestr(n)
+dt = datetime(ds,'TimeZone',char(TimeZone.getDefault().getID()))
+
+data = table(...
+    repelem(rep, n_iter+1)',...
+    (0:n_iter),...
+    repelem(Delta, n_iter+1)',...
+    repelem(p, n_iter+1)',...
+    repelem(rho, n_iter+1)',...
+    repelem(s, n_iter+1)',...
+    acc_vec,...
+    [0; discov_true_vec],...
+    [0; discov_false_vec],...
+    [0; diff_x_tilde],...
+    [0; diff_omega_diag],...
+    [0; omega_est_time],...
+    [0; sdp_solve_time],...
+    repelem[dt, n_iter+1]),
+'VariableNames', ...
+	["rep", "iter", "sep", "dim", "rho", "sparsity", "acc", "discov_true", "discov_false", "diff_x_tilde", "diff_omega_diag",  "time_isee", "time_SDP", "jobdate"])
+
+
 

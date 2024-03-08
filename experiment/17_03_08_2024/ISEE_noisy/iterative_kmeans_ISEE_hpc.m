@@ -12,7 +12,7 @@ function [cluster_est, diff_x_tilde, diff_omega_diag, entries_survived, omega_es
     omega_est_time   = zeros(n_iter, 1);
     sdp_solve_time   = zeros(n_iter, 1);
     entries_survived = zeros(n_iter, n);
-    cluster_est      = zeros(n_iter, n);
+    cluster_est      = zeros(n_iter+1, n);
     
     %initialization
     cluster_est_now = initialize_bicluster(x, init_method);
