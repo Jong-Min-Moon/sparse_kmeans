@@ -18,7 +18,7 @@ code_dir="${project_dir}/experiment/${meeting_date}/${experiment_name}"
 
 rho=20
 Delta=4
-p=100
+p=300
 
 s=10
 n=500

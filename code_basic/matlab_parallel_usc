@@ -1,0 +1,11 @@
+pc = parallel.cluster.Local;
+job_folder = fullfile('/scratch1/',getenv('USER'),getenv('SLURM_JOB_ID'));
+mkdir(job_folder);
+set(pc,'JobStorageLocation',job_folder);
+ncores = str2num(getenv('SLURM_CPUS_PER_TASK')) - 1;
+pool = parpool(pc,ncores)
+%
+%
+%
+
+

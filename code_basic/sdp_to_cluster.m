@@ -1,4 +1,4 @@
-function cluster_est_now = sdp_to_cluster(Z_now) 
+function cluster_est_now = sdp_to_cluster(Z_now, K) 
 
     [U_sdp,~,~] = svd(Z_now);
     U_top_k = U_sdp(:,1:K);

@@ -1,0 +1,15 @@
+#!/bin/bash
+
+#SBATCH --partition=epyc-64
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=20G
+#SBATCH --time=2:00:00
+echo hello
+
+
+module purge
+module load matlab/2022a
+cd /home1/jongminm/sparse_kmeans/experiment/17_03_08_2024/ISEE_denoise
+matlab -batch rho20_Delta4_p100_rep_22

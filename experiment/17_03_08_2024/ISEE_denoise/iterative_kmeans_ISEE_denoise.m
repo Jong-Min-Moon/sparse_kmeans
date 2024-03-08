@@ -1,9 +1,13 @@
-function [cluster_est, diff_x_tilde, diff_omega_diag, entries_survived, omega_est_time, sdp_solve_time] = iterative_kmeans_ISEE_hpc(x, K, n_iter, Omega, init_method) 
+function [cluster_est, diff_x_tilde, diff_omega_diag, entries_survived, omega_est_time, sdp_solve_time] = iterative_kmeans_ISEE_denoise(x, K, n_iter, Omega, omega_sparsity, init_method) 
 
     % modified 03/07/2024
     n     = size(x,2);
     p     = size(x,1);
-    thres = sqrt(2 * log(p))
+    %thres = sqrt(2 * log(p))
+    lambda = sqrt(log(p)/n);
+    diverging_quantity = sqrt(log(log(n)));
+    thres = diverging_quantity*max(omega_sparsity*lambda^2, lambda)
+
     fprintf("thres=%f", thres)
     Omega_x = Omega * x;
     %saving arrays
@@ -39,8 +43,8 @@ function [cluster_est, diff_x_tilde, diff_omega_diag, entries_survived, omega_es
         diff_omega_diag(iter) = norm(Omega_diag_hat-diag(Omega), "fro")
         
         % 2. threshold the data matrix
-        signal_est_now = mean( x_tilde_now(:, cluster_est_now==1), 2) - mean( x_tilde_now(:, cluster_est_now==-1), 2);   
-        abs_diff = abs(signal_est_now)./sqrt(Omega_diag_hat) * sqrt( n_g1_now*n_g2_now/n );
+        signal_est_now = mean( mean_now(:, cluster_est_now==1), 2) - mean( mean_now(:, cluster_est_now==-1), 2);   
+        abs_diff = abs(signal_est_now);%./sqrt(Omega_diag_hat) * sqrt( n_g1_now*n_g2_now/n );
         s_hat = abs_diff > thres;
         x_tilde_now_s  = x_tilde_now(s_hat,:);
         entries_survived(iter,:) = s_hat;

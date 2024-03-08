@@ -1,6 +1,6 @@
 function cluster_est_now = initialize_bicluster(x, init_method) 
     K = 2;
-
+    n = size(x,2);
     if strcmp(init_method, 'spec')
         H_hat = (x' * x)/n;
         [V,D] = eig(H_hat);

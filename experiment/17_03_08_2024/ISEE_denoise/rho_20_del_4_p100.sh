@@ -4,10 +4,10 @@
 cluster_home="/home1/jongminm"
 project_name="sparse_kmeans"
 meeting_date="17_03_08_2024"
-experiment_name="ISEE_noisy"
+experiment_name="ISEE_denoise"
 extension_code="m"
 extension_result="csv"
-table_name="public.sparse_kmeans_isee"
+table_name="sparse_kmeans_isee_denoise"
 project_dir="${cluster_home}/${project_name}"
 code_dir="${project_dir}/experiment/${meeting_date}/${experiment_name}"
 
@@ -45,6 +45,7 @@ do
     echo "s = ${s}" >> ${code_dir}/temp_code
     echo "n = ${n}" >> ${code_dir}/temp_code
     echo "ii = ${ii}" >> ${code_dir}/temp_code
+    echo "table_name = '${table_name}'" >> ${code_dir}/temp_code
     cat ${code_dir}/skeleton_code.${extension_code} >> ${code_dir}/temp_code
  
     mv ${code_dir}/temp_code ${code_dir}/${filename_code}.${extension_code}
