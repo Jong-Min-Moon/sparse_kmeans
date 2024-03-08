@@ -30,8 +30,8 @@ fprintf("replication: (%i)th \n\n", rep)
 %data generation
 x_noisy = x_noiseless +  mvnrnd(zeros(p,1), Sigma, n)';%each column is one observation
     
-
-[clustering_acc, diff_x_tilde, diff_omega_diag, false_discov, true_discov, false_discov_top5, omega_est_time, sdp_solve_time]= iterative_kmeans_spectral_init_ISEE_hpc(x_noisy, K,n_iter, Omega, s, cluster_true, 'hc', rep, dcon, true);
+x, K, n_iter, init_method
+[cluster_est, diff_x_tilde, diff_omega_diag, entries_survived, omega_est_time, sdp_solve_time]= iterative_kmeans_ISEE_hpc(x_noisy, K, n_iter, init_method);
     acc_so_far =  clustering_acc_mat(1:j);
     fprintf( "mean acc so far: %f\n",  mean( acc_so_far ) );
 
