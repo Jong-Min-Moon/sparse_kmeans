@@ -1,3 +1,5 @@
+% modified to return the objective function value
+%
 % Author:       Mixon, Villar, Ward.
 % Filename:     kmeans_sdp.m
 % Last edited:  2024-1-20 
@@ -31,7 +33,7 @@
 %       constraints.
 % -------------------------------------------------------------------------
 
-function X=kmeans_sdp(P, k)
+function [X, obj]=kmeans_sdp(P, k)
 
 N=size(P,2);
 
