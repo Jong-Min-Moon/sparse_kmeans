@@ -51,7 +51,7 @@ for rho in {5,20,45}
                 
                 # job
                 touch ${code_dir}/temp_job
-                cat ${code_dir}/skeleton_job.job >> ${code_dir}/temp_job
+                echo "#!/bin/bash" >> ${code_dir}/temp_job
                 echo "#SBATCH --output=${code_dir}.out" >> ${code_dir}/temp_job
                 echo "cd ${code_dir}" >> ${code_dir}/temp_job
                 sleep 4

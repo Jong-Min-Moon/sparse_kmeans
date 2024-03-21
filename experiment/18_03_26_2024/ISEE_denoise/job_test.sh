@@ -51,8 +51,10 @@ for rho in 5
                 
                 # job
                 touch ${code_dir}/temp_job
+                echo "#!/bin/bash" >> ${code_dir}/temp_job
+                echo "#SBATCH --output=${code_dir}/${filename_code}.out" >> ${code_dir}/temp_job
                 cat ${code_dir}/skeleton_job.job >> ${code_dir}/temp_job
-                echo "#SBATCH --output=${code_dir}.out" >> ${code_dir}/temp_job
+                
                 echo "cd ${code_dir}" >> ${code_dir}/temp_job
                 sleep 4
                 echo "matlab -batch ${filename_code}" >> ${code_dir}/temp_job
@@ -62,7 +64,6 @@ for rho in 5
 
                 sbatch ${code_dir}/${filename_code}.job
                 sleep 4
-                rm ${code_dir}/${filename_code}.job
             done
         done
     done

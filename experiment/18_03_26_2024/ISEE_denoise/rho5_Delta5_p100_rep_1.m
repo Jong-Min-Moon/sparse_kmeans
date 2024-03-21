@@ -1,3 +1,22 @@
+addpath(genpath('/home1/jongminm/sparse_kmeans'));
+pc = parallel.cluster.Local;
+job_folder = fullfile('/scratch1/',getenv('USER'),getenv('SLURM_JOB_ID'));
+mkdir(job_folder);
+set(pc,'JobStorageLocation',job_folder);
+ncores = str2num(getenv('SLURM_CPUS_PER_TASK')) - 1;
+pool = parpool(pc,ncores)
+%
+%
+%
+
+
+rho = 5;
+p = 100
+Delta = 5
+s = 10
+n = 500
+ii = 1
+table_name = 'sparse_kmeans_isee_denoise'
 
 conn=sqlite('/home1/jongminm/sparse_kmeans/sparse_kmeans.db')
 rho = rho /100
@@ -28,7 +47,7 @@ x_noiseless = [ mu_1_mat  mu_2_mat ];%each column is one observation
 table_cell = cell(1,4);
 zero_mean = zeros(p,1);
 for jj = 1:4
-    rep = (ii-1)*4+jj
+    rep = ii*4-jj+1
     rng(rep)
     x_noisy = x_noiseless +  mvnrnd(zero_mean, Sigma, n)';%data generation. each column is one observation
 

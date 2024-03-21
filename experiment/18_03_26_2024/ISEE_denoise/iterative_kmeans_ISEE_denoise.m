@@ -68,7 +68,7 @@ function [cluster_est, diff_x_tilde, diff_omega_diag, entries_survived, omega_es
 
         % solve SDP
         tic
-        Z_now, obj_val = kmeans_sdp( x_tilde_now_s' * Sigma_hat_s_hat_now * x_tilde_now_s/ n, K);
+        [Z_now, obj_val] = kmeans_sdp( x_tilde_now_s' * Sigma_hat_s_hat_now * x_tilde_now_s/ n, K);
         cluster_est_now = sdp_to_cluster(Z_now, K);
         cluster_est(iter+1, :) = cluster_est_now;
         sdp_solve_time(iter) = toc
@@ -77,7 +77,4 @@ function [cluster_est, diff_x_tilde, diff_omega_diag, entries_survived, omega_es
         fprintf("\n%i entries survived \n",n_entries_survived)
         
     end % end one iteration
-    diff_x_tilde
-    diff_omega_diag
-    omega_est_time
-    sdp_solve_time
+
