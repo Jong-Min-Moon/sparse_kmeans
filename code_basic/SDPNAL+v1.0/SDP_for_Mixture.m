@@ -7,7 +7,7 @@
 
  A = x * x';
  
- Z = kmeans_sdp(A, 2);
+ [Z, obd] = kmeans_sdp(A, 2);
 
 imagesc(Z)
 title('SDP solution')
