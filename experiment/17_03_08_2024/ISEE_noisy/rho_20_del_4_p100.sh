@@ -1,0 +1,71 @@
+#!/bin/bash
+#
+#
+cluster_home="/home1/jongminm"
+project_name="sparse_kmeans"
+meeting_date="17_03_08_2024"
+experiment_name="ISEE_noisy"
+extension_code="m"
+extension_result="csv"
+table_name="public.sparse_kmeans_isee"
+project_dir="${cluster_home}/${project_name}"
+code_dir="${project_dir}/experiment/${meeting_date}/${experiment_name}"
+
+
+#화면에 텍스트 표시:
+
+
+
+rho=20
+Delta=4
+p=100
+
+s=10
+n=500
+
+for ii in {1..25}
+do
+    #filename of code
+    filename_code="rho${rho}_Delta${Delta}_p${p}_rep_${ii}"
+    echo "file_name = ${filename_code}"
+
+    #filename of result
+    path_result="${code_dir}/result/${filename_code}.${extension_result}"
+
+   
+    # code
+    touch ${code_dir}/temp_code
+    echo "addpath(genpath('${project_dir}'));" >> ${code_dir}/temp_code
+
+    
+    cat ${project_dir}/code_basic/matlab_parallel_usc >> ${code_dir}/temp_code
+    echo "rho = ${rho};" >> ${code_dir}/temp_code
+    echo "p = ${p}" >> ${code_dir}/temp_code
+    echo "Delta = ${Delta}" >> ${code_dir}/temp_code
+    echo "s = ${s}" >> ${code_dir}/temp_code
+    echo "n = ${n}" >> ${code_dir}/temp_code
+    echo "ii = ${ii}" >> ${code_dir}/temp_code
+    cat ${code_dir}/skeleton_code.${extension_code} >> ${code_dir}/temp_code
+ 
+    mv ${code_dir}/temp_code ${code_dir}/${filename_code}.${extension_code}
+    sleep 4
+    
+    # job
+    touch ${code_dir}/temp_job
+    cat ${code_dir}/skeleton_job.job >> ${code_dir}/temp_job
+    echo "cd ${code_dir}" >> ${code_dir}/temp_job
+    sleep 4
+    echo "matlab -batch ${filename_code}" >> ${code_dir}/temp_job
+
+
+    mv ${code_dir}/temp_job ${code_dir}/${filename_code}.job
+
+    sbatch ${code_dir}/${filename_code}.job
+    sleep 4
+    rm ${code_dir}/${filename_code}.job
+done
+
+
+
+
+
