@@ -62,7 +62,7 @@ At{1}=sparse(Auxt);
 
 OPTIONS.maxiter = 50000;
 OPTIONS.tol = 1e-6;
-OPTIONS.printlevel = 1;
+OPTIONS.printlevel = 0;
 
 % SDPNAL+ call
 [obj,X,s,y,S,Z,y2,v,info,runhist]=sdpnalplus(blk,At,C,b,0,[],[],[],[],OPTIONS);

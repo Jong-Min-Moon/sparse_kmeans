@@ -15,11 +15,13 @@ code_dir="${project_dir}/experiment/${meeting_date}/${experiment_name}"
 
 s=10
 n=500
-for rho in {5,20,45}
+n_iter=30
+
+for rho in 5 20 45
     do
-    for Delta in {3, 4, 5, 6}
+    for Delta in 5 4 6 3
         do
-        for p in {50, 100, 150, 200, 250, 300, 350, 400, 450}
+        for p in 50 100 150 200 250 300 350 400 450
             do
             for ii in {1..25}
                 do
@@ -38,6 +40,7 @@ for rho in {5,20,45}
                 
                 cat ${project_dir}/code_basic/matlab_parallel_usc >> ${code_dir}/temp_code
                 echo "rho = ${rho};" >> ${code_dir}/temp_code
+                echo "n_iter = ${n_iter};" >> ${code_dir}/temp_code
                 echo "p = ${p}" >> ${code_dir}/temp_code
                 echo "Delta = ${Delta}" >> ${code_dir}/temp_code
                 echo "s = ${s}" >> ${code_dir}/temp_code
@@ -52,7 +55,9 @@ for rho in {5,20,45}
                 # job
                 touch ${code_dir}/temp_job
                 echo "#!/bin/bash" >> ${code_dir}/temp_job
-                echo "#SBATCH --output=${code_dir}.out" >> ${code_dir}/temp_job
+                echo "#SBATCH --output=${code_dir}/${filename_code}.out" >> ${code_dir}/temp_job
+                cat ${code_dir}/skeleton_job.job >> ${code_dir}/temp_job
+                
                 echo "cd ${code_dir}" >> ${code_dir}/temp_job
                 sleep 4
                 echo "matlab -batch ${filename_code}" >> ${code_dir}/temp_job
@@ -61,7 +66,7 @@ for rho in {5,20,45}
                 mv ${code_dir}/temp_job ${code_dir}/${filename_code}.job
 
                 sbatch ${code_dir}/${filename_code}.job
-                sleep 4
+                sleep 5
                 rm ${code_dir}/${filename_code}.job
             done
         done

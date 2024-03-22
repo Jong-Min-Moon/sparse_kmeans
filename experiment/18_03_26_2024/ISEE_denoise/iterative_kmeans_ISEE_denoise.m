@@ -1,4 +1,4 @@
-function [cluster_est, diff_x_tilde, diff_omega_diag, entries_survived, omega_est_time, sdp_solve_time, obj_val_vec] = iterative_kmeans_ISEE_denoise(x, K, n_iter, Omega, omega_sparsity, init_method) 
+function [cluster_est, diff_x_tilde, diff_omega_diag, entries_survived, omega_est_time, sdp_solve_time, obj_val_prim, obj_val_dual] = iterative_kmeans_ISEE_denoise(x, K, n_iter, Omega, omega_sparsity, init_method) 
 
     % modified 03/07/2024
     n     = size(x,2);
@@ -15,7 +15,8 @@ function [cluster_est, diff_x_tilde, diff_omega_diag, entries_survived, omega_es
     omega_est_time   = zeros(n_iter, 1);
     sdp_solve_time   = zeros(n_iter, 1);
     entries_survived = zeros(n_iter, p);
-    obj_val_vec          = zeros(n_iter, p);
+    obj_val_prim          = zeros(n_iter, 1);
+    obj_val_dual          = zeros(n_iter, 1);
     cluster_est      = zeros(n_iter+1, n);
     
     %initialization
@@ -37,10 +38,10 @@ function [cluster_est, diff_x_tilde, diff_omega_diag, entries_survived, omega_es
         % innovated data estimation
         tic
         [mean_now, noise_now, Omega_diag_hat] = ISEE_bicluster(x, cluster_est_now);
-        omega_est_time(iter) = toc
+        omega_est_time(iter) = toc;
         x_tilde_now = mean_now + noise_now;
-        diff_x_tilde(iter) = norm(x_tilde_now-Omega_x, "fro")
-        diff_omega_diag(iter) = norm(Omega_diag_hat-diag(Omega), "fro")
+        diff_x_tilde(iter) = norm(x_tilde_now-Omega_x, "fro");
+        diff_omega_diag(iter) = norm(Omega_diag_hat-diag(Omega), "fro");
         
         % 2. threshold the data matrix
         signal_est_now = mean( mean_now(:, cluster_est_now==1), 2) - mean( mean_now(:, cluster_est_now==-1), 2);   
@@ -71,8 +72,9 @@ function [cluster_est, diff_x_tilde, diff_omega_diag, entries_survived, omega_es
         [Z_now, obj_val] = kmeans_sdp( x_tilde_now_s' * Sigma_hat_s_hat_now * x_tilde_now_s/ n, K);
         cluster_est_now = sdp_to_cluster(Z_now, K);
         cluster_est(iter+1, :) = cluster_est_now;
-        sdp_solve_time(iter) = toc
-        obj_val_vec(iter) = obj_val;
+        sdp_solve_time(iter) = toc;
+        obj_val_prim(iter) = obj_val(1);
+        obj_val_dual(iter) = obj_val(2);
 
         fprintf("\n%i entries survived \n",n_entries_survived)
         
