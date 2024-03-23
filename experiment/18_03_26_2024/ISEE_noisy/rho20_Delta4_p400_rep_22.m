@@ -1,3 +1,23 @@
+addpath(genpath('/home1/jongminm/sparse_kmeans'));
+pc = parallel.cluster.Local;
+job_folder = fullfile('/scratch1/',getenv('USER'),getenv('SLURM_JOB_ID'));
+mkdir(job_folder);
+set(pc,'JobStorageLocation',job_folder);
+ncores = str2num(getenv('SLURM_CPUS_PER_TASK')) - 1;
+pool = parpool(pc,ncores)
+%
+%
+%
+
+
+rho = 20;
+n_iter = 30;
+p = 400
+Delta = 4
+s = 10
+n = 500
+ii = 22
+table_name = 'sparse_kmeans_isee'
 
 conn=sqlite('/home1/jongminm/sparse_kmeans/sparse_kmeans.db')
 rho = rho /100
@@ -33,7 +53,7 @@ for jj = 1:4
 
     fprintf("replication: (%i)th \n\n", rep)
 
-    [cluster_est_mat, diff_x_tilde, diff_omega_diag, entries_survived, omega_est_time, sdp_solve_time, obj_prim, obj_dual]= iterative_kmeans_ISEE_denoise(x_noisy, K, n_iter, Omega, Omega_sparsity, 'spec');
+    [cluster_est_mat, diff_x_tilde, diff_omega_diag, entries_survived, omega_est_time, sdp_solve_time, obj_prim, obj_dual]= iterative_kmeans_ISEE(x_noisy, K, n_iter, Omega, Omega_sparsity, 'spec', 'noisy');
 
     acc_vec = get_acc(cluster_est_mat, cluster_true)
     fprintf( strcat( "acc =", join(repelem("%f ", length(acc_vec))), "\n"),  acc_vec );

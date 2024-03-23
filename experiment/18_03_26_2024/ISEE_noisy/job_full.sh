@@ -4,10 +4,10 @@
 cluster_home="/home1/jongminm"
 project_name="sparse_kmeans"
 meeting_date="18_03_26_2024"
-experiment_name="ISEE_denoise"
+experiment_name="ISEE_noisy"
 extension_code="m"
 extension_result="csv"
-table_name="sparse_kmeans_isee_denoise"
+table_name="sparse_kmeans_isee"
 project_dir="${cluster_home}/${project_name}"
 code_dir="${project_dir}/experiment/${meeting_date}/${experiment_name}"
 
@@ -19,9 +19,9 @@ n_iter=30
 
 for rho in 5 20 45
     do
-    for Delta in 5 4 6 3
+    for Delta in 5 4 3
         do
-        for p in 50 100 150 200 250 300 350 400 450
+        for p in  100  200  300  400 
             do
             for ii in {1..25}
                 do
