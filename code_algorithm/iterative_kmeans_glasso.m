@@ -41,20 +41,20 @@ function [cluster_est, diff_x_tilde, diff_omega_diag, entries_survived, omega_es
 
         % innovated data estimation
         tic
-        [mean_now, noise_now, Omega_diag_hat] = ISEE_bicluster(x, cluster_est_now);
+        [Omega_est, ~, ~] = glasso_bicluster(x, cluster_est_now, 30);
         omega_est_time(iter) = toc;
-        x_tilde_now = mean_now + noise_now;
+        Omega_diag_hat = diag(Omega_est);
+        x_tilde_now = Omega_est * x;
         diff_x_tilde(iter) = norm(x_tilde_now-Omega_x, "fro");
         diff_omega_diag(iter) = norm(Omega_diag_hat-diag(Omega), "fro");
-        
+        diff_omega_op(iter) = norm(Omega_est-Omega, 2);
+        diff_omega_ellone(iter) = norm(Omega_est-Omega, 1);
+        diff_omega_frob(iter) = norm(Omega_est-Omega, "fro");
+
         % 2. threshold the data matrix
-        if thres_method == "denoised" 
-            signal_est_now = mean( mean_now(:, cluster_est_now==1), 2) - mean( mean_now(:, cluster_est_now==-1), 2);   
-            abs_diff = abs(signal_est_now);
-        else
-            mixed_signal_est_now = mean( x_tilde_now(:, cluster_est_now==1), 2) - mean( x_tilde_now(:, cluster_est_now==-1), 2);   
-            abs_diff = abs(mixed_signal_est_now)./sqrt(Omega_diag_hat) * sqrt( n_g1_now*n_g2_now/n );
-        end
+        mixed_signal_est_now = mean( x_tilde_now(:, cluster_est_now==1), 2) - mean( x_tilde_now(:, cluster_est_now==-1), 2);   
+        abs_diff = abs(mixed_signal_est_now)./sqrt(Omega_diag_hat) * sqrt( n_g1_now*n_g2_now/n );
+        
         s_hat = abs_diff > thres;
         x_tilde_now_s  = x_tilde_now(s_hat,:);
         entries_survived(iter,:) = s_hat;
