@@ -1,4 +1,4 @@
-function [cluster_est, diff_x_tilde, diff_omega_diag, entries_survived, omega_est_time, sdp_solve_time, obj_val_prim, obj_val_dual] = iterative_kmeans_ISEE(x, K, n_iter, Omega, omega_sparsity, init_method) 
+function [cluster_est, diff_x_tilde, diff_omega_op, diff_omega_ellone, diff_omega_frob, diff_omega_diag, entries_survived, omega_est_time, sdp_solve_time, obj_val_prim, obj_val_dual] = iterative_kmeans_ISEE(x, K, n_iter, Omega, omega_sparsity, init_method) 
 
     % modified 03/022/2024
     n     = size(x,2);

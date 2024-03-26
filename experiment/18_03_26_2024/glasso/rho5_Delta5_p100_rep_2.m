@@ -19,7 +19,7 @@ n = 500
 ii = 2
 table_name = 'sparse_kmeans_glasso'
 
-conn=sqlite('/home1/jongminm/sparse_kmeans/sparse_kmeans.db')
+
 rho = rho /100
 
 
@@ -52,13 +52,12 @@ for jj = 1:4
     x_noisy = x_noiseless +  mvnrnd(zero_mean, Sigma, n)';%data generation. each column is one observation
 
     fprintf("replication: (%i)th \n\n", rep)
-    [cluster_est_mat, diff_x_tilde, diff_omega_diag, entries_survived, omega_est_time, sdp_solve_time, obj_prim, obj_dual]= iterative_kmeans_glasso(x_noisy, K, n_iter, Omega, Omega_sparsity, 'spec');
-
-    acc_vec = get_acc(cluster_est_mat, cluster_true)
+    [cluster_est_mat, diff_x_tilde, diff_omega_op, diff_omega_ellone, diff_omega_frob, diff_omega_diag, entries_survived, omega_est_time, sdp_solve_time, obj_prim, obj_dual] = iterative_kmeans_glasso(x_noisy, K, n_iter, Omega, Omega_sparsity, 'spec');
+    acc_vec = get_acc(cluster_est_mat, cluster_true);
     fprintf( strcat( "acc =", join(repelem("%f ", length(acc_vec))), "\n"),  acc_vec );
     [discov_true_vec, discov_false_vec] = get_discovery(entries_survived, s);
-    discov_true_vec
-    discov_false_vec
+
+
 
     import java.util.TimeZone 
     nn = now;
@@ -77,11 +76,20 @@ for jj = 1:4
         [0; discov_true_vec],...
         [0; discov_false_vec],...
         [0; diff_x_tilde],...
+        [0; diff_omega_op],...
+        [0; diff_omega_ellone],...
+        [0; diff_omega_frob],...
         [0; diff_omega_diag],...
         [0; omega_est_time],...
         [0; sdp_solve_time], repelem(dt, n_iter+1)','VariableNames', ...
-        ["rep", "iter", "sep", "dim", "rho", "sparsity", "acc", "obj_prim", "obj_dual", "discov_true", "discov_false", "diff_x_tilde", "diff_omega_diag",  "time_isee", "time_SDP", "jobdate"])
+        ["rep", "iter", "sep", "dim", "rho", "sparsity", "acc", "obj_prim", "obj_dual", "discov_true", "discov_false", "diff_x_tilde", "diff_omega_op", "diff_omega_ellone", "diff_omega_frob", "diff_omega_diag",  "time_isee", "time_SDP", "jobdate"])
+        waittime = randi([5,20]);
+        pause(waittime);
+        conn=sqlite('/home1/jongminm/sparse_kmeans/sparse_kmeans.db')
+        pause(2);
         sqlwrite(conn, table_name, data)
+        pause(2);
+        close(conn)
 end
 
-close(conn)
+
