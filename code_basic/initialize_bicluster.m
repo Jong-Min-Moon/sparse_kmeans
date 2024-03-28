@@ -22,5 +22,5 @@ function cluster_est_now = initialize_bicluster(x, init_method)
         [cluster_est_now,C] = kmeans(U_top_k,K);  % label
 
     end
-    cluster_est_now = cluster_est_now .* (cluster_est_now ~= 2) + (cluster_est_now == 2)* (-1);
+    %cluster_est_now = cluster_est_now .* (cluster_est_now ~= 2) + (cluster_est_now == 2)* (-1);
     cluster_est_now = cluster_est_now';

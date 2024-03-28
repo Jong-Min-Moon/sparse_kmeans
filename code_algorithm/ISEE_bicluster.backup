@@ -1,8 +1,7 @@
-function [mean_now, noise_now, Omega_diag_hat] = ISEE_bicluster(dg)
-    p = dg.dimension;
-    n = dg.sample_size;
+function [mean_now, noise_now, Omega_diag_hat] = ISEE_bicluster(x_noisy, cluster_est_now)
+    p = size(x_noisy,1);
+    n = size(x_noisy,2);
     n_regression = floor(p/2);
-    cluster_est_now = dg.cluster_assign;
 
     Omega_diag_hat_even = repelem(0,p/2);
     Omega_diag_hat_odd = repelem(0,p/2);
@@ -22,8 +21,9 @@ function [mean_now, noise_now, Omega_diag_hat] = ISEE_bicluster(dg)
         E_Al = zeros([2,n]);
 
         for cluster = 1:2
-            g_now = (cluster_est_now == cluster);
-            x_noisy_g_now = dg.data(:,g_now);
+            cluster_now = sign(cluster/2-0.7);
+            g_now = (cluster_est_now == cluster_now);
+            x_noisy_g_now = x_noisy(:,g_now);
             predictor_boolean = ((1:p) == (2*(i-1)+1)) | ((1:p) == (2*(i-1)+2));
             predictor_now = x_noisy_g_now(~predictor_boolean, :)';
             for j = 1:2
@@ -47,7 +47,8 @@ function [mean_now, noise_now, Omega_diag_hat] = ISEE_bicluster(dg)
         noise_Al = Omega_hat_Al*E_Al; % 2 * n
         mean_Al = zeros([2,n]);
         for cluster = 1:2
-            g_now = cluster_est_now == cluster;
+            cluster_now = sign(cluster/2-0.7);
+            g_now = cluster_est_now == cluster_now;
             n_now = sum(g_now);
             mean_Al(:,g_now) = repmat(Omega_hat_Al*alpha_Al(:,cluster), [1,n_now]);
         end
