@@ -80,16 +80,16 @@ methods
         end
     end
 
-    function database_subtable = get_database_subtable(ik, rep, Delta, rho, s, cluster_true, )
+    function database_subtable = get_database_subtable(ik, rep, Delta, rho, s, cluster_true, Omega)
         n_iter = size(ik.obj_val_prim,1);
         current_time = get_current_time();
-        acc_vec = iterative_kmeans_learner.evaluate_accuracy(cluster_true);
-        [discov_true_vec, discov_false_vec, survived_indices] = iterative_kmeans_learner.evaluate_discovery(s);
-        [diff_x_tilde_fro, diff_x_tilde_op, diff_x_tilde_ellone] = iterative_kmeans_learner.evaluate_innovation_est(Omega);
+        acc_vec = ik.evaluate_accuracy(cluster_true);
+        [discov_true_vec, discov_false_vec, survived_indices] = ik.evaluate_discovery(s);
+        [diff_x_tilde_fro, diff_x_tilde_op, diff_x_tilde_ellone] = ik.evaluate_innovation_est(Omega);
         %fprintf( strcat( "acc =", join(repelem("%f ", length(acc_vec))), "\n"),  acc_vec );
-        cluster_string_vec = iterative_kmeans_learner.get_cluster_string_vec;
+        cluster_string_vec = ik.get_cluster_string_vec();
         
-        data = table(...
+        database_subtable = table(...
             repelem(rep, n_iter+1)',...                      % 01 replication number
             (0:n_iter)',...                                  % 02 step iteration number
             repelem(Delta, n_iter+1)',...                    % 03 separation
@@ -97,28 +97,28 @@ methods
             repelem(rho, n_iter+1)',...                      % 05 conditional correlation
             repelem(s, n_iter+1)',...                        % 06 sparsity
             acc_vec,...                                      % 07 accuracy
-            [0; iterative_kmeans_learner.obj_val_prim],...   % 08 objective function value (relaxed, primal)
-            [0; iterative_kmeans_learner.obj_val_dual],...   % 09 objective function value (relaxed, dual)
+            [0; ik.obj_val_prim],...                         % 08 objective function value (relaxed, primal)
+            [0; ik.obj_val_dual],...                         % 09 objective function value (relaxed, dual)
             [0; discov_true_vec],...                         % 10 true discovery
             [0; discov_false_vec],...                        % 11 false discovery
             [0; diff_x_tilde_fro],...                        % 12 estimation error of the innovated data, in Frobenius norm
             [0; diff_x_tilde_op],...                         % 13 estimation error of the innovated data, in operator norm
             [0; diff_x_tilde_ellone],...                     % 14 estimation error of the innovated data, in \ell_1 norm
-            [0; iterative_kmeans_learner.omega_est_time],... % 15 timing for estimating the precision matrix
-            [0; iterative_kmeans_learner.sdp_solve_time], ...% 16 timing elapsed for solving the SDP
+            [0; ik.omega_est_time],...                       % 15 timing for estimating the precision matrix
+            [0; ik.sdp_solve_time], ...                      % 16 timing elapsed for solving the SDP
             repelem(current_time, n_iter+1)', ...            % 17 timestamp
             [""; survived_indices],...                       % 18 indices of survived entry
             cluster_string_vec,...                           % 19 clustering information
             'VariableNames', ...
-            %  1      2       3      4      5        6         
+            ...  1      2       3      4      5        6         
             ["rep", "iter", "sep", "dim", "rho", "sparsity", ...
-            %  7        8           9             10             11
+            ...  7        8           9             10             11
              "acc", "obj_prim", "obj_dual", "discov_true", "discov_false", ...
-            %          12              13                    14
+            ...       12              13                    14
              "diff_x_tilde_fro", "diff_x_tilde_op", "diff_x_tilde_ellone", ...
-            %    15          16           17
+            ...  15          16           17
              "time_est", "time_SDP", "jobdate", ...
-            %        18              19            
+            ...      18              19            
             "survived_indices", "cluster_est"
             ])
     end
@@ -165,8 +165,8 @@ methods
     function cluster_string_vec = get_cluster_string_vec(ik)
         len_vec = size(ik.cluster_est,1);
         cluster_string_vec = strings(len_vec,1);
-        for i = 1:length(len_vec)
-            cluster_string_vec(i) = get_num2str_with_mark(ik.cluster_est(i,:));
+        for i = 1:len_vec
+            cluster_string_vec(i) = get_num2str_with_mark(ik.cluster_est(i,:), ',');
         end
     end
 
