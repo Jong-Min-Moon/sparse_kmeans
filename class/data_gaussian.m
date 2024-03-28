@@ -9,12 +9,12 @@ classdef data_gaussian < handle
         cluster_assign
         number_cluster
         cluster_mean_small_mat
-        isotropic
+        omega_sparsity
     end
 
     methods
-        function dg = data_gaussian(data_matrix, isotropic)
-            dg.data = data_matrix;
+        function dg = data_gaussian(data, omega_sparsity)
+            dg.data = data;
             dg.dimension = size(dg.data,1);
             dg.sample_size = size(dg.data,2);
             
@@ -22,7 +22,7 @@ classdef data_gaussian < handle
             dg.number_support = sum(dg.support);
             dg.number_cluster = 1;
             dg.cluster_assign = repelem(1,dg.sample_size);
-            dg.isotropic = isotropic;
+            dg.omega_sparsity = omega_sparsity;
         end
     end
 
@@ -37,7 +37,7 @@ classdef data_gaussian < handle
             
 
             entrywise_signal_estimate = dg.get_entrywise_signal();
-            dg.get_support(entrywise_signal_estimate, omega_sparsity);
+            dg.get_support(entrywise_signal_estimate);
 
             
             data_innovated_small = dg.data_innovated(dg.support,:);
@@ -49,14 +49,14 @@ classdef data_gaussian < handle
     
     methods (Access = protected)
 
-        function cutoff = get_cutoff(dg, omega_sparsity)
+        function cutoff = get_cutoff(dg)
             cutoff = sqrt(2 * log(dg.dimension));
         end
 
-        function get_support(dg, entrywise_signal_estimate, omega_sparsity)
+        function get_support(dg, entrywise_signal_estimate)
                         %implement the following:
             %dg.entrywise_signal_estimate = dg.entrywise_signal_estimate./sqrt(Omega_diag_hat)* sqrt( n_g1_now*n_g2_now/n );;
-            cutoff = dg.get_cutoff(omega_sparsity);
+            cutoff = dg.get_cutoff();
             dg.support = entrywise_signal_estimate > cutoff;
             dg.number_support = sum(dg.support);
         end
