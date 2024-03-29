@@ -3,6 +3,7 @@ classdef data_gaussian < handle
         dimension
         sample_size
         data
+        affinity
         data_innovated
         support
         number_support
@@ -17,6 +18,7 @@ classdef data_gaussian < handle
             dg.data = data;
             dg.dimension = size(dg.data,1);
             dg.sample_size = size(dg.data,2);
+            dg.affinity = data'*data;
             
             dg.support = repelem(true, dg.dimension);
             dg.number_support = sum(dg.support);

@@ -48,7 +48,7 @@ methods
             ik.sdp_solve_time(iter) = toc;
             ik.obj_val_prim(iter) = obj_val(1);
             ik.obj_val_dual(iter) = obj_val(2);
-
+            ik.obj_val_original(iter) = ik.get_objective_value_original(ik.cluster_est(iter+1, :));
             fprintf("\n%i entries survived \n",sum(ik.data_object.support))
         
         end % end one iteration
@@ -63,6 +63,7 @@ methods
         ik.entries_survived = zeros(n_iter, p);
         ik.obj_val_prim     = zeros(n_iter, 1);
         ik.obj_val_dual     = zeros(n_iter, 1);
+        ik.obj_val_original = zeros(n_iter, 1);
         ik.cluster_est      = zeros(n_iter+1, n);
     end
 
@@ -79,7 +80,16 @@ methods
             initial_cluster_assign = cluster(Z, 'Maxclust', ik.number_cluster);
         end
     end
+    
+    function objective_value_original = get_objective_value_original(ik, cluster_est)
+        objective_value_original = 0;
+        for i = 1:ik.data_object.number_cluster
+            cluster_size = sum(cluster_est==i);
+            affinity_cluster = ik.data_object.affinity(cluster_est==i, cluster_est==i);
+            objective_value_original = objective_value_original + sum(affinity_cluster, "all");
+        end
 
+    end
     function database_subtable = get_database_subtable(ik, rep, Delta, rho, s, cluster_true, Omega)
         n_iter = size(ik.obj_val_prim,1);
         current_time = get_current_time();
