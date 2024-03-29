@@ -3,10 +3,10 @@
 %
 
 
-rho = 5;
+rho = 45;
 n_iter = 5;
 p = 50
-Delta = 5
+Delta = 4
 s = 10
 n = 500
 ii = 21

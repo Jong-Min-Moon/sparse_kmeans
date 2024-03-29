@@ -4,6 +4,7 @@ classdef data_gaussian < handle
         sample_size
         data
         affinity
+        sparse_affinity
         data_innovated
         support
         number_support
@@ -40,7 +41,7 @@ classdef data_gaussian < handle
 
             entrywise_signal_estimate = dg.get_entrywise_signal();
             dg.get_support(entrywise_signal_estimate);
-
+            
             
             data_innovated_small = dg.data_innovated(dg.support,:);
             data_innovated_big = dg.data_innovated;
@@ -50,39 +51,7 @@ classdef data_gaussian < handle
 
     
     methods (Access = protected)
-
-        function cutoff = get_cutoff(dg)
-            cutoff = sqrt(2 * log(dg.dimension));
-        end
-
-        function get_support(dg, entrywise_signal_estimate)
-                        %implement the following:
-            %dg.entrywise_signal_estimate = dg.entrywise_signal_estimate./sqrt(Omega_diag_hat)* sqrt( n_g1_now*n_g2_now/n );;
-            cutoff = dg.get_cutoff();
-            dg.support = entrywise_signal_estimate > cutoff;
-            dg.number_support = sum(dg.support);
-        end
-
-        function get_innovated_data(dg)
-            omega_hat = dg.get_precision_matrix();
-            dg.data_innovated = omega_hat*dg.data;
-        end
-
-        function cluster_mean_innovated_mat = get_cluster_mean_innovated(dg)
-            dg.get_innovated_data();
-            cluster_mean_innovated_mat = zeros(dg.dimension, dg.number_cluster);
-            for i = 1:dg.number_cluster
-                data_innovated_cluster = dg.data_innovated(:, (dg.cluster_assign ==  i));
-                cluster_mean_innovated_mat(:,i) = mean(data_innovated_cluster, 2);
-            end
-        end
-        
-        function precision_matrix = get_precision_matrix()
-            disp("implement")
-        end
-
         function entrywise_signal_estimate = get_entrywise_signal(dg)
-            
             cluster_mean_innovated_mat = dg.get_cluster_mean_innovated();
             number_combination = nchoosek(dg.number_cluster,2);
             signal_estimate = zeros(dg.dimension, number_combination);
@@ -93,10 +62,52 @@ classdef data_gaussian < handle
                 end
             end
             entrywise_signal_estimate = min(signal_estimate, [],2);
-            
-
-
         end
+
+        function cluster_mean_innovated_mat = get_cluster_mean_innovated(dg)
+            dg.get_innovated_data();
+            cluster_mean_innovated_mat = zeros(dg.dimension, dg.number_cluster);
+            for i = 1:dg.number_cluster
+                data_innovated_cluster = dg.data_innovated(:, (dg.cluster_assign ==  i));
+                cluster_mean_innovated_mat(:,i) = mean(data_innovated_cluster, 2);
+            end
+        end
+
+        function get_innovated_data(dg)
+            omega_hat = dg.get_precision_matrix();
+            dg.data_innovated = omega_hat*dg.data;
+        end
+        
+        function get_support(dg, entrywise_signal_estimate)
+                        %implement the following:
+            %dg.entrywise_signal_estimate = dg.entrywise_signal_estimate./sqrt(Omega_diag_hat)* sqrt( n_g1_now*n_g2_now/n );;
+            cutoff = dg.get_cutoff();
+            dg.support = entrywise_signal_estimate > cutoff;
+            dg.number_support = sum(dg.support);
+            dg.get_sparse_affinity()
+        end
+
+        function cutoff = get_cutoff(dg)
+            cutoff = sqrt(2 * log(dg.dimension));
+        end
+        
+        function sparse_affinity = get_sparse_affinity(dg)
+            data_small = dg.data(dg.support, :);
+            dg.sparse_affinity = data_small' * data_small;
+        end
+
+
+
+
+
+
+
+        
+        function precision_matrix = get_precision_matrix()
+            disp("implement")
+        end
+
+
 
         
 
