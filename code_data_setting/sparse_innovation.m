@@ -3,6 +3,8 @@ rho = rho /100
 % data paramters
 K=2;
 Omega_sparsity = 2;
+number_cluster=2;
+omega_sparsity = 2;
 rounding = 1e-4;
 cluster_true = [repelem(1,n/2), repelem(-1,n/2)];
 Omega = eye(p) + diag(rho*ones(p-1,1), 1) + diag(rho*ones(p-1,1), -1);

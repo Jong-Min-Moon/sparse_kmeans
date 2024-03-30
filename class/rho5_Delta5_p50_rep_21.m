@@ -4,7 +4,7 @@
 
 
 rho = 45;
-n_iter = 5;
+n_iter_max = 30;
 p = 50
 Delta = 4
 s = 10
@@ -13,7 +13,7 @@ ii = 21
 
 rho = rho /100
 
-
+table_name = 'sparse_kmeans_isee_clean'
 % data paramters
 number_cluster=2;
 omega_sparsity = 2;
@@ -37,7 +37,6 @@ mu_1_mat = repmat(mu_1,  1, n/2); %each column is one observation
 mu_2_mat = repmat(mu_2, 1, n/2);%each column is one observation
 x_noiseless = [ mu_1_mat  mu_2_mat ];%each column is one observation
 
-table_cell = cell(1,4);
 zero_mean = zeros(p,1);
 for jj = 1:1
     rep = (ii-1)*4+jj
@@ -46,16 +45,14 @@ for jj = 1:1
 
     fprintf("replication: (%i)th \n\n", rep)
     iterative_kmeans_learner = iterative_kmeans(x_noisy, @data_gaussian_ISEE_clean, number_cluster, omega_sparsity, init_method);
-    iterative_kmeans_learner.learn(n_iter);
-
-    acc_vec = iterative_kmeans_learner.evaluate_accuracy(cluster_true);
-    [discov_true_vec, discov_false_vec, survived_indices] = iterative_kmeans_learner.evaluate_discovery(s);
-    [diff_x_tilde_fro, diff_x_tilde_op, diff_x_tilde_ellone] = iterative_kmeans_learner.evaluate_innovation_est(Omega);
-    fprintf( strcat( "acc =", join(repelem("%f ", length(acc_vec))), "\n"),  acc_vec );
+    iterative_kmeans_learner.learn(n_iter_max);
     
-    database_subtable = iterative_kmeans_learner.get_database_subtable(rep, Delta, rho, s, cluster_true, Omega)
-  
-        %sqlwrite(conn, table_name, data)
+    database_subtable = iterative_kmeans_learner.get_database_subtable(rep, Delta, rho, s, cluster_true, Omega);
+    conn=sqlite('"D:/GitHub/sparse_kmeans/experiment/sparse_kmeans.db');
+    pause(2);
+    sqlwrite(conn, table_name, database_subtable)
+    pause(2);
+    close(conn)
 end
 
-close(conn)
+
