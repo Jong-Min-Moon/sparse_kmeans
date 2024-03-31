@@ -50,11 +50,11 @@ methods
             ik.sdp_solve_time(iter) = toc;
             ik.obj_val_prim(iter) = obj_val(1);
             ik.obj_val_dual(iter) = obj_val(2);
-
-            fprintf('relaxed dual: %f, original: %f \n', [ik.obj_val_dual(iter), ik.obj_val_original(iter)])
             ik.obj_val_original(iter) = ik.get_objective_value_original(clutser_est_vec);
             ik.cluster_est(iter+1, :) = clutser_est_vec;
             fprintf("\n%i entries survived \n",sum(ik.data_object.support))
+            fprintf('relaxed dual: %f, original: %f \n', [ik.obj_val_dual(iter), ik.obj_val_original(iter)])
+
             
             if ik.is_stop(iter)
                 ik.iter_stop = iter;
