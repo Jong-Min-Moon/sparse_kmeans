@@ -50,9 +50,9 @@ methods
             ik.sdp_solve_time(iter) = toc;
             ik.obj_val_prim(iter) = obj_val(1);
             ik.obj_val_dual(iter) = obj_val(2);
-            obj_val(2)
-            obj_og_now = ik.get_objective_value_original(clutser_est_vec);
-            ik.obj_val_original(iter) = obj_og_now;
+
+            fprintf('relaxed dual: %f, original: %f \n', [ik.obj_val_dual(iter), ik.obj_val_original(iter)])
+            ik.obj_val_original(iter) = ik.get_objective_value_original(clutser_est_vec);
             ik.cluster_est(iter+1, :) = clutser_est_vec;
             fprintf("\n%i entries survived \n",sum(ik.data_object.support))
             
@@ -113,7 +113,7 @@ methods
         for i = 1:ik.data_object.number_cluster
             cluster_size = sum(cluster_est==i);
             affinity_cluster = ik.data_object.sparse_affinity(cluster_est==i, cluster_est==i);
-            objective_value_original = objective_value_original + sum(affinity_cluster, "all");
+            objective_value_original = objective_value_original + sum(affinity_cluster, "all")/cluster_size;
         end
 
     end
@@ -167,13 +167,25 @@ methods
         acc_vec = zeros(ik.iter_stop+1, 1);
         permutation_all = perms(1:ik.number_cluster);
         number_permutation = size(permutation_all, 1);
+       
         for i = 1:(ik.iter_stop+1)
+            acc_permutation_vec = zeros(number_permutation, 1);
             cluster_est_now = ik.cluster_est(i,:);
-            
-            acc_vec(i) = max( mean(cluster_true == cluster_est_now), mean(cluster_true == (-cluster_est_now + 3)));
+            for j = 1:number_permutation
+                permutation_now = permutation_all(j,:);
+                cluster_permuted_now = ik.change_label(cluster_est_now,permutation_now);
+                acc_permutation_vec(j) = mean(cluster_true == cluster_permuted_now);
+            end
+            acc_vec(i) = max( acc_permutation_vec );
         end
     end
-
+    
+    function change_label(ik, cluster_est, permutation)
+        cluster_est_permuted = cluster_est;
+        for i = 1:ik.number_cluster
+            cluster_est_permuted(cluster_est==i) = permutation(i);
+        end
+    end
     function [discov_true_vec, discov_false_vec, survived_indices] = evaluate_discovery(ik, s)
         discov_true_vec = zeros(ik.iter_stop, 1);
         discov_false_vec = zeros(ik.iter_stop, 1);
