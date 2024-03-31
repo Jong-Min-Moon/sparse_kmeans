@@ -50,7 +50,9 @@ methods
             ik.sdp_solve_time(iter) = toc;
             ik.obj_val_prim(iter) = obj_val(1);
             ik.obj_val_dual(iter) = obj_val(2);
-            ik.obj_val_original(iter) = ik.get_objective_value_original(clutser_est_vec)
+            obj_val(2)
+            obj_og_now = ik.get_objective_value_original(clutser_est_vec);
+            ik.obj_val_original(iter) = obj_og_now;
             ik.cluster_est(iter+1, :) = clutser_est_vec;
             fprintf("\n%i entries survived \n",sum(ik.data_object.support))
             
@@ -71,7 +73,8 @@ methods
             stop = false;
         else
             relative_change_original = abs((ik.obj_val_original(iter) - ik.obj_val_original(iter-1))/ik.obj_val_original(iter-1));
-            if relative_change_original < 0.01
+            relative_change_sdp = abs((ik.obj_val_dual(iter) - ik.obj_val_dual(iter-1))/ik.obj_val_dual(iter-1));
+            if (relative_change_original < 0.01) & (relative_change_sdp < 0.01)
                 stop = true;
             else
                 stop = false;
@@ -149,7 +152,7 @@ methods
             ...  1      2       3      4      5        6         
             ["rep", "iter", "sep", "dim", "rho", "sparsity", ...
             ...  7        8           9             10             11               12
-             "acc", "obj_prim", "obj_dual", "object_original", "discov_true", "discov_false", ...
+             "acc", "obj_prim", "obj_dual", "obj_original", "discov_true", "discov_false", ...
             ...       13              14                    15
              "diff_x_tilde_fro", "diff_x_tilde_op", "diff_x_tilde_ellone", ...
             ...  16          17           18
@@ -162,8 +165,11 @@ methods
 
     function acc_vec = evaluate_accuracy(ik, cluster_true)
         acc_vec = zeros(ik.iter_stop+1, 1);
+        permutation_all = perms(1:ik.number_cluster);
+        number_permutation = size(permutation_all, 1);
         for i = 1:(ik.iter_stop+1)
             cluster_est_now = ik.cluster_est(i,:);
+            
             acc_vec(i) = max( mean(cluster_true == cluster_est_now), mean(cluster_true == (-cluster_est_now + 3)));
         end
     end
