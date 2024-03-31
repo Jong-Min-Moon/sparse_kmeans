@@ -180,7 +180,7 @@ methods
         end
     end
     
-    function change_label(ik, cluster_est, permutation)
+    function cluster_est_permuted = change_label(ik, cluster_est, permutation)
         cluster_est_permuted = cluster_est;
         for i = 1:ik.number_cluster
             cluster_est_permuted(cluster_est==i) = permutation(i);
