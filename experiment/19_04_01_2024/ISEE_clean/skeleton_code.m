@@ -13,7 +13,8 @@ for jj = 1:4
     iterative_kmeans_learner = iterative_kmeans(x_noisy, @data_gaussian_ISEE_clean, number_cluster, omega_sparsity, init_method);
     iterative_kmeans_learner.learn(n_iter_max);
     
-    database_subtable = iterative_kmeans_learner.get_database_subtable(rep, Delta, rho, s, cluster_true, Omega)
+    database_subtable = iterative_kmeans_learner.get_database_subtable(rep, Delta, rho, s, cluster_true, Omega);
+    database_subtable(:,1:12)
     conn=sqlite('/home1/jongminm/sparse_kmeans/sparse_kmeans.db');
     pause(2);
     sqlwrite(conn, table_name, database_subtable)
