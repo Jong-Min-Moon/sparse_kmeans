@@ -15,6 +15,8 @@ for jj = 1:4
     
     database_subtable = iterative_kmeans_learner.get_database_subtable(rep, Delta, rho, s, cluster_true, Omega);
     database_subtable(:,1:12)
+    random_seconds = randi([4 32],1);
+    pause(random_seconds)
     conn=sqlite('/home1/jongminm/sparse_kmeans/sparse_kmeans.db');
     pause(2);
     sqlwrite(conn, table_name, database_subtable)

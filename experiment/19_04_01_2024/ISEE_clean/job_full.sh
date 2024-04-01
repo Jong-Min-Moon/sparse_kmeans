@@ -19,14 +19,14 @@ n_iter_max=100
 
 for rho in 20 35 45
     do
-    for Delta in 4 3 2
+    for Delta in 4 3
         do
         for p in  100 200 300 400
             do
             for ii in {1..10}
                 do
                     #filename of code
-                    filename_code="rho${rho}_Delta${Delta}_p${p}"
+                    filename_code="rho${rho}_Delta${Delta}_p${p}_rep_${ii}"
                     echo "file_name = ${filename_code}"
 
                     #filename of result

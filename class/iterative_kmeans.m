@@ -58,12 +58,16 @@ methods
             
             if ik.is_stop(iter)
                 ik.iter_stop = iter;
+                fprintf("\n final iteration = %i ", ik.iter_stop)
                 break
-            if iter == max_n_iter
-                ik.iter_stop = iter
             end
 
+            if iter == max_n_iter
+                ik.iter_stop = max_n_iter
+                fprintf("\n final iteration = %i ", ik.iter_stop)
             end
+
+            
 
         end % end one iteration
     end
