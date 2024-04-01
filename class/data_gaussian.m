@@ -6,6 +6,7 @@ classdef data_gaussian < handle
         affinity
         sparse_affinity
         data_innovated
+        Omega_diag_hat
         support
         number_support
         cluster_assign
@@ -61,7 +62,7 @@ classdef data_gaussian < handle
                     signal_estimate(:,column_index) = abs(cluster_mean_innovated_mat(:,i) - cluster_mean_innovated_mat(:,j));
                 end
             end
-            entrywise_signal_estimate = min(signal_estimate, [],2);
+            entrywise_signal_estimate = min(signal_estimate, [],2); %column vector
         end
 
         function cluster_mean_innovated_mat = get_cluster_mean_innovated(dg)
@@ -80,7 +81,7 @@ classdef data_gaussian < handle
         
         function get_support(dg, entrywise_signal_estimate)
                         %implement the following:
-            %dg.entrywise_signal_estimate = dg.entrywise_signal_estimate./sqrt(Omega_diag_hat)* sqrt( n_g1_now*n_g2_now/n );;
+            
             cutoff = dg.get_cutoff();
             dg.support = entrywise_signal_estimate > cutoff;
             dg.number_support = sum(dg.support);
