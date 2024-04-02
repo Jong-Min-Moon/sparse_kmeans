@@ -55,22 +55,21 @@ methods
                 ik.cluster_est(iter+1, :) = clutser_est_vec;
                 
                 fprintf('took %fs, relaxed dual: %f, original: %f \n', [ik.sdp_solve_time(iter), ik.obj_val_dual(iter), ik.obj_val_original(iter)])
-                
-                
-                if ik.is_stop(iter)
-                    ik.iter_stop = iter;
-                    fprintf("\n final iteration = %i ", ik.iter_stop)
-                    break
-                end
-
-                if iter == max_n_iter
-                    ik.iter_stop = max_n_iter;
-                    fprintf("\n final iteration = %i ", ik.iter_stop)
-                end
             else
                 fprintf('All entries dead. Re-initializing...')
                 clutser_est_vec = ik.get_initial_cluster_assign();
                 ik.cluster_est(iter+1, :) = clutser_est_vec;  
+            end
+
+            % decide to stop or not
+            if ik.is_stop(iter)
+                ik.iter_stop = iter;
+                fprintf("\n final iteration = %i ", ik.iter_stop)
+                break
+            end
+            if iter == max_n_iter
+                ik.iter_stop = max_n_iter;
+                fprintf("\n final iteration = %i ", ik.iter_stop)
             end
             
 

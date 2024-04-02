@@ -11,6 +11,7 @@ methods (Access = protected)
         [innovated_data_mean, innovated_data_noise, ~] = ISEE_bicluster(dg);
         dg.data_innovated = innovated_data_mean + innovated_data_noise;
     end
+    
     function cutoff = get_cutoff(dg)
         lambda = sqrt(log(dg.dimension)/dg.sample_size);
         diverging_quantity = sqrt(log(dg.sample_size));

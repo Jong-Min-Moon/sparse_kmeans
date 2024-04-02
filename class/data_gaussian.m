@@ -6,6 +6,7 @@ classdef data_gaussian < handle
         affinity
         sparse_affinity
         data_innovated
+        Omega_hat
         Omega_diag_hat
         support
         number_support
@@ -74,14 +75,8 @@ classdef data_gaussian < handle
             end
         end
 
-        function get_innovated_data(dg)
-            omega_hat = dg.get_precision_matrix();
-            dg.data_innovated = omega_hat*dg.data;
-        end
-        
+
         function get_support(dg, entrywise_signal_estimate)
-                        %implement the following:
-            
             cutoff = dg.get_cutoff();
             dg.support = entrywise_signal_estimate > cutoff;
             dg.number_support = sum(dg.support);

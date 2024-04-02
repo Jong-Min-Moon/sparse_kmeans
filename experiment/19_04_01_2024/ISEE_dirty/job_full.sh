@@ -17,13 +17,13 @@ s=10
 n=500
 n_iter_max=100
 
-for rho in 20 #35 45
+for rho in 20 35 45
     do
-    for Delta in 4 #3
+    for Delta in 4 3
         do
-        for p in  100 #200 300 400
+        for p in  100 200 300 400
             do
-            for ii in {1..1}
+            for ii in {1..10}
                 do
                     #filename of code
                     filename_code="rho${rho}_Delta${Delta}_p${p}_rep_${ii}"
