@@ -71,6 +71,10 @@ classdef stopper < handle
             end
         end %end of method loop_decision
         
+        function is_already = check_already(sp, stopping_criteria_vec, iter, criteria) 
+            is_already =  sum(ismember(stopping_criteria_vec(1:iter), criteria)) > 0;
+        end%end of is_already
+
         function is_early = check_early(sp, iter, standard)
              if iter <= standard
                  is_early = true;
@@ -78,5 +82,6 @@ classdef stopper < handle
                  is_early = false;
              end
         end%end of method check_early
+
     end%end of methods
 end%end of classdef

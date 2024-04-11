@@ -27,5 +27,20 @@ classdef stopperTest < matlab.unittest.TestCase
             expSolution = false;
             testCase.verifyEqual(actSolution,expSolution)
         end%end of check_early_true
+
+        function check_already_true(testCase)
+            sp = stopper();
+            actSolution = sp.check_already(["", "", "", "loop", "", "", "", "original"],5, "loop");
+            expSolution = true;
+            testCase.verifyEqual(actSolution,expSolution)
+        end%end of check_early_true
+
+        function check_already_false(testCase)
+            sp = stopper();
+            actSolution = sp.check_already(["", "", "", "original", "", "", "", "loop"],5, "loop");
+            expSolution = false;
+            testCase.verifyEqual(actSolution,expSolution)
+        end%end of check_early_false
+
     end%end of methods
 end%end of stopperTest
