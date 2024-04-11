@@ -2,53 +2,74 @@ classdef stopper < handle
 
     methods
         function stop_decision = determine_stop(sp, obj_val_original, obj_val_prim, stopping_criteria, iter, percent_change)
+            
             if iter==1
                 stop_decision = false;
-                decision_reason = "first";
+                decision_reason = "early";
             else
-                [stop_decision, decision_reason] = sp.detect_relative_change_original(obj_val_original, iter, percent_change)
-                if stop_decision == false
-                    [stop_decision, decision_reason] = sp.detect_relative_change_sdp(obj_val_original, iter, percent_change)
-                    if stop_decision == false
-                    
-                    end
-                end
-                
+                decision_dic = dictionary(["original", "sdp", "loop"], [false,false,false]);
+                reason_dic  = dictionary(["original", "sdp", "loop"], ["","",""]);
+                [decision_vec("original"), reason_dic("original")] = sp.detect_relative_change_original(obj_val_original, iter, percent_change);
+                [decision_vec("sdp"),      reason_dic("original")] = sp.detect_relative_change_sdp(obj_val_original, iter, percent_change);
             end
         end
 
         function [stop_decision, decision_reason] = detect_relative_change_original(sp, obj_val_original, iter, percent_change)
-            if sum(ismember(stopping_criteria(1:iters), "original"))>0
+            if sum(ismember(stopping_criteria(1:iters), "original")) > 0
                 stop_decision = false;
-                decision_reason = "already"
+                decision_reason = "already";
             else
                 relative_change_original = abs((obj_val_original(iter) - obj_val_original(iter-1))/obj_val_original(iter-1));
                 if (relative_change_original < percent_change)
                     stop_decision = true;
-                    decision_reason = "active"
+                    decision_reason = "active";
                 else
                     stop_decision = false;
-                    decision_reason = "inactive"
+                    decision_reason = "inactive";
                 end
             end
         end
 
         function [stop_decision, decision_reason] = detect_relative_change_sdp(sp, obj_val_prim, iter, percent_change)
-            if sum(ismember(stopping_criteria(1:iters), "sdp"))>0
+            if sum(ismember(stopping_criteria(1:iters), "sdp")) > 0
                 stop_decision = false;
-                decision_reason = "already"
+                decision_reason = "already";
             else
                 relative_change_original = abs((obj_val_prim(iter) - obj_val_prim(iter-1))/obj_val_prim(iter-1));
                 if (relative_change_original < percent_change)
                     stop_decision = true;
-                    decision_reason = "active"
+                    decision_reason = "active";
                 else
                     stop_decision = false;
-                    decision_reason = "inactive"
+                    decision_reason = "inactive";
                 end
             end
         end
 
+        function [stop_decision, decision_reason] = detect_loop(sp, obj_val_prim, obj_val_original, iter, window_size)
+            if sum(ismember(stopping_criteria(1:iters), "loop")) > 0
+                stop_decision = false;
+                decision_reason = "already";
+            else
+                if iter <= (window_size-1)/2
+                    stop_decision = false;
+                    decision_reason = "early";
+                else
+                    
+                end
+            end
+        end
+
+        function loop_decision = compare_in_window(sp, window_vec, percent_change)
+            window_size = length(window_vec);
+            index_center = (window_size+1)/2;
+            value_center = window_vec(index_center);
+            value_window = window_vec([1:(index_center-1), (index_center+1), window_size]);
+            if sum(abs(value_window - value_center)/value_center < percent_change) >0
+                loop_decision = true;
+            else
+                loop_decision = false;
+        end
         function stop = is_stop(ik, iter)
             if iter == 1
                 stop = false;
