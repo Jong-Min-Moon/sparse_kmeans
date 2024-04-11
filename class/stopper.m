@@ -8,32 +8,13 @@ classdef stopper < handle
             sp.window_size = window_size;
             sp.percent_change = percent_change;
         end
-        function stop_decision = determine_stop(sp, obj_val_original, obj_val_sdp, stopping_criteria, iter, percent_change)
-            
-            if iter==1
-                stop_decision = false;
-                decision_reason = "early";
-            else
-                decision_dic = dictionary(["original", "sdp", "loop"], [false,false,false]);
-                reason_dic  = dictionary(["original", "sdp", "loop"], ["","",""]);
-                [decision_vec("original"), reason_dic("original")] = sp.detect_relative_change_original(obj_val_original, iter, percent_change);
-                [decision_vec("sdp"),      reason_dic("original")] = sp.detect_relative_change_sdp(obj_val_original, iter, percent_change);
-            end
-        end
 
-        function [stop_decision, decision_reason] = detect_relative_change_original(sp, obj_val_original, iter, percent_change)
-            if sum(ismember(stopping_criteria(1:iters), "original")) > 0
-                stop_decision = false;
-                decision_reason = "already";
-            else
-                relative_change_original = abs((obj_val_original(iter) - obj_val_original(iter-1))/obj_val_original(iter-1));
-                if (relative_change_original < percent_change)
-                    stop_decision = true;
-                    decision_reason = "active";
-                else
-                    stop_decision = false;
-                    decision_reason = "inactive";
-                end
+        function criteria_vec = pull_criteria(sp, obj_val_original, obj_val_sdp, stopping_criteria_vec, iter)
+            criteria_vec = dictionary(["original", "sdp", "loop"], [false,false,false]);
+            if iter>1
+                criteria_vec("original") = sp.detect_relative_change(obj_val_original, stopping_criteria_vec, iter, "original");
+                criteria_vec("sdp")      = sp.detect_relative_change(obj_val_sdp     , stopping_criteria_vec, iter, "sdp");
+                criteria_vec("loop")     = sp.detect_loop(obj_val_original, obj_val_sdp, stopping_criteria_vec, iter)
             end
         end
 
@@ -48,10 +29,12 @@ classdef stopper < handle
             relative_change = abs((obj_val_vec(iter) - obj_val_vec(iter-1))/obj_val_vec(iter-1));
         end
 
-        function is_loop = detect_loop(sp, obj_val_prim, obj_val_original, stopping_criteria_vec, iter)
-            if ~(sp.check_early(iter, (sp.window_size-1)/2) | sp.check_already(stopping_criteria_vec, iter, "loop"))
-                window_vec_sdp      = obj_val_prim(    iter-(sp.window_size-1):iter )
+        function is_loop = detect_loop(sp, obj_val_original, obj_val_sdp, stopping_criteria_vec, iter)
+            if (sp.check_early(iter, (sp.window_size-1)/2) | sp.check_already(stopping_criteria_vec, iter, "loop"))
+                is_loop = false;
+            else
                 window_vec_original = obj_val_original(iter-(sp.window_size-1):iter )
+                window_vec_sdp      = obj_val_sdp(     iter-(sp.window_size-1):iter )
                 is_loop = ( sp.compare_in_window(window_vec_sdp) | sp.compare_in_window(window_vec_original) );  
             end
         end

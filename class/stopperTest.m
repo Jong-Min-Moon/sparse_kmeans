@@ -1,5 +1,19 @@
 classdef stopperTest < matlab.unittest.TestCase
     methods(Test)
+        function pull_criteria_first(testCase)
+            sp = stopper(3, 0.5);
+            actSolution = sp.pull_criteria([1,0,0,0], [1,0,0,0], ["","", "", ""], 1)
+            expSolution = dictionary(["original", "sdp", "loop"], [false,false,false]);
+            testCase.verifyEqual(actSolution,expSolution)
+        end%pull_criteria_first
+
+        function pull_criteria_original(testCase)
+            sp = stopper(3, 0.5);
+            actSolution = sp.pull_criteria([2,1,0.6,0], [1,10,1,0], ["sdp","loop", "", ""], 3)
+            expSolution = dictionary(["original", "sdp", "loop"], [true,false,false]);
+            testCase.verifyEqual(actSolution,expSolution)
+        end%pull_criteria_first
+
         function detect_relative_change_true(testCase)
             sp = stopper(3, 0.5);
             actSolution = sp.detect_relative_change( [1,1,1,0], ["","loop", "", "sdp"], 3, "sdp")
