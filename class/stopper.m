@@ -55,33 +55,30 @@ classdef stopper < handle
                     stop_decision = false;
                     decision_reason = "early";
                 else
-                    
+                    window_vec_sdp      = obj_val_prim(end-(window_size-1):end);
+                    window_vec_original = obj_val_original(end-(window_size-1):end);
+                    sp.compare_in_window()
                 end
             end
         end
 
-        function loop_decision = compare_in_window(sp, window_vec, percent_change)
+        function decision_loop = compare_in_window(sp, window_vec, percent_change)
             window_size = length(window_vec);
             index_center = (window_size+1)/2;
             value_center = window_vec(index_center);
             value_window = window_vec([1:(index_center-1), (index_center+1), window_size]);
             if sum(abs(value_window - value_center)/value_center < percent_change) >0
-                loop_decision = true;
+                decision_loop = true;
             else
-                loop_decision = false;
-        end
-        function stop = is_stop(ik, iter)
-            if iter == 1
-                stop = false;
-            else
-                
-                relative_change_sdp = abs((ik.obj_val_dual(iter) - ik.obj_val_dual(iter-1))/ik.obj_val_dual(iter-1));
-                if (relative_change_original < 0.01) & (relative_change_sdp < 0.01)
-                    stop = true;
-                else
-                    stop = false;
-                end
+                decision_loop = false;
             end
-        end
-    end
-end
+        end %end of method loop_decision
+        
+        function decision_early = check_early(sp, iter, standard)
+             if iter <= standard
+                 stop_decision = false;
+                 decision_reason = "early";
+             end
+        end%end of method check_early
+    end%end of methods
+end%end of classdef
