@@ -1,6 +1,11 @@
 classdef stopper < handle
-
+    properties
+        percent_change
+    end
     methods
+        function sp = stopper(percent_change)
+            sp.percent_change = percent_change
+        end
         function stop_decision = determine_stop(sp, obj_val_original, obj_val_prim, stopping_criteria, iter, percent_change)
             
             if iter==1
@@ -51,7 +56,7 @@ classdef stopper < handle
                 stop_decision = false;
                 decision_reason = "already";
             else
-                if ~sp.check_early(iter, (window_size-1)/2)
+            if ~(sp.check_early(iter, (window_size-1)/2) | sp.check_already(stopping_criteria_vec, iter, "loop")) 
                     window_vec_sdp      = obj_val_prim(end-(window_size-1):end);
                     window_vec_original = obj_val_original(end-(window_size-1):end);
                     sp.compare_in_window()
@@ -59,12 +64,12 @@ classdef stopper < handle
             end
         end
 
-        function decision_loop = compare_in_window(sp, window_vec, percent_change)
+        function decision_loop = compare_in_window(sp, window_vec)
             window_size = length(window_vec);
             index_center = (window_size+1)/2;
             value_center = window_vec(index_center);
             value_window = window_vec([1:(index_center-1), (index_center+1), window_size]);
-            if sum(abs(value_window - value_center)/value_center < percent_change) >0
+            if sum(abs(value_window - value_center)/value_center < sp.percent_change) >0
                 decision_loop = true;
             else
                 decision_loop = false;
