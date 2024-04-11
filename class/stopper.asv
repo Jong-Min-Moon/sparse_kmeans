@@ -37,20 +37,15 @@ classdef stopper < handle
             end
         end
 
-        function [stop_decision, decision_reason] = detect_relative_change_sdp(sp, obj_val_prim, iter, percent_change)
-            if sum(ismember(stopping_criteria(1:iters), "sdp")) > 0
-                stop_decision = false;
-                decision_reason = "already";
+        function is_converge = detect_relative_change(sp, obj_val_vec, stopping_criteria_vec, iter, criteria)
+            if (sp.check_already(stopping_criteria_vec, iter, criteria) | (sp.get_relative_change(obj_val_vec, iter) > sp.percent_change))
+                is_converge = false;
             else
-                relative_change_original = abs((obj_val_prim(iter) - obj_val_prim(iter-1))/obj_val_prim(iter-1));
-                if (relative_change_original < percent_change)
-                    stop_decision = true;
-                    decision_reason = "active";
-                else
-                    stop_decision = false;
-                    decision_reason = "inactive";
-                end
-            end
+                is_converge = true;
+            end                    
+        end % end of detect_relative_change
+        % function relative_change = get_relative_change(sp, obj_val_vec, iter)
+            relative_change = abs((obj_val_vec(iter) - obj_val_vec(iter-1))/obj_val_vec(iter-1));
         end
 
         function is_loop = detect_loop(sp, obj_val_prim, obj_val_original, stopping_criteria_vec, iter)

@@ -1,5 +1,19 @@
 classdef stopperTest < matlab.unittest.TestCase
     methods(Test)
+        function detect_relative_change_true(testCase)
+            sp = stopper(3, 0.5);
+            actSolution = sp.detect_relative_change( [1,1,1,0], ["","loop", "", "sdp"], 3, "sdp")
+            expSolution = true;
+            testCase.verifyEqual(actSolution,expSolution)
+        end%end of detect_relative_change_true
+
+        function detect_relative_change_false(testCase)
+            sp = stopper(3, 0.5);
+            actSolution = sp.detect_relative_change( [1,1,0.3,0], ["loop","sdp", "", "original"], 3, "original")
+            expSolution = false;
+            testCase.verifyEqual(actSolution,expSolution)
+        end%end of detect_relative_change_true
+
         function detect_loop_true(testCase)
             sp = stopper(3, 0.5);
             actSolution = sp.detect_loop([2,2,2,3,2,0], [2,2,2,3,2,0], ["","","","","",""], 5)
