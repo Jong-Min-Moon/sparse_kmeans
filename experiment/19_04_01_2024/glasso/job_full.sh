@@ -4,10 +4,10 @@
 cluster_home="/home1/jongminm"
 project_name="sparse_kmeans"
 meeting_date="19_04_01_2024"
-experiment_name="ISEE_dirty"
+experiment_name="glasso"
 extension_code="m"
 extension_result="csv"
-table_name="sparse_kmeans_isee_dirty"
+table_name="sparse_kmeans_glasso"
 project_dir="${cluster_home}/${project_name}"
 code_dir="${project_dir}/experiment/${meeting_date}/${experiment_name}"
 data_setting_dir="${project_dir}/code_data_setting"
@@ -17,13 +17,13 @@ s=10
 n=500
 n_iter_max=100
 
-for rho in 20 35 45
+for rho in 20 #35 45
     do
-    for Delta in 4 3
+    for Delta in 4 #3
         do
-        for p in  100 200 300 400
+        for p in  100 #200 300 400
             do
-            for ii in {1..10}
+            for ii in {1..1}
                 do
                     #filename of code
                     filename_code="rho${rho}_Delta${Delta}_p${p}_rep_${ii}"

@@ -98,11 +98,7 @@ classdef data_gaussian < handle
 
 
 
-        
-        function precision_matrix = get_precision_matrix()
-            disp("implement")
-        end
-
+ 
 
 
         
