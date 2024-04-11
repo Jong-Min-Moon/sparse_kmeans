@@ -1,0 +1,32 @@
+classdef stopper < handle
+
+    methods
+        function determine_stop(sp, obj_val_original, obj_val_prim, iter)
+            if iter==1
+                stop_decision = false;
+            else
+
+            end
+        end
+
+        function detect_relative_change_original(sp, obj_val_original, iter, percent_change)
+            relative_change_original = abs((obj_val_original(iter) - obj_val_original(iter-1))/obj_val_original(iter-1));
+            if (relative_change_original < percent_change)
+                stop_decision = false;
+            end
+        end
+        function stop = is_stop(ik, iter)
+            if iter == 1
+                stop = false;
+            else
+                
+                relative_change_sdp = abs((ik.obj_val_dual(iter) - ik.obj_val_dual(iter-1))/ik.obj_val_dual(iter-1));
+                if (relative_change_original < 0.01) & (relative_change_sdp < 0.01)
+                    stop = true;
+                else
+                    stop = false;
+                end
+            end
+        end
+    end
+end
