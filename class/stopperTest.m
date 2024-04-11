@@ -14,9 +14,16 @@ classdef stopperTest < matlab.unittest.TestCase
             testCase.verifyEqual(actSolution,expSolution)
         end%end of loop_decision_return_false
         
+        function check_early_true(testCase)
+            sp = stopper();
+            actSolution = sp.check_early(1,1);
+            expSolution = true;
+            testCase.verifyEqual(actSolution,expSolution)
+        end%end of check_early_true
+
         function check_early_false(testCase)
             sp = stopper();
-            [actSolution, ~] = sp.check_early(1,1);
+            actSolution = sp.check_early(299,5);
             expSolution = false;
             testCase.verifyEqual(actSolution,expSolution)
         end%end of check_early_true

@@ -51,10 +51,7 @@ classdef stopper < handle
                 stop_decision = false;
                 decision_reason = "already";
             else
-                if iter <= (window_size-1)/2
-                    stop_decision = false;
-                    decision_reason = "early";
-                else
+                if ~sp.check_early(iter, (window_size-1)/2)
                     window_vec_sdp      = obj_val_prim(end-(window_size-1):end);
                     window_vec_original = obj_val_original(end-(window_size-1):end);
                     sp.compare_in_window()
@@ -74,10 +71,11 @@ classdef stopper < handle
             end
         end %end of method loop_decision
         
-        function [stop_decision, decision_reason] = check_early(sp, iter, standard)
+        function is_early = check_early(sp, iter, standard)
              if iter <= standard
-                 stop_decision = false;
-                 decision_reason = "early";
+                 is_early = true;
+             else
+                 is_early = false;
              end
         end%end of method check_early
     end%end of methods
