@@ -74,7 +74,7 @@ classdef stopper < handle
             end
         end %end of method loop_decision
         
-        function decision_early = check_early(sp, iter, standard)
+        function [stop_decision, decision_reason] = check_early(sp, iter, standard)
              if iter <= standard
                  stop_decision = false;
                  decision_reason = "early";
