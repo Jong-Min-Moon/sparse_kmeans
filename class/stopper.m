@@ -1,12 +1,14 @@
 classdef stopper < handle
     properties
+        window_size
         percent_change
     end
     methods
-        function sp = stopper(percent_change)
-            sp.percent_change = percent_change
+        function sp = stopper(window_size, percent_change)
+            sp.window_size = window_size;
+            sp.percent_change = percent_change;
         end
-        function stop_decision = determine_stop(sp, obj_val_original, obj_val_prim, stopping_criteria, iter, percent_change)
+        function stop_decision = determine_stop(sp, obj_val_original, obj_val_sdp, stopping_criteria, iter, percent_change)
             
             if iter==1
                 stop_decision = false;
@@ -51,28 +53,26 @@ classdef stopper < handle
             end
         end
 
-        function [stop_decision, decision_reason] = detect_loop(sp, obj_val_prim, obj_val_original, iter, window_size)
-            if sum(ismember(stopping_criteria(1:iters), "loop")) > 0
-                stop_decision = false;
-                decision_reason = "already";
-            else
-            if ~(sp.check_early(iter, (window_size-1)/2) | sp.check_already(stopping_criteria_vec, iter, "loop")) 
-                    window_vec_sdp      = obj_val_prim(end-(window_size-1):end);
-                    window_vec_original = obj_val_original(end-(window_size-1):end);
-                    sp.compare_in_window()
-                end
+        function is_loop = detect_loop(sp, obj_val_prim, obj_val_original, stopping_criteria_vec, iter)
+            if ~(sp.check_early(iter, (sp.window_size-1)/2) | sp.check_already(stopping_criteria_vec, iter, "loop"))
+                window_vec_sdp      = obj_val_prim(    iter-(sp.window_size-1):iter )
+                window_vec_original = obj_val_original(iter-(sp.window_size-1):iter )
+                is_loop = ( sp.compare_in_window(window_vec_sdp) | sp.compare_in_window(window_vec_original) );  
             end
         end
 
         function decision_loop = compare_in_window(sp, window_vec)
-            window_size = length(window_vec);
-            index_center = (window_size+1)/2;
-            value_center = window_vec(index_center);
-            value_window = window_vec([1:(index_center-1), (index_center+1), window_size]);
-            if sum(abs(value_window - value_center)/value_center < sp.percent_change) >0
-                decision_loop = true;
+            if length(window_vec) == sp.window_size
+                index_center = (sp.window_size+1)/2
+                value_center = window_vec(index_center)
+                value_window = window_vec
+                if sum(abs(value_window - value_center)/value_center < sp.percent_change) >1
+                    decision_loop = true;
+                else
+                    decision_loop = false;
+                end
             else
-                decision_loop = false;
+                error("the window size does not match")
             end
         end %end of method loop_decision
         
