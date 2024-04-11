@@ -1,20 +1,51 @@
 classdef stopper < handle
 
     methods
-        function determine_stop(sp, obj_val_original, obj_val_prim, iter)
+        function stop_decision = determine_stop(sp, obj_val_original, obj_val_prim, stopping_criteria, iter, percent_change)
             if iter==1
                 stop_decision = false;
+                decision_reason = "first";
             else
-
+                [stop_decision, decision_reason] = sp.detect_relative_change_original(obj_val_original, iter, percent_change)
+                if stop_decision == false
+                    
+                end
+                
             end
         end
 
-        function detect_relative_change_original(sp, obj_val_original, iter, percent_change)
-            relative_change_original = abs((obj_val_original(iter) - obj_val_original(iter-1))/obj_val_original(iter-1));
-            if (relative_change_original < percent_change)
+        function [stop_decision, decision_reason] = detect_relative_change_original(sp, obj_val_original, iter, percent_change)
+            if sum(ismember(stopping_criteria(1:iters), "original"))>0
                 stop_decision = false;
+                decision_reason = "already"
+            else
+                relative_change_original = abs((obj_val_original(iter) - obj_val_original(iter-1))/obj_val_original(iter-1));
+                if (relative_change_original < percent_change)
+                    stop_decision = true;
+                    decision_reason = "active"
+                else
+                    stop_decision = false;
+                    decision_reason = "inactive"
+                end
             end
         end
+
+        function [stop_decision, decision_reason] = detect_relative_change_sdp(sp, obj_val_prim, iter, percent_change)
+            if sum(ismember(stopping_criteria(1:iters), "sdp"))>0
+                stop_decision = false;
+                decision_reason = "already"
+            else
+                relative_change_original = abs((obj_val_prim(iter) - obj_val_prim(iter-1))/obj_val_prim(iter-1));
+                if (relative_change_original < percent_change)
+                    stop_decision = true;
+                    decision_reason = "active"
+                else
+                    stop_decision = false;
+                    decision_reason = "inactive"
+                end
+            end
+        end
+
         function stop = is_stop(ik, iter)
             if iter == 1
                 stop = false;
