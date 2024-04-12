@@ -1,39 +1,39 @@
 classdef stopperTest < matlab.unittest.TestCase
     methods(Test)
-        function pull_criteria_first(testCase)
+        function apply_criteria_first(testCase)
             sp = stopper(100, 3, 0.5);
-            actSolution = sp.pull_criteria([1,0,0,0], [1,0,0,0], ["","", "", ""], 1)
+            actSolution = sp.apply_criteria([1,0,0,0], [1,0,0,0], ["","", "", ""], 1)
             expSolution = dictionary(["original", "sdp", "loop"], [false,false,false]);
             testCase.verifyEqual(actSolution,expSolution)
-        end%pull_criteria_first
+        end%apply_criteria_first
 
-        function pull_criteria_original(testCase)
+        function apply_criteria_original(testCase)
             sp = stopper(100, 3, 0.5);
-            actSolution = sp.pull_criteria([2,1,0.6,0], [1,10,1,0], ["sdp","loop", "", ""], 3)
+            actSolution = sp.apply_criteria([2,1,0.6,0], [1,10,1,0], ["sdp","loop", "", ""], 3)
             expSolution = dictionary(["original", "sdp", "loop"], [true,false,false]);
             testCase.verifyEqual(actSolution,expSolution)
-        end%pull_criteria_original
+        end%apply_criteria_original
 
-        function pull_criteria_sdp(testCase)
+        function apply_criteria_sdp(testCase)
             sp = stopper(100, 3, 0.5);
-            actSolution = sp.pull_criteria([1,10,1,0], [2,1,0.6,0],  ["original","loop", "", ""], 3)
+            actSolution = sp.apply_criteria([1,10,1,0], [2,1,0.6,0],  ["original","loop", "", ""], 3)
             expSolution = dictionary(["original", "sdp", "loop"], [false, true, false]);
             testCase.verifyEqual(actSolution,expSolution)
-        end%pull_criteria_original
+        end%apply_criteria_original
 
-        function pull_criteria_loop(testCase)
+        function apply_criteria_loop(testCase)
             sp = stopper(100, 5, 0.00001);
-            actSolution = sp.pull_criteria([1,5,1,5,1,5,0,0,0], [0,0,0,0,0,0,0,0,0],  ["","sdp", "", "", "", "","","",""], 6)
+            actSolution = sp.apply_criteria([1,5,1,5,1,5,0,0,0], [0,0,0,0,0,0,0,0,0],  ["","sdp", "", "", "", "","","",""], 6)
             expSolution = dictionary(["original", "sdp", "loop"], [false, false, true]);
             testCase.verifyEqual(actSolution,expSolution)
-        end%pull_criteria_loop
+        end%apply_criteria_loop
 
-        function pull_criteria_nonstop(testCase)
+        function apply_criteria_nonstop(testCase)
             sp = stopper(100, 5, 0.00001);
-            actSolution = sp.pull_criteria([10,9,8,7,6,5,4,3], [10,9,8,7,6,5,4,3],  ["","", "", "", "", "","","",""], 8)
+            actSolution = sp.apply_criteria([10,9,8,7,6,5,4,3], [10,9,8,7,6,5,4,3],  ["","", "", "", "", "","","",""], 8)
             expSolution = dictionary(["original", "sdp", "loop"], [false, false, false]);
             testCase.verifyEqual(actSolution,expSolution)
-        end%pull_criteria_nonstop
+        end%apply_criteria_nonstop
 
         function detect_relative_change_true(testCase)
             sp = stopper(100, 3, 0.5);

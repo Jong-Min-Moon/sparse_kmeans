@@ -3,7 +3,7 @@ classdef stopper < handle
         window_size
         percent_change
         max_iter
-        stop_history
+        stop_history
     end
     methods
         function sp = stopper(max_iter, window_size, percent_change)
@@ -17,16 +17,19 @@ classdef stopper < handle
             criteria_vec = dictionary(["original", "sdp", "loop"], [false,false,false]);
             if iter>1
                 is_converge_original = sp.detect_relative_change(obj_val_original, stopping_criteria_vec, iter, "original");
+                criteria_vec("original") = is_converge_original;
                 if is_converge_original
                     sp.stop_history(iter, 1) = is_converge_original;
                 end
 
                 is_converge_sdp = sp.detect_relative_change(obj_val_sdp, stopping_criteria_vec, iter, "sdp");
+                criteria_vec("sdp") = is_converge_sdp;
                 if is_converge_sdp
                     sp.stop_history(iter, 2) = is_converge_sdp;
                 end
 
                 is_loop = sp.detect_loop(obj_val_original, obj_val_sdp, stopping_criteria_vec, iter);
+                criteria_vec("loop") = is_loop;
                 if is_loop
                     sp.stop_history(iter - (sp.window_size-1)/2, 3) = is_loop;
                 end
