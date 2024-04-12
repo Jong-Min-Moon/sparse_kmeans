@@ -14,6 +14,7 @@ properties
     obj_val_original
     cluster_est
     iter_stop
+    stop_decider
 end
 
 methods
@@ -22,46 +23,40 @@ methods
         ik.number_cluster = number_cluster;
         ik.omega_sparsity = omega_sparsity;
         ik.init_method = init_method;
+
     end
     
-    function learn(ik, max_n_iter) 
-        ik.initialize_saving_matrix(max_n_iter)
-  
-        %initialization
-        initial_cluster_assign = ik.get_initial_cluster_assign();
-        ik.cluster_est(1,:) = initial_cluster_assign;
- 
-        for iter = 1:max_n_iter
-            fprintf("\n%i th thresholding\n\n", iter)
+    function run_single_iter(ik, iter)
+        fprintf("\n%i th thresholding\n\n", iter)
             
-            %estimation and thresholding
+        %estimation and thresholding
+        tic
+        [data_innovated_small, data_innovated_big, sample_covariance_small] = ik.data_object.threshold(ik.cluster_est(iter,:), ik.omega_sparsity);
+
+        ik.omega_est_time(iter) = toc;
+        ik.entries_survived(iter,:) = ik.data_object.support;
+        ik.x_tilde_est(:,:,iter) = data_innovated_big;
+        n_survived = sum(ik.data_object.support);
+        fprintf("\n%i entries survived \n",n_survived)
+        if n_survived > 0
+            fprintf('solving SDP...')
             tic
-            [data_innovated_small, data_innovated_big, sample_covariance_small] = ik.data_object.threshold(ik.cluster_est(iter,:), ik.omega_sparsity);
-
-            ik.omega_est_time(iter) = toc;
-            ik.entries_survived(iter,:) = ik.data_object.support;
-            ik.x_tilde_est(:,:,iter) = data_innovated_big;
-            n_survived = sum(ik.data_object.support);
-            fprintf("\n%i entries survived \n",n_survived)
-            if n_survived > 0
-                fprintf('solving SDP...')
-                tic
-                [Z_now, obj_val] = kmeans_sdp( data_innovated_small' * sample_covariance_small * data_innovated_small/ ik.data_object.sample_size, ik.data_object.number_cluster);
-                clutser_est_vec = sdp_to_cluster(Z_now, ik.data_object.number_cluster);
-                ik.sdp_solve_time(iter) = toc;
-                ik.obj_val_prim(iter) = obj_val(1);
-                ik.obj_val_dual(iter) = obj_val(2);
-                ik.obj_val_original(iter) = ik.get_objective_value_original(clutser_est_vec);
-                ik.cluster_est(iter+1, :) = clutser_est_vec;
-                
-                fprintf('took %fs, relaxed dual: %f, original: %f \n', [ik.sdp_solve_time(iter), ik.obj_val_dual(iter), ik.obj_val_original(iter)])
-            else
-                fprintf('All entries dead. Re-initializing...')
-                clutser_est_vec = ik.get_initial_cluster_assign();
-                ik.cluster_est(iter+1, :) = clutser_est_vec;  
-            end
-
-            % decide to stop or not
+            [Z_now, obj_val] = kmeans_sdp( data_innovated_small' * sample_covariance_small * data_innovated_small/ ik.data_object.sample_size, ik.data_object.number_cluster);
+            clutser_est_vec = sdp_to_cluster(Z_now, ik.data_object.number_cluster);
+            ik.sdp_solve_time(iter) = toc;
+            ik.obj_val_prim(iter) = obj_val(1);
+            ik.obj_val_dual(iter) = obj_val(2);
+            ik.obj_val_original(iter) = ik.get_objective_value_original(clutser_est_vec);
+            ik.cluster_est(iter+1, :) = clutser_est_vec;
+            fprintf('took %fs, relaxed dual: %f, original: %f \n', [ik.sdp_solve_time(iter), ik.obj_val_dual(iter), ik.obj_val_original(iter)])
+        else
+            fprintf('All entries dead. Re-initializing...')
+            clutser_est_vec = ik.get_initial_cluster_assign();
+            ik.cluster_est(iter+1, :) = clutser_est_vec;  
+        end
+        
+        % stopping criterion
+        ik.stop_decider.apply_criteria(ik.obj_val_original, ik.obj_val_prim, stopping_criteria_vec, iter)
             if ik.is_stop(iter)
                 ik.iter_stop = iter;
                 fprintf("\n final iteration = %i ", ik.iter_stop)
@@ -69,10 +64,18 @@ methods
             end
             if iter == max_n_iter
                 ik.iter_stop = max_n_iter;
-                fprintf("\n final iteration = %i ", ik.iter_stop)
-            end
-            
-
+                fprintf("\n final iteration = %i ", ik.iter_stop)    
+    end
+        function run_iterative_algorithm(ik, max_n_iter, window_size, percent_change)
+        ik.stop_decider = stopper(max_n_iter, window_size, percent_change);
+        ik.initialize_saving_matrix(max_n_iter)
+  
+        %initialization
+        initial_cluster_assign = ik.get_initial_cluster_assign();
+        ik.cluster_est(1,:) = initial_cluster_assign;
+ 
+        for iter = 1:max_n_iter
+            ik.run_single_iter(iter)
         end % end one iteration
     end
 
