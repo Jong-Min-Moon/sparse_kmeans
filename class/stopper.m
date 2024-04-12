@@ -3,14 +3,16 @@ classdef stopper < handle
         window_size
         percent_change
         max_iter
+        stop_history
     end
     methods
-        function sp = stopper(window_size, percent_change, max_iter)
+        function sp = stopper(max_iter, window_size, percent_change)
             sp.window_size = window_size;
             sp.percent_change = percent_change;
             sp.max_iter = max_iter;
+            sp.stop_history = repelem(false, max_iter,3);
         end
-
+        
         function criteria_vec = pull_criteria(sp, obj_val_original, obj_val_sdp, stopping_criteria_vec, iter)
             criteria_vec = dictionary(["original", "sdp", "loop"], [false,false,false]);
             if iter>1
