@@ -51,8 +51,8 @@ classdef stopper < handle
             relative_change = abs((obj_val_vec(iter) - obj_val_vec(iter-1))/obj_val_vec(iter-1));
         end
 
-        function is_loop = detect_loop(sp, obj_val_original, obj_val_sdp, stopping_criteria_vec, iter)
-            if (sp.check_early(iter, (sp.window_size-1)/2) | sp.check_already(stopping_criteria_vec, iter, "loop"))
+        function is_loop = detect_loop(sp, obj_val_original, obj_val_sdp, iter)
+            if (sp.check_early(iter, (sp.window_size-1)/2) | sp.check_already(iter, "loop"))
                 is_loop = false;
             else
                 window_vec_original = obj_val_original(iter-(sp.window_size-1):iter )

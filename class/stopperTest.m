@@ -51,14 +51,14 @@ classdef stopperTest < matlab.unittest.TestCase
 
         function detect_loop_true(testCase)
             sp = stopper(100, 3, 0.5);
-            actSolution = sp.detect_loop([2,2,2,3,2,0], [2,2,2,3,2,0], ["","","","","",""], 5)
+            actSolution = sp.detect_loop([2,2,2,3,2,0], [2,2,2,3,2,0], 5)
             expSolution = true;
             testCase.verifyEqual(actSolution,expSolution)
         end%end of detect_loop_true
 
         function detect_loop_false(testCase)
             sp = stopper(100, 3, 0.3);
-            actSolution = sp.detect_loop([2,2,2,10,2,0], [2,2,2,10,2,0], ["","","","","",""], 5)
+            actSolution = sp.detect_loop([2,2,2,10,2,0], [2,2,2,10,2,0], 5)
             expSolution = false;
             testCase.verifyEqual(actSolution,expSolution)
         end%end of detect_loop_true
