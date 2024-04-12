@@ -2,11 +2,13 @@ classdef stopper < handle
     properties
         window_size
         percent_change
+        max_iter
     end
     methods
-        function sp = stopper(window_size, percent_change)
+        function sp = stopper(window_size, percent_change, max_iter)
             sp.window_size = window_size;
             sp.percent_change = percent_change;
+            sp.max_iter = max_iter;
         end
 
         function criteria_vec = pull_criteria(sp, obj_val_original, obj_val_sdp, stopping_criteria_vec, iter)
