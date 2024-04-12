@@ -3,27 +3,37 @@ classdef stopper < handle
         window_size
         percent_change
         max_iter
-        stop_history
+        stop_history
     end
     methods
         function sp = stopper(max_iter, window_size, percent_change)
             sp.window_size = window_size;
             sp.percent_change = percent_change;
             sp.max_iter = max_iter;
+            original = replelem(false, )
             sp.stop_history = repelem(false, max_iter,3);
         end
         
-        function criteria_vec = pull_criteria(sp, obj_val_original, obj_val_sdp, stopping_criteria_vec, iter)
+        function criteria_vec = apply_criteria(sp, obj_val_original, obj_val_sdp, stopping_criteria_vec, iter)
             criteria_vec = dictionary(["original", "sdp", "loop"], [false,false,false]);
             if iter>1
                 is_converge_original = sp.detect_relative_change(obj_val_original, stopping_criteria_vec, iter, "original");
+                criteria_vec("original") = is_converge_original;
                 if is_converge_original
-                    sp.stop_history(iter,1) = is_converge_original;
+                    sp.stop_history(iter, 1) = is_converge_original;
                 end
-                is_converge_sdp      = sp.detect_relative_change(obj_val_sdp, stopping_criteria_vec, iter, "sdp");
+
+                is_converge_sdp = sp.detect_relative_change(obj_val_sdp, stopping_criteria_vec, iter, "sdp");
+                criteria_vec("sdp") = is_converge_sdp;
                 if is_converge_sdp
-                    
-                criteria_vec("loop")     = sp.detect_loop(obj_val_original, obj_val_sdp, stopping_criteria_vec, iter)
+                    sp.stop_history(iter, 2) = is_converge_sdp;
+                end
+
+                is_loop = sp.detect_loop(obj_val_original, obj_val_sdp, stopping_criteria_vec, iter);
+                criteria_vec("loop") = is_loop;
+                if is_loop
+                    sp.stop_history(iter - (sp.window_size-1)/2, 3) = is_loop;
+                end
             end
         end
 
@@ -63,7 +73,7 @@ classdef stopper < handle
             end
         end %end of method loop_decision
         
-        function is_already = check_already(sp, stopping_criteria_vec, iter, criteria) 
+        function is_already = check_already(sp, iter, criteria) 
             is_already =  sum(ismember(stopping_criteria_vec(1:iter), criteria)) > 0;
         end%end of is_already
 

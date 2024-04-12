@@ -10,7 +10,11 @@ classdef stopper < handle
             sp.window_size = window_size;
             sp.percent_change = percent_change;
             sp.max_iter = max_iter;
-            sp.stop_history = repelem(false, max_iter,3);
+
+            original = repelem(false, max_iter, 1);
+            sdp = repelem(false, max_iter, 1);
+            loop = repelem(false, max_iter, 1);
+            sp.stop_history = table(original, sdp, loop);
         end
         
         function criteria_vec = apply_criteria(sp, obj_val_original, obj_val_sdp, stopping_criteria_vec, iter)
@@ -19,19 +23,19 @@ classdef stopper < handle
                 is_converge_original = sp.detect_relative_change(obj_val_original, stopping_criteria_vec, iter, "original");
                 criteria_vec("original") = is_converge_original;
                 if is_converge_original
-                    sp.stop_history(iter, 1) = is_converge_original;
+                    sp.stop_history{iter, "original"} = is_converge_original;
                 end
 
                 is_converge_sdp = sp.detect_relative_change(obj_val_sdp, stopping_criteria_vec, iter, "sdp");
                 criteria_vec("sdp") = is_converge_sdp;
                 if is_converge_sdp
-                    sp.stop_history(iter, 2) = is_converge_sdp;
+                    sp.stop_history{iter, "sdp"} = is_converge_sdp;
                 end
 
                 is_loop = sp.detect_loop(obj_val_original, obj_val_sdp, stopping_criteria_vec, iter);
                 criteria_vec("loop") = is_loop;
                 if is_loop
-                    sp.stop_history(iter - (sp.window_size-1)/2, 3) = is_loop;
+                    sp.stop_history{iter - (sp.window_size-1)/2, "loop"} = is_loop;
                 end
             end
         end
@@ -72,8 +76,8 @@ classdef stopper < handle
             end
         end %end of method loop_decision
         
-        function is_already = check_already(sp, stopping_criteria_vec, iter, criteria) 
-            is_already =  sum(ismember(stopping_criteria_vec(1:iter), criteria)) > 0;
+        function is_already = check_already(sp, iter, criteria) 
+            is_already =  sum(sp.stop_history{1:iter, criteria}) > 0;
         end%end of is_already
 
         function is_early = check_early(sp, iter, standard)
