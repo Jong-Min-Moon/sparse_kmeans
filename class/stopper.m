@@ -17,31 +17,31 @@ classdef stopper < handle
             sp.stop_history = table(original, sdp, loop);
         end
         
-        function criteria_vec = apply_criteria(sp, obj_val_original, obj_val_sdp, stopping_criteria_vec, iter)
-            criteria_vec = dictionary(["original", "sdp", "loop"], [false,false,false]);
+        function criteria_vec = apply_criteria(sp, obj_val_original, obj_val_sdp, iter)
+            criteria_vec = sp.stop_history(iter,:);
             if iter>1
-                is_converge_original = sp.detect_relative_change(obj_val_original, stopping_criteria_vec, iter, "original");
-                criteria_vec("original") = is_converge_original;
+                is_converge_original = sp.detect_relative_change(obj_val_original, iter, "original");
+                criteria_vec{1, "original"} = is_converge_original;
                 if is_converge_original
                     sp.stop_history{iter, "original"} = is_converge_original;
                 end
 
-                is_converge_sdp = sp.detect_relative_change(obj_val_sdp, stopping_criteria_vec, iter, "sdp");
-                criteria_vec("sdp") = is_converge_sdp;
+                is_converge_sdp = sp.detect_relative_change(obj_val_sdp, iter, "sdp");
+                criteria_vec{1, "sdp"} = is_converge_sdp;
                 if is_converge_sdp
                     sp.stop_history{iter, "sdp"} = is_converge_sdp;
                 end
 
-                is_loop = sp.detect_loop(obj_val_original, obj_val_sdp, stopping_criteria_vec, iter);
-                criteria_vec("loop") = is_loop;
+                is_loop = sp.detect_loop(obj_val_original, obj_val_sdp, iter);
+                criteria_vec{1, "loop"} = is_loop;
                 if is_loop
                     sp.stop_history{iter - (sp.window_size-1)/2, "loop"} = is_loop;
                 end
             end
         end
 
-        function is_converge = detect_relative_change(sp, obj_val_vec, stopping_criteria_vec, iter, criteria)
-            if (sp.check_already(stopping_criteria_vec, iter, criteria) | (sp.get_relative_change(obj_val_vec, iter) > sp.percent_change))
+        function is_converge = detect_relative_change(sp, obj_val_vec, iter, criteria)
+            if (sp.check_already(iter, criteria) | (sp.get_relative_change(obj_val_vec, iter) > sp.percent_change))
                 is_converge = false;
             else
                 is_converge = true;
@@ -52,7 +52,7 @@ classdef stopper < handle
         end
 
         function is_loop = detect_loop(sp, obj_val_original, obj_val_sdp, iter)
-            if (sp.check_early(iter, (sp.window_size-1)/2) | sp.check_already(iter, "loop"))
+            if (sp.check_early(iter, sp.window_size) | sp.check_already(iter, "loop"))
                 is_loop = false;
             else
                 window_vec_original = obj_val_original(iter-(sp.window_size-1):iter )

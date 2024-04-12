@@ -2,63 +2,98 @@ classdef stopperTest < matlab.unittest.TestCase
     methods(Test)
         function apply_criteria_first(testCase)
             sp = stopper(100, 3, 0.5);
-            actSolution = sp.apply_criteria([1,0,0,0], [1,0,0,0], ["","", "", ""], 1)
-            expSolution = dictionary(["original", "sdp", "loop"], [false,false,false]);
+            actSolution = sp.apply_criteria([1,0,0,0], [1,0,0,0], 1)
+            original = false;
+            sdp = false;
+            loop = false;
+            expSolution = table(original, sdp, loop);
             testCase.verifyEqual(actSolution,expSolution)
         end%apply_criteria_first
 
         function apply_criteria_original(testCase)
-            sp = stopper(100, 3, 0.5);
-            actSolution = sp.apply_criteria([2,1,0.6,0], [1,10,1,0], ["sdp","loop", "", ""], 3)
-            expSolution = dictionary(["original", "sdp", "loop"], [true,false,false]);
+            sp = stopper(100, 5, 0.01);
+            actSolution = sp.apply_criteria([2, 1, 1.9, 0.8, 0.7999], [1,10,100,1000, 10000], 5)
+            original = true;
+            sdp = false;
+            loop = false;
+            expSolution = table(original, sdp, loop);
+            testCase.verifyEqual(actSolution,expSolution)
+        end%apply_criteria_original_loop
+
+        function apply_criteria_sdp(testCase)
+            sp = stopper(100, 5, 0.01);
+            actSolution = sp.apply_criteria([1,10,100,1000, 10000], [2, 1, 1.9, 0.8, 0.7999], 5)
+            original = false;
+            sdp = true;
+            loop = false;
+            expSolution = table(original, sdp, loop);
             testCase.verifyEqual(actSolution,expSolution)
         end%apply_criteria_original
 
-        function apply_criteria_sdp(testCase)
-            sp = stopper(100, 3, 0.5);
-            actSolution = sp.apply_criteria([1,10,1,0], [2,1,0.6,0],  ["original","loop", "", ""], 3)
-            expSolution = dictionary(["original", "sdp", "loop"], [false, true, false]);
+        function apply_criteria_original_loop(testCase)
+            sp = stopper(100, 5, 0.01);
+            actSolution = sp.apply_criteria([1, 10, 100, 1000, 999.9999], [1,3,1,3,1], 5)
+            original = true;
+            sdp = false;
+            loop = true;
+            expSolution = table(original, sdp, loop);
             testCase.verifyEqual(actSolution,expSolution)
-        end%apply_criteria_original
+        end%apply_criteria_original_loop
 
         function apply_criteria_loop(testCase)
             sp = stopper(100, 5, 0.00001);
-            actSolution = sp.apply_criteria([1,5,1,5,1,5,0,0,0], [0,0,0,0,0,0,0,0,0],  ["","sdp", "", "", "", "","","",""], 6)
-            expSolution = dictionary(["original", "sdp", "loop"], [false, false, true]);
+            actSolution = sp.apply_criteria([99,99,999,999,1,3,1,3,1], [1,10,100,1000,10000,100000,1000000,10000000,100000000], 9)
+            original = false;
+            sdp = false;
+            loop = true;
+            expSolution = table(original, sdp, loop);
             testCase.verifyEqual(actSolution,expSolution)
         end%apply_criteria_loop
 
         function apply_criteria_nonstop(testCase)
             sp = stopper(100, 5, 0.00001);
-            actSolution = sp.apply_criteria([10,9,8,7,6,5,4,3], [10,9,8,7,6,5,4,3],  ["","", "", "", "", "","","",""], 8)
-            expSolution = dictionary(["original", "sdp", "loop"], [false, false, false]);
+            actSolution = sp.apply_criteria([10,9,8,7,6,5,4,3], [10,9,8,7,6,5,4,3], 8)
+            original = false;
+            sdp = false;
+            loop = false;
+            expSolution = table(original, sdp, loop);
             testCase.verifyEqual(actSolution,expSolution)
         end%apply_criteria_nonstop
 
         function detect_relative_change_true(testCase)
             sp = stopper(100, 3, 0.5);
-            actSolution = sp.detect_relative_change( [1,1,1,0], ["","loop", "", "sdp"], 3, "sdp")
+            sp.stop_history{1:4, "original"} = [false, false, false, true]';
+            actSolution = sp.detect_relative_change( [1,1,1,0], 3, "sdp")
             expSolution = true;
             testCase.verifyEqual(actSolution,expSolution)
         end%end of detect_relative_change_true
 
         function detect_relative_change_false(testCase)
             sp = stopper(100, 3, 0.5);
-            actSolution = sp.detect_relative_change( [1,1,0.3,0], ["loop","sdp", "", "original"], 3, "original")
+            sp.stop_history{1:4, "original"} = [false, false, false, true]';
+            actSolution = sp.detect_relative_change( [1,1,0.3,0], 3, "original")
             expSolution = false;
             testCase.verifyEqual(actSolution,expSolution)
         end%end of detect_relative_change_true
 
+        function detect_relative_change_already(testCase)
+            sp = stopper(100, 3, 0.5);
+            sp.stop_history{1:4, "original"} = [false, false, true, true]';
+            actSolution = sp.detect_relative_change( [1,1,1,0], 3, "original")
+            expSolution = false;
+            testCase.verifyEqual(actSolution,expSolution)
+        end%end of detect_relative_change_already
+
         function detect_loop_true(testCase)
             sp = stopper(100, 3, 0.5);
-            actSolution = sp.detect_loop([2,2,2,3,2,0], [2,2,2,3,2,0], 5)
+            actSolution = sp.detect_loop([2,2,2,3,2,0], [2,2,2,3,2,0], 5);
             expSolution = true;
             testCase.verifyEqual(actSolution,expSolution)
         end%end of detect_loop_true
 
         function detect_loop_false(testCase)
             sp = stopper(100, 3, 0.3);
-            actSolution = sp.detect_loop([2,2,2,10,2,0], [2,2,2,10,2,0], 5)
+            actSolution = sp.detect_loop([2,2,2,10,2,0], [2,2,2,10,2,0], 5);
             expSolution = false;
             testCase.verifyEqual(actSolution,expSolution)
         end%end of detect_loop_true
@@ -93,7 +128,7 @@ classdef stopperTest < matlab.unittest.TestCase
 
         function check_already_true(testCase)
             sp = stopper(100, 3, 0.01);
-            sp.stop_history{1:8, "loop"} = [false, false, false, true, false, false, false, false]'
+            sp.stop_history{1:8, "loop"} = [false, false, false, true, false, false, false, false]';
             actSolution = sp.check_already(5, "loop");
             expSolution = true;
             testCase.verifyEqual(actSolution,expSolution)
@@ -101,7 +136,7 @@ classdef stopperTest < matlab.unittest.TestCase
 
         function check_already_false(testCase)
             sp = stopper(100, 3, 0.01);
-            sp.stop_history{1:8, "original"} = [false, false, false, false, false, false, true, false]'
+            sp.stop_history{1:8, "original"} = [false, false, false, false, false, false, true, false]';
             actSolution = sp.check_already(5, "original");
             expSolution = false;
             testCase.verifyEqual(actSolution,expSolution)

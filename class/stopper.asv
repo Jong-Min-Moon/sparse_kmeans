@@ -10,35 +10,38 @@ classdef stopper < handle
             sp.window_size = window_size;
             sp.percent_change = percent_change;
             sp.max_iter = max_iter;
-            original = replelem(false, )
-            sp.stop_history = repelem(false, max_iter,3);
+
+            original = repelem(false, max_iter, 1);
+            sdp = repelem(false, max_iter, 1);
+            loop = repelem(false, max_iter, 1);
+            sp.stop_history = table(original, sdp, loop);
         end
         
-        function criteria_vec = apply_criteria(sp, obj_val_original, obj_val_sdp, stopping_criteria_vec, iter)
-            criteria_vec = dictionary(["original", "sdp", "loop"], [false,false,false]);
+        function criteria_vec = apply_criteria(sp, obj_val_original, obj_val_sdp, iter)
+            criteria_vec = sp.stop_history(iter,:);
             if iter>1
-                is_converge_original = sp.detect_relative_change(obj_val_original, stopping_criteria_vec, iter, "original");
-                criteria_vec("original") = is_converge_original;
+                is_converge_original = sp.detect_relative_change(obj_val_original, iter, "original");
+                criteria_vec{1, "original"} = is_converge_original;
                 if is_converge_original
-                    sp.stop_history(iter, 1) = is_converge_original;
+                    sp.stop_history{iter, "original"} = is_converge_original;
                 end
 
-                is_converge_sdp = sp.detect_relative_change(obj_val_sdp, stopping_criteria_vec, iter, "sdp");
-                criteria_vec("sdp") = is_converge_sdp;
+                is_converge_sdp = sp.detect_relative_change(obj_val_sdp, iter, "sdp");
+                criteria_vec{1, "sdp"} = is_converge_sdp;
                 if is_converge_sdp
-                    sp.stop_history(iter, 2) = is_converge_sdp;
+                    sp.stop_history{iter, "sdp"} = is_converge_sdp;
                 end
 
-                is_loop = sp.detect_loop(obj_val_original, obj_val_sdp, stopping_criteria_vec, iter);
-                criteria_vec("loop") = is_loop;
+                is_loop = sp.detect_loop(obj_val_original, obj_val_sdp, iter);
+                criteria_vec{1, "loop") = is_loop;
                 if is_loop
-                    sp.stop_history(iter - (sp.window_size-1)/2, 3) = is_loop;
+                    sp.stop_history{iter - (sp.window_size-1)/2, "loop"} = is_loop;
                 end
             end
         end
 
-        function is_converge = detect_relative_change(sp, obj_val_vec, stopping_criteria_vec, iter, criteria)
-            if (sp.check_already(stopping_criteria_vec, iter, criteria) | (sp.get_relative_change(obj_val_vec, iter) > sp.percent_change))
+        function is_converge = detect_relative_change(sp, obj_val_vec, iter, criteria)
+            if (sp.check_already(iter, criteria) | (sp.get_relative_change(obj_val_vec, iter) > sp.percent_change))
                 is_converge = false;
             else
                 is_converge = true;
@@ -48,8 +51,8 @@ classdef stopper < handle
             relative_change = abs((obj_val_vec(iter) - obj_val_vec(iter-1))/obj_val_vec(iter-1));
         end
 
-        function is_loop = detect_loop(sp, obj_val_original, obj_val_sdp, stopping_criteria_vec, iter)
-            if (sp.check_early(iter, (sp.window_size-1)/2) | sp.check_already(stopping_criteria_vec, iter, "loop"))
+        function is_loop = detect_loop(sp, obj_val_original, obj_val_sdp, iter)
+            if (sp.check_early(iter, (sp.window_size-1)/2) | sp.check_already(iter, "loop"))
                 is_loop = false;
             else
                 window_vec_original = obj_val_original(iter-(sp.window_size-1):iter )
@@ -74,7 +77,7 @@ classdef stopper < handle
         end %end of method loop_decision
         
         function is_already = check_already(sp, iter, criteria) 
-            is_already =  sum(ismember(stopping_criteria_vec(1:iter), criteria)) > 0;
+            is_already =  sum(sp.stop_history{1:iter, criteria}) > 0;
         end%end of is_already
 
         function is_early = check_early(sp, iter, standard)
