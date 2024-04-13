@@ -194,12 +194,7 @@ methods
         end
     end
     
-    function cluster_est_permuted = change_label(ik, cluster_est, permutation)
-        cluster_est_permuted = cluster_est;
-        for i = 1:ik.number_cluster
-            cluster_est_permuted(cluster_est==i) = permutation(i);
-        end
-    end
+
     function [discov_true_vec, discov_false_vec, survived_indices] = evaluate_discovery(ik, s)
         discov_true_vec = zeros(ik.iter_stop, 1);
         discov_false_vec = zeros(ik.iter_stop, 1);

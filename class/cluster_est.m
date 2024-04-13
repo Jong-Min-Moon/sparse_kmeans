@@ -22,6 +22,13 @@ classdef cluster_est < handle
                 ce.cluster_partition(i) = {partition_now};
             end % end of the for loop that creates the partition dictionary
         end %end of the constructor
-    end
+    
 
+        function cluster_est_permuted = change_label(ce, permutation)
+            cluster_est_permuted = ce.cluster_info_vec;
+            for i = 1:ce.number_cluster
+                cluster_est_permuted(ce.cluster_info_vec==i) = permutation(i);
+            end
+        end% end of change_label
+    end% end of methods
 end % end of the class
