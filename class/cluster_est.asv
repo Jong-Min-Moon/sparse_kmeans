@@ -1,0 +1,24 @@
+classdef cluster_est < handle
+    properties
+        cluster_info_vec
+        number_cluster
+    end
+    
+    methods
+        function ce = cluster_est(cluster_info_vec)
+            ce.cluster_info_vec = cluster_info_vec;
+            label_cluster = unique(cluster_info_vec);
+            ce.number_cluster = length(label_cluster);
+            cluster_name_vec = "cluster" + string(1:ce.number_cluster);
+            ce.cluster_partition = dictionary( ...
+                [1:ce.number_cluster], ...
+                repelem(ce.cluster_info_vec,))
+            for i = 1:ce.number_cluster
+                cluster_name_now = "cluster"+string(i);
+                cluster_partition_now = ce.cluster_info_vec(cluster_info_vec==i);
+                ce.cluster_partition.cluster_name_now = 
+            end
+        end %end of the constructor
+    end
+
+end % end of the class

@@ -136,7 +136,7 @@ methods
         %fprintf( strcat( "acc =", join(repelem("%f ", length(acc_vec))), "\n"),  acc_vec );
         cluster_string_vec = ik.get_cluster_string_vec();
     
-        n_row = int32(ik.iter_stop)
+        n_row = int32(ik.iter_stop);
         database_subtable = table(...
             repelem(rep, n_row+1)',...                      % 01 replication number
             (0:n_row)',...                                  % 02 step iteration number
@@ -226,15 +226,14 @@ methods
             diff_x_tilde_fro(i)    = norm(diff_mat, "fro");
         end
     end
-
-    function cluster_string_vec = get_cluster_string_vec(ik)
-        
+    %
+    function cluster_string_vec = get_cluster_string_vec(ik) 
         cluster_string_vec = strings(ik.iter_stop+1, 1);
         for i = 1:(ik.iter_stop+1)
             cluster_string_vec(i) = get_num2str_with_mark(ik.cluster_est(i,:), ',');
-        end
-    end
-
+        end % end of for loop
+    end% end of cluster_string_vec
+    
 end %end of methods
 end %end of classdef
 
