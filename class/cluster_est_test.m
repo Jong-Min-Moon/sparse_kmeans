@@ -13,5 +13,12 @@ classdef cluster_est_test < matlab.unittest.TestCase
             expSolution = [2,1,2,1];
             testCase.verifyEqual(actSolution,expSolution)
         end%change_label
+
+        function evaluate_accuracy(testCase)
+            ce = cluster_est([1,2,1,2]); 
+            actSolution = ce.evaluate_accuracy([1,2,2,2]);
+            expSolution = 0.75;
+            testCase.verifyEqual(actSolution,expSolution)
+        end% end of evaluate_accuracy
     end%end of methods
 end%end of stopperTest

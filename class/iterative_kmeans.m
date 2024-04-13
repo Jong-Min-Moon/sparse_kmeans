@@ -194,7 +194,7 @@ methods
         end
     end
     
-
+ 
     function [discov_true_vec, discov_false_vec, survived_indices] = evaluate_discovery(ik, s)
         discov_true_vec = zeros(ik.iter_stop, 1);
         discov_false_vec = zeros(ik.iter_stop, 1);

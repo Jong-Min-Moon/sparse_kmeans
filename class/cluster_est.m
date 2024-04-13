@@ -23,6 +23,17 @@ classdef cluster_est < handle
             end % end of the for loop that creates the partition dictionary
         end %end of the constructor
     
+        function acc_vec = evaluate_accuracy(ce, cluster_true)
+            permutation_all = perms(1:ce.number_cluster);
+            number_permutation = size(permutation_all, 1);
+            acc_permutation_vec = zeros(number_permutation, 1);
+            for j = 1:number_permutation
+                permutation_now = permutation_all(j,:);
+                cluster_permuted_now = ce.change_label(permutation_now);
+                acc_permutation_vec(j) = mean(cluster_true == cluster_permuted_now);
+            end % end of the for loop over permutations
+            acc_vec = max( acc_permutation_vec );
+        end % end of evaluate_accuracy
 
         function cluster_est_permuted = change_label(ce, permutation)
             cluster_est_permuted = ce.cluster_info_vec;
