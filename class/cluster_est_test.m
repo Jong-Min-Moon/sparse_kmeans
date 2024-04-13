@@ -5,7 +5,14 @@ classdef cluster_est_test < matlab.unittest.TestCase
             actSolution = ce.cluster_partition;
             expSolution = dictionary([1,2], {[1,3], [2,4]});
             testCase.verifyEqual(actSolution,expSolution)
-        end%apply_criteria_first
+        end%create_partition_dict
+
+        function create_string(testCase)
+            ce = cluster_est([1,2,1,2]);
+            actSolution = ce.cluster_info_string;
+            expSolution = '1,2,1,2';
+            testCase.verifyEqual(actSolution,expSolution)
+        end%create_string
 
         function change_label(testCase)
             ce = cluster_est([1,2,1,2]); 

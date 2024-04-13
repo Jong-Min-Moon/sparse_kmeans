@@ -4,6 +4,7 @@ classdef cluster_est < handle
         cluster_info_vec
         number_cluster
         cluster_partition
+        cluster_info_string
     end
     
     methods
@@ -13,6 +14,8 @@ classdef cluster_est < handle
             ce.cluster_info_vec = cluster_info_vec;
             label_cluster = unique(cluster_info_vec);
             ce.number_cluster = length(label_cluster);
+
+            % create a struct representation (which aligns with the paper)
             ce.cluster_partition = dictionary( ...
                 1:ce.number_cluster, ...
                 repelem({ce.cluster_info_vec}, ce.number_cluster) ...
@@ -21,6 +24,9 @@ classdef cluster_est < handle
                 partition_now = full_index_vec(cluster_info_vec==i);
                 ce.cluster_partition(i) = {partition_now};
             end % end of the for loop that creates the partition dictionary
+        
+            % create a string representation (for the database)
+            ce.cluster_info_string = get_num2str_with_mark(cluster_info_vec, ',');
         end %end of the constructor
     
         function acc_vec = evaluate_accuracy(ce, cluster_true)
@@ -41,5 +47,7 @@ classdef cluster_est < handle
                 cluster_est_permuted(ce.cluster_info_vec==i) = permutation(i);
             end
         end% end of change_label
+
+
     end% end of methods
 end % end of the class
