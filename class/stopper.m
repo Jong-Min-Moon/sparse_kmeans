@@ -4,21 +4,41 @@ classdef stopper < handle
         percent_change
         max_iter
         stop_history
+        is_stop
+        final_iter_calculation
+        final_iter_return
     end
     methods
-        function sp = stopper(max_iter, window_size, percent_change)
-            sp.window_size = window_size;
+        function sp = stopper(max_iter, window_size_half, percent_change)
+            sp.window_size = 1 + window_size_half*2;
             sp.percent_change = percent_change;
             sp.max_iter = max_iter;
+            sp.is_stop = false;
 
             original = repelem(false, max_iter, 1);
             sdp = repelem(false, max_iter, 1);
             loop = repelem(false, max_iter, 1);
             sp.stop_history = table(original, sdp, loop);
         end
-        
-        function is_stop = stop_by_two(sp,iter)
+
+        function final_iter = get_final_iter(sp)
+            if sp.is_stop
+                if sum(sp.stop_history{:,"loop"}) >= 1
+                    sp.final_iter_return = p.final_iter_calculation - (sp.window_size-1)/2;
+                else
+                    sp.final_iter_return = p.final_iter_calculation;
+                end
+                final_iter = sp.final_iter_return;
+            end
+        end
+
+
+        function is_stop = is_stop_by_two(sp,iter)
             is_stop = (sum(sp.stop_history{1:iter,:},"all")>=2) | (iter == sp.max_iter);
+            sp.is_stop = is_stop;
+            if is_stop
+                sp.final_iter_calculation = iter;
+            end
         end
         
         function criteria_vec = apply_criteria(sp, obj_val_original, obj_val_sdp, iter)

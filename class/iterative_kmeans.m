@@ -55,7 +55,7 @@ methods
         end
     end
     
-    function run_iterative_algorithm(ik, max_n_iter, window_size, percent_change)
+    function [cluster_est_final, iter_stop] = run_iterative_algorithm(ik, max_n_iter, window_size, percent_change)
         ik.stop_decider = stopper(max_n_iter, window_size, percent_change);
         ik.initialize_saving_matrix(max_n_iter)
   
@@ -68,13 +68,13 @@ methods
             
             % stopping criterion
             criteria_vec = ik.stop_decider.apply_criteria(ik.obj_val_original, ik.obj_val_prim, iter);
-            if ik.stop_decider.stop_by_two(iter)
-                ik.iter_stop = iter
+            if ik.stop_decider.is_stop_by_two(iter)
+                ik.iter_stop = ik.get_final_iter()
                 fprintf("\n final iteration = %i ", ik.iter_stop)
                 break 
             end %end of stopping criteria
         end % end one iteration
-        if
+        cluster_est_final = ik.cluster_est(ik.iter_stop+1,:);
     end
 
     function stop = is_stop(ik, iter)

@@ -4,6 +4,7 @@ classdef stopper < handle
         percent_change
         max_iter
         stop_history
+        is
     end
     methods
         function sp = stopper(max_iter, window_size, percent_change)
@@ -16,9 +17,14 @@ classdef stopper < handle
             loop = repelem(false, max_iter, 1);
             sp.stop_history = table(original, sdp, loop);
         end
-        
-        function isstop_by_two(sp,iter)
-            (sum(ik.stop_decider.stop_history{1:iter,:},"all")>=2) | (iter == max_n_iter)
+
+        function final_iter = get_final_iter(sp)
+            
+        end
+
+
+        function is_stop = is_stop_by_two(sp,iter)
+            is_stop = (sum(sp.stop_history{1:iter,:},"all")>=2) | (iter == sp.max_iter);
         end
         
         function criteria_vec = apply_criteria(sp, obj_val_original, obj_val_sdp, iter)
