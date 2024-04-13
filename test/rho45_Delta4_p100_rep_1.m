@@ -61,7 +61,7 @@ for jj = 1
     iterative_kmeans_learner = iterative_kmeans(x_noisy, @data_gaussian_ISEE_clean, number_cluster, omega_sparsity, init_method);
     iterative_kmeans_learner.run_iterative_algorithm(n_iter_max, 5, 0.01);
     
-    database_subtable = iterative_kmeans_learner.get_database_subtable(rep, Delta, rho, s, cluster_true, Omega);
+    database_subtable = iterative_kmeans_learner.get_database_subtable(rep, Delta, rho, 1:10, cluster_true, Omega);
     database_subtable(:,1:15)
     conn=sqlite('/Users/jmmoon/Documents/GitHub/sparse_kmeans/sparse_kmeans_temp.db');
     pause(2);

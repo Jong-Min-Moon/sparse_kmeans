@@ -127,7 +127,8 @@ methods
 
     end
 
-    function database_subtable = get_database_subtable(ik, rep, Delta, rho, s, cluster_true, Omega)
+    function database_subtable = get_database_subtable(ik, rep, Delta, rho, support, cluster_true, Omega)
+        s = length(support);
         current_time = get_current_time();
         acc_vec = ik.evaluate_accuracy(cluster_true);
         [discov_true_vec, discov_false_vec, survived_indices] = ik.evaluate_discovery(s);
