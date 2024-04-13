@@ -24,9 +24,9 @@ classdef stopper < handle
         function final_iter = get_final_iter(sp)
             if sp.is_stop
                 if sum(sp.stop_history{:,"loop"}) >= 1
-                    sp.final_iter_return = p.final_iter_calculation - (sp.window_size-1)/2;
+                    sp.final_iter_return = sp.final_iter_calculation - (sp.window_size-1)/2;
                 else
-                    sp.final_iter_return = p.final_iter_calculation;
+                    sp.final_iter_return = sp.final_iter_calculation;
                 end
                 final_iter = sp.final_iter_return;
             end
