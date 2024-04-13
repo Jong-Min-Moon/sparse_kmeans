@@ -17,6 +17,10 @@ classdef stopper < handle
             sp.stop_history = table(original, sdp, loop);
         end
         
+        function is_stop = stop_by_two(sp,iter)
+            is_stop = (sum(sp.stop_history{1:iter,:},"all")>=2) | (iter == sp.max_iter);
+        end
+        
         function criteria_vec = apply_criteria(sp, obj_val_original, obj_val_sdp, iter)
             criteria_vec = sp.stop_history(iter,:);
             if iter>1
@@ -55,8 +59,8 @@ classdef stopper < handle
             if (sp.check_early(iter, sp.window_size) | sp.check_already(iter, "loop"))
                 is_loop = false;
             else
-                window_vec_original = obj_val_original(iter-(sp.window_size-1):iter )
-                window_vec_sdp      = obj_val_sdp(     iter-(sp.window_size-1):iter )
+                window_vec_original = obj_val_original(iter-(sp.window_size-1):iter );
+                window_vec_sdp      = obj_val_sdp(     iter-(sp.window_size-1):iter );
                 is_loop = ( sp.compare_in_window(window_vec_sdp) | sp.compare_in_window(window_vec_original) );  
             end
         end
@@ -66,7 +70,8 @@ classdef stopper < handle
                 index_center = (sp.window_size+1)/2;
                 value_center = window_vec(index_center);
                 value_window = window_vec;
-                if sum(abs(value_window - value_center)/value_center < sp.percent_change) >1
+                change = abs(value_window - value_center)/value_center
+                if sum( change < sp.percent_change) >1
                     decision_loop = true;
                 else
                     decision_loop = false;
@@ -77,7 +82,7 @@ classdef stopper < handle
         end %end of method loop_decision
         
         function is_already = check_already(sp, iter, criteria) 
-            is_already =  sum(sp.stop_history{1:iter, criteria}) > 0;
+            is_already =  sum(sp.stop_history{1:(iter-1), criteria}) > 0;
         end%end of is_already
 
         function is_early = check_early(sp, iter, standard)

@@ -68,12 +68,13 @@ methods
             
             % stopping criterion
             criteria_vec = ik.stop_decider.apply_criteria(ik.obj_val_original, ik.obj_val_prim, iter);
-            if (sum(ik.stop_decider.stop_history{1:5,:},"all")>=2) | (iter == max_n_iter) 
+            if ik.stop_decider.stop_by_two(iter)
                 ik.iter_stop = iter
                 fprintf("\n final iteration = %i ", ik.iter_stop)
                 break 
             end %end of stopping criteria
         end % end one iteration
+        if
     end
 
     function stop = is_stop(ik, iter)
