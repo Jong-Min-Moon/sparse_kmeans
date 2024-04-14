@@ -116,7 +116,7 @@ classdef iterative_kmeans_test < matlab.unittest.TestCase
                 iterative_kmeans_learner = iterative_kmeans(x_noisy, @data_gaussian_ISEE_clean, number_cluster, omega_sparsity, init_method);
                 iterative_kmeans_learner.run_iterative_algorithm(n_iter_max, 2, 0.01);
                 
-                database_subtable = iterative_kmeans_learner.get_database_subtable(rep, Delta, rho, s, cluster_true, Omega);
+                database_subtable = iterative_kmeans_learner.get_database_subtable(rep, Delta, rho, 1:10, cluster_true, Omega);
         actSolution = database_subtable{6, ["acc", "obj_prim", "obj_dual", "obj_original", "discov_true", "discov_false"]}
         expSolution = [0.838, -5.2692, -5.2691, 1726, 10, 20 ];
         testCase.verifyEqual(actSolution, expSolution, "RelTol",1e-3)

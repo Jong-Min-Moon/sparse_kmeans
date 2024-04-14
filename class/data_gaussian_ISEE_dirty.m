@@ -15,7 +15,7 @@ methods (Access = protected)
     end
 
     function cutoff = get_cutoff(dgd)
-        [GC,GR] = groupcounts(dgd.cluster_assign');
+        [GC,GR] = groupcounts(dgd.cluster_info_vec');
         cutoff = sqrt(2 * log(dgd.dimension)) / sqrt( prod(GC)/dgd.sample_size) * sqrt(dgd.Omega_diag_hat); %column vector
     end    
 
@@ -26,7 +26,7 @@ methods (Access = protected)
         
         %redundant procedure, just for unity with the dirty version
         for i = 1:dgd.number_cluster
-            data_innovated_cluster = innovated_data_mean(:, (dgd.cluster_assign ==  i));
+            data_innovated_cluster = innovated_data_mean(:, (dgd.cluster_info_vec ==  i));
             cluster_mean_innovated_mat(:,i) = mean(data_innovated_cluster, 2);
         end
     end

@@ -2,7 +2,7 @@ function [mean_now, noise_now, Omega_diag_hat] = ISEE_bicluster(dg)
     p = dg.dimension;
     n = dg.sample_size;
     n_regression = floor(p/2);
-    cluster_est_now = dg.cluster_assign;
+    cluster_est_now = dg.cluster_info_vec;
 
     Omega_diag_hat_even = repelem(0,p/2);
     Omega_diag_hat_odd = repelem(0,p/2);

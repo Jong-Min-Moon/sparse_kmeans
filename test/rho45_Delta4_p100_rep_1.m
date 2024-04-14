@@ -5,8 +5,9 @@
 
 
 ii = 1;
-rho = 45;
 n_iter_max = 5;
+rho = 45;
+
 p = 100
 Delta = 4
 s = 10
@@ -37,7 +38,6 @@ mu_1_mat = repmat(mu_1,  1, n/2); %each column is one observation
 mu_2_mat = repmat(mu_2, 1, n/2);%each column is one observation
 x_noiseless = [ mu_1_mat  mu_2_mat ];%each column is one observation
 
-table_cell = cell(1,4);
 zero_mean = zeros(p,1);
 
 
@@ -51,8 +51,7 @@ zero_mean = zeros(p,1);
 
 init_method = 'spec'
 
-zero_mean = zeros(p,1);
-for jj = 1
+for jj = 1:4
     rep = (ii-1)*4+jj
     rng(rep)
     x_noisy = x_noiseless +  mvnrnd(zero_mean, Sigma, n)';%data generation. each column is one observation

@@ -12,6 +12,9 @@ classdef cluster_est < handle
             ce.sample_size = length(cluster_info_vec);
             full_index_vec = 1:ce.sample_size;
             ce.cluster_info_vec = cluster_info_vec;
+            if size(ce.cluster_info_vec,2) == 1
+                ce.cluster_info_vec  = ce.cluster_info_vec';
+            end
             label_cluster = unique(cluster_info_vec);
             ce.number_cluster = length(label_cluster);
 
@@ -26,7 +29,7 @@ classdef cluster_est < handle
             end % end of the for loop that creates the partition dictionary
         
             % create a string representation (for the database)
-            ce.cluster_info_string = get_num2str_with_mark(cluster_info_vec, ',');
+            ce.cluster_info_string = get_num2str_with_mark(ce.cluster_info_vec, ",");
         end %end of the constructor
     
         function acc_vec = evaluate_accuracy(ce, cluster_true)

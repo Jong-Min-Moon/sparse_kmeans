@@ -1,0 +1,72 @@
+classdef sparse_data_generator < handle 
+    properties
+        separation
+        support
+        sparsity
+        magnitude
+    end
+    methods
+        function sdg = sparse_data_generator(support, separation, dimension, number_cluster, precision_sparsity, conditional_correlation)
+            sdg.support = support;
+            sdg.sparsity = length(support);
+            sdg.separation = separation;
+            sdg.dimension = dimension;
+            sdg.number_cluster = number_cluster;
+            sdg.precision_sparsity = precision_sparsity;
+            sdg.conditional_correlation = conditional_correlation;
+            sdg.sparse_precision_matrix = sdg.get_sparse_precision_matrix();
+            sdg.covariance_matrix = inv(sdg.sparse_precision_matrix);
+
+        end
+        
+        function get_symmetric_mean(sdg)
+        
+        end
+        function get_magnitude(sdg)
+            %innovated
+            sdg.magnitude = sdg.separation/2/ sqrt( sum( Sigma(1:s,1:s),"all") )
+        end
+        
+        function sparse_precision_matrix = get_sparse_precision_matrix(sdg)
+            sparse_precision_matrix = eye(sdg.dimension);
+            for i = 1:precision_sparsity
+                sparse_precision_matrix = sparse_precision_matrix + diag(sdg.conditional_correlation*ones(sdg.dimension-i,1), 1) + diag(sdg.conditional_correlation*ones(sdg.dimension-i,1), -1);
+            end
+        end
+
+        
+    end
+
+end
+
+rho = 45;
+
+Delta = 4
+n = 500
+table_name = 'sparse_kmeans_isee_clean'
+rho = rho /100
+
+% data paramters
+K=2;
+
+number_cluster=2;
+rounding = 1e-4;
+cluster_true = [repelem(1,n/2), repelem(2,n/2)];
+
+
+
+
+
+mu_0_tilde =  M * sparse_mean;
+mu_0 = Sigma*mu_0_tilde;
+mu_1 = -mu_0;
+mu_2 = mu_0;
+beta = Omega * (mu_1-mu_2);
+fprintf( "delta confirmed: %f", sqrt( (mu_1-mu_2)' * beta ))
+norm((mu_1-mu_2))
+
+mu_1_mat = repmat(mu_1,  1, n/2); %each column is one observation
+mu_2_mat = repmat(mu_2, 1, n/2);%each column is one observation
+x_noiseless = [ mu_1_mat  mu_2_mat ];%each column is one observation
+
+zero_mean = zeros(p,1);

@@ -10,7 +10,7 @@ classdef data_gaussian < handle
         Omega_diag_hat
         support
         number_support
-        cluster_assign
+        cluster_info_vec
         number_cluster
         cluster_mean_small_mat
         omega_sparsity
@@ -26,21 +26,20 @@ classdef data_gaussian < handle
             dg.support = repelem(true, dg.dimension);
             dg.number_support = sum(dg.support);
             dg.number_cluster = 1;
-            dg.cluster_assign = repelem(1,dg.sample_size);
+            dg.cluster_info_vec = repelem(1,dg.sample_size);
             dg.omega_sparsity = omega_sparsity;
         end
     end
 
     methods
-        function [data_innovated_small, data_innovated_big, sample_covariance_small] = threshold(dg, cluster_assign, omega_sparsity)
-            if length(cluster_assign) ~= dg.sample_size
+        function [data_innovated_small, data_innovated_big, sample_covariance_small] = threshold(dg, cluster_est, omega_sparsity)
+            dg.cluster_info_vec = cluster_est.cluster_info_vec;
+            dg.number_cluster = cluster_est.number_cluster;
+
+            if cluster_est.sample_size ~= dg.sample_size
                 error("the number of the assignment vector must be the same as the sample size")
             end
             
-            dg.cluster_assign = cluster_assign;
-            dg.number_cluster = max(unique(dg.cluster_assign));
-            
-
             entrywise_signal_estimate = dg.get_entrywise_signal();
             dg.get_support(entrywise_signal_estimate);
             
@@ -70,7 +69,7 @@ classdef data_gaussian < handle
             dg.get_innovated_data();
             cluster_mean_innovated_mat = zeros(dg.dimension, dg.number_cluster);
             for i = 1:dg.number_cluster
-                data_innovated_cluster = dg.data_innovated(:, (dg.cluster_assign ==  i));
+                data_innovated_cluster = dg.data_innovated(:, (dg.cluster_info_vec ==  i));
                 cluster_mean_innovated_mat(:,i) = mean(data_innovated_cluster, 2);
             end
         end
@@ -106,7 +105,7 @@ classdef data_gaussian < handle
         function get_cluster_mean_small(dg)
             dg.cluster_mean_small_mat = zeros(dg.number_support, dg.number_cluster);
             for i = 1:dg.number_cluster
-                data_cluster_small = dg.data(dg.support, (dg.cluster_assign ==  i));
+                data_cluster_small = dg.data(dg.support, (dg.cluster_info_vec ==  i));
                 dg.cluster_mean_small_mat(:,i) = mean(data_cluster_small, 2);
             end
         end
@@ -117,7 +116,7 @@ classdef data_gaussian < handle
             dg.get_cluster_mean_small();
             data_small = dg.data(dg.support,:);
             for i = 1:dg.number_cluster
-                data_small(:,dg.cluster_assign == i) = data_small(:,dg.cluster_assign == i) - dg.cluster_mean_small_mat(:,i);
+                data_small(:,dg.cluster_info_vec == i) = data_small(:,dg.cluster_info_vec == i) - dg.cluster_mean_small_mat(:,i);
             end
             sample_covariance_small = (data_small * data_small')/(dg.sample_size-1);
         end
