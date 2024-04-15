@@ -67,7 +67,7 @@ methods
             
             % stopping criterion
             criteria_vec = ik.stop_decider.apply_criteria(ik.obj_val_original, ik.obj_val_prim, iter);
-            [is_stop, final_iter] = ik.stop_decider.is_stop_by_two(iter);
+            [is_stop, final_iter] = ik.stop_decider.is_stop_by_two(iter)
             if is_stop
                 ik.iter_stop = final_iter;
                 fprintf("\n final iteration = %i ", ik.iter_stop)
@@ -89,7 +89,6 @@ methods
         ik.obj_val_prim      = zeros(max_n_iter, 1);
         ik.obj_val_dual      = zeros(max_n_iter, 1);
         ik.obj_val_original  = zeros(max_n_iter, 1);
-        %ik.cluster_est       = zeros(max_n_iter+1, n);
 
         cluster_est_dummy   = cluster_est( repelem(1,n) );
         cluster_est_dummy_vec = repelem(cluster_est_dummy, max_n_iter+1);
@@ -124,7 +123,7 @@ methods
         s = length(support);
         current_time = get_current_time();
         acc_dict = ik.evaluate_accuracy(cluster_true);
-        [discov_true_vec, discov_false_vec, survived_indices] = ik.evaluate_discovery(support);
+        [true_pos_vec, false_pos_vec, false_neg_vec, survived_indices] = ik.evaluate_discovery(support);
         [diff_x_tilde_fro, diff_x_tilde_op, diff_x_tilde_ellone] = ik.evaluate_innovation_est(Omega);
         %fprintf( strcat( "acc =", join(repelem("%f ", length(acc_vec))), "\n"),  acc_vec );
         cluster_string_dict = ik.get_cluster_string_dict();
@@ -137,15 +136,20 @@ methods
             repelem(ik.data_object.dimension, n_row+1)',... % 04 data dimension
             repelem(rho, n_row+1)',...                      % 05 conditional correlation
             repelem(s, n_row+1)',...                        % 06 sparsity
-            [false; ik.stop_decider.stop_history{1:n_row, "original"}],...
-            [false; ik.stop_decider.stop_history{1:n_row, "sdp"}],...
-            [false; ik.stop_decider.stop_history{1:n_row, "loop"}],...
-            values(acc_dict),...                                     % 07 accuracy
-            [0; ik.obj_val_prim(1:n_row)],...               % 08 objective function value (relaxed, primal)
-            [0; ik.obj_val_dual(1:n_row)],...               % 09 objective function value (relaxed, dual)
-            [0; ik.obj_val_original(1:n_row)],...           % 10 objective function value (original)
-            [0; discov_true_vec],...                        % 11 true discovery
-            [0; discov_false_vec],...                       % 12 false discovery
+            ...
+            [false; ik.stop_decider.stop_history{1:n_row, "original"}],... %07
+            [false; ik.stop_decider.stop_history{1:n_row, "sdp"}],...      %08
+            [false; ik.stop_decider.stop_history{1:n_row, "loop"}],...     %09
+            values(acc_dict),...                                     % 10 accuracy
+            ...
+            [0; ik.obj_val_prim(1:n_row)],...               % 11 objective function value (relaxed, primal)
+            [0; ik.obj_val_dual(1:n_row)],...               % 12 objective function value (relaxed, dual)
+            [0; ik.obj_val_original(1:n_row)],...           % 13 objective function value (original)
+            ...
+            [0; true_pos_vec],...                           % 14 true positive
+            [0; false_pos_vec],...                          % 15 false positive
+            [0; false_neg_vec],...                          % 16 false negative
+            ...
             [0; diff_x_tilde_fro],...                       % 13 estimation error of the innovated data, in Frobenius norm
             [0; diff_x_tilde_op],...                        % 14 estimation error of the innovated data, in operator norm
             [0; diff_x_tilde_ellone],...                    % 15 estimation error of the innovated data, in \ell_1 norm
@@ -157,9 +161,12 @@ methods
             'VariableNames', ...
             ...  1      2       3      4      5        6         
             ["rep", "iter", "sep", "dim", "rho", "sparsity", ...
+            ...
             "stop_og", "stop_sdp", "stop_loop", ...
-            ...  7        8           9             10             11               12
-             "acc", "obj_prim", "obj_dual", "obj_original", "discov_true", "discov_false", ...
+            ...  7        8           9             10             
+             "acc", "obj_prim", "obj_dual", "obj_original", ...
+            ...11               12
+             "true_pos", "false_pos",  "false_neg"...
             ...       13              14                    15
              "diff_x_tilde_fro", "diff_x_tilde_op", "diff_x_tilde_ellone", ...
             ...  16          17           18
@@ -178,15 +185,19 @@ methods
     end
     
  
-    function [discov_true_vec, discov_false_vec, survived_indices] = evaluate_discovery(ik, support)
-        discov_true_vec = zeros(ik.iter_stop, 1);
-        discov_false_vec = zeros(ik.iter_stop, 1);
+    function [true_pos_vec, false_pos_vec, false_neg_vec , survived_indices] = evaluate_discovery(ik, support)
+        true_pos_vec  = zeros(ik.iter_stop, 1);
+        false_pos_vec = zeros(ik.iter_stop, 1);
+	    false_neg_vec = zeros(ik.iter_stop, 1);
         survived_indices = strings(ik.iter_stop, 1);
         for i = 1:ik.iter_stop
-            entries_survived_now = ik.entries_survived(i,:);
-            discov_true_vec(i) = sum(entries_survived_now(support));
-            discov_false_vec(i) = sum(entries_survived_now) - discov_true_vec(i);
-            survived_indices(i) = get_num2str_with_mark( find(entries_survived_now), ',');
+            positive_vec = ik.entries_survived(i,:);
+            true_pos_vec(i)  = sum(positive_vec(support));
+            false_pos_vec(i) = sum(positive_vec) - true_pos_vec(i);
+
+	        negative_vec = ~positive_vec;
+	        false_neg_vec(i) = sum(negative_vec(support));
+            survived_indices(i) = get_num2str_with_mark( find(positive_vec), ',');
         end
     end
 

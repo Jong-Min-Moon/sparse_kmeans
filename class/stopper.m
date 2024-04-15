@@ -24,19 +24,16 @@ classdef stopper < handle
 
 
         function [is_stop, final_iter_return]  = is_stop_by_two(sp,iter)
-            index_true_converge_original = find(sp.stop_history{1:iter,"original"});
-            index_true_converge_sdp      = find(sp.stop_history{1:iter,"sdp"});
-            index_true_converge_loop     = find(sp.stop_history{1:iter,"loop"});
-      
-            is_converge_original = ~isempty(index_true_converge_original);
-            is_converge_sdp      = ~isempty(index_true_converge_sdp);
-            is_converge_loop     = ~isempty(index_true_converge_loop);
+            criterion_vec = ["original", "sdp", "loop"];
+            is_converge = arrayfun(@(criterion) ~isempty(find(sp.stop_history{1:iter,criterion})), criterion_vec);
+            criteron_activated = criterion_vec(is_converge);
+            index_converge = arrayfun(@(criterion) find(sp.stop_history{1:iter,criterion}), criteron_activated);
 
-            is_stop = ( is_converge_original + is_converge_sdp + is_converge_loop  >= 2) | (iter == sp.max_iter);
+            is_stop = ( sum(is_converge) >= 2) | (iter == sp.max_iter);
             sp.is_stop = is_stop;
             if is_stop
                 sp.final_iter_calculation = iter;
-                sp.final_iter_return = max(is_converge_original*index_true_converge_original, is_converge_sdp*index_true_converge_sdp, is_converge_loop*index_true_converge_loop);
+                sp.final_iter_return = max(index_converge);
             else
                 sp.final_iter_return = 1;
             end
