@@ -21,26 +21,37 @@ classdef stopper < handle
             sp.stop_history = table(original, sdp, loop);
         end
 
+        function final_iter = get_final_iter(sp)
+            if sp.is_stop
+                if sum(sp.stop_history{:,"loop"}) >= 1
+                    sp.final_iter_return = sp.final_iter_calculation - (sp.window_size-1)/2;
+                else
+                    sp.final_iter_return = sp.final_iter_calculation;
+                end
+                final_iter = sp.final_iter_return;
+            end
+        end
 
 
-        function [is_stop, final_iter_return]  = is_stop_by_two(sp,iter)
-            index_true_converge_original = find(sp.stop_history{1:iter,"original"});
-            index_true_converge_sdp      = find(sp.stop_history{1:iter,"sdp"});
-            index_true_converge_loop     = find(sp.stop_history{1:iter,"loop"});
+        function is_stop = is_stop_by_two(sp,iter)
+            is_converge_original = find(sp.stop_history{1:iter,"original"})
+            is_converge_sdp      = find(sp.stop_history{1:iter,"sdp"})
+            is_converge_loop     = find(sp.stop_history{1:iter,"loop"})
       
-            is_converge_original = ~isempty(index_true_converge_original);
-            is_converge_sdp      = ~isempty(index_true_converge_sdp);
-            is_converge_loop     = ~isempty(index_true_converge_loop);
+            is_converge_original = isempty(find(sp.stop_history{1:iter,"original"}))
+            is_converge_sdp      = isempty(find(sp.stop_history{1:iter,"sdp"}))
+            is_converge_loop     = isempty(find(sp.stop_history{1:iter,"loop"}))
 
-            is_stop = ( is_converge_original + is_converge_sdp + is_converge_loop  >= 2) | (iter == sp.max_iter);
+            is_stop = ( ...
+                ~isempty(is_converge_original) + ...
+                ~isempty(is_converge_sdp + is_converge_loop) + ...
+                ~isempty(is_converge_loop) >=2 ...
+                ) | (iter == sp.max_iter);
             sp.is_stop = is_stop;
             if is_stop
                 sp.final_iter_calculation = iter;
-                sp.final_iter_return = max(is_converge_original*index_true_converge_original, is_converge_sdp*index_true_converge_sdp, is_converge_loop*index_true_converge_loop);
-            else
-                sp.final_iter_return = 1;
+                
             end
-            final_iter_return = sp.final_iter_return;
         end
         
         function criteria_vec = apply_criteria(sp, obj_val_original, obj_val_sdp, iter)

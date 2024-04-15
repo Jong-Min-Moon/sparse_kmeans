@@ -30,7 +30,7 @@ methods
         cluster_now = ik.cluster_est_dict(iter-1);
         %estimation and thresholding
         tic
-        [data_innovated_small, data_innovated_big, sample_covariance_small] = ik.data_object.threshold(cluster_now, ik.omega_sparsity)
+        [data_innovated_small, data_innovated_big, sample_covariance_small] = ik.data_object.threshold(cluster_now, ik.omega_sparsity);
 
         ik.omega_est_time(iter) = toc;
         ik.entries_survived(iter,:) = ik.data_object.support;
@@ -54,8 +54,8 @@ methods
         ik.cluster_est_dict(iter) = cluster_est(cluster_est_vec);
     end
     
-    function [cluster_est_final, iter_stop] = run_iterative_algorithm(ik, max_n_iter, window_size, percent_change)
-        ik.stop_decider = stopper(max_n_iter, window_size, percent_change);
+    function [cluster_est_final, iter_stop] = run_iterative_algorithm(ik, max_n_iter, window_size_half, percent_change)
+        ik.stop_decider = stopper(max_n_iter, window_size_half, percent_change);
         ik.initialize_saving_matrix(max_n_iter)
   
         %initialization
@@ -67,8 +67,9 @@ methods
             
             % stopping criterion
             criteria_vec = ik.stop_decider.apply_criteria(ik.obj_val_original, ik.obj_val_prim, iter);
-            if ik.stop_decider.is_stop_by_two(iter)
-                ik.iter_stop = ik.stop_decider.get_final_iter();
+            [is_stop, final_iter] = ik.stop_decider.is_stop_by_two(iter);
+            if is_stop
+                ik.iter_stop = final_iter;
                 fprintf("\n final iteration = %i ", ik.iter_stop)
                 break 
             end %end of stopping criteria
@@ -77,19 +78,7 @@ methods
         iter_stop = ik.iter_stop;
     end
 
-    function stop = is_stop(ik, iter)
-        if iter == 1
-            stop = false;
-        else
-            relative_change_original = abs((ik.obj_val_original(iter) - ik.obj_val_original(iter-1))/ik.obj_val_original(iter-1));
-            relative_change_sdp = abs((ik.obj_val_dual(iter) - ik.obj_val_dual(iter-1))/ik.obj_val_dual(iter-1));
-            if (relative_change_original < 0.01) & (relative_change_sdp < 0.01)
-                stop = true;
-            else
-                stop = false;
-            end
-        end
-    end
+
     function initialize_saving_matrix(ik, max_n_iter)
         p = ik.data_object.dimension;
         n = ik.data_object.sample_size;

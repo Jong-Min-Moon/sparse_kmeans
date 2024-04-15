@@ -8,5 +8,6 @@ classdef sparse_symmetric_data_generator_test < matlab.unittest.TestCase
             expSolution = 4;
             testCase.verifyEqual(actSolution, expSolution)
         end% end of evaluate_accuracy
+
     end%end of methods
 end%end of stopperTest

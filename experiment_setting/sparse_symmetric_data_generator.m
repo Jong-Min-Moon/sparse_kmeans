@@ -25,6 +25,13 @@ classdef sparse_symmetric_data_generator < handle
 
         end
         
+        function x_noiseless = get_noiseless_data(sdg, sample_size)
+            [mean_1, mean_2] = sdg.get_symmetric_mean_sparse_before_innovation();
+            mu_1_mat = repmat(mean_1,  1, sample_size/2); %each column is one observation
+            mu_2_mat = repmat(mean_2, 1, sample_size/2);%each column is one observation
+            x_noiseless = [ mu_1_mat  mu_2_mat ];%each column is one observation
+        end %end of get_noiseless_data
+        
         function [mean_1, mean_2] = get_symmetric_mean_sparse_before_innovation(sdg)
             sparse_pre_mean_one = sdg.get_sparse_mean_one();
             sparse_pre_mean_0 =  sdg.magnitude * sparse_pre_mean_one;

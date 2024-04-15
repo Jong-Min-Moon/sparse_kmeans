@@ -1,0 +1,58 @@
+classdef block_iteration_for_server < handle
+    properties
+        table_name
+        db_dir
+        separation
+        dimension
+        correlation
+        data_generator
+        number_cluster
+    end % end of properties
+
+    methods
+        function blfs = block_iteration_for_server(table_name, db_dir, support, separation, dimension, correlation, sample_size, data_generator_class, cluster_true)
+            blfs.number_cluster = 2;
+            blfs.n_iter_max = 100;
+            blfs.window_size_half = 2;
+            blfs.support        = support;
+            blfs.table_name     = table_name;
+            blfs.db_dir         = db_dir;
+            blfs.separation     = separation;
+            blfs.dimension      = dimension;
+            blfs.sample_size    = sample_size;
+            blfs.correlation    = correlation;
+            blfs.data_generator = data_generator_class(support, separation, dimension, 2, correlation);
+            blfs.init_method    = 'spec';
+            blfs.cluster_true = cluster_true;
+        end % end of the constructer
+        
+        function database_subtable = run_one_iteration(blfs, block_num, iter_num)
+                rep = (block_num-1)*4+iter_num;
+                rng(rep)
+                zero_mean = zeros(blfs.dimension,1);
+                x_noiseless = blfs.data_generator.get_noiseless_data(blfs.sample_size);
+                x_noisy = x_noiseless +  mvnrnd(zero_mean, blfs.data_generator.covariance_matrix, blfs.sample_size)';%data generation. each column is one observation
+
+                fprintf("replication: (%i)th \n\n", rep)
+                iterative_kmeans_learner = iterative_kmeans(x_noisy, @data_gaussian_ISEE_clean, blfs.number_cluster, blfs.correlation, blfs.init_method);
+                iterative_kmeans_learner.run_iterative_algorithm(n_iter_max, window_size_half, 0.01);
+    
+                database_subtable = iterative_kmeans_learner.get_database_subtable(rep, blfs.separation, blfs.correlation, blfs.support, blfs.cluster_true, blfs.data_generator.sparse_precision_matrix);
+        end%end of run_one_iteration
+
+        function run_four_iterations(blfs, block_num)
+            for iter_num = 1:4
+                database_subtable = blfs.run_one_iteration(blfs, block_num, iter_num)
+                
+            end % end of the for loop
+        end % end of run_four_iterations
+
+        function 
+                conn=sqlite(blfs.db_dir);
+                pause(2);
+                sqlwrite(conn, blfs.table_name, database_subtable)
+                pause(2);
+                close(conn)
+
+    end % end of methods
+end
