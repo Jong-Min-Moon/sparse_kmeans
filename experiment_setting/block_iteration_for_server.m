@@ -50,7 +50,7 @@ classdef block_iteration_for_server < handle
         function save_into_database(blfs, database_subtable)
             conn=sqlite(blfs.db_dir);
             pause(2);
-            sqlwrite(conn, blfs.table_name, database_subtable);
+            sqlwrite(conn, blfs.table_name, database_subtable)
             pause(2);
             close(conn)
         end % end of save_into_database
