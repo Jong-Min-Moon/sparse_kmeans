@@ -1,9 +1,10 @@
 #!/bin/bash
 #
 #
+n_iter_max=2
 cluster_home="/home1/jongminm"
 project_name="sparse_kmeans"
-meeting_date="19_04_01_2024"
+meeting_date="21_04_15_2024"
 experiment_name="ISEE_clean"
 extension_code="m"
 extension_result="csv"
@@ -11,19 +12,18 @@ table_name="sparse_kmeans_isee_clean"
 project_dir="${cluster_home}/${project_name}"
 code_dir="${project_dir}/experiment/${meeting_date}/${experiment_name}"
 data_setting_dir="${project_dir}/code_data_setting"
-
+db_dir="/home1/jongminm/sparse_kmeans/sparse_kmeans.db"
 
 s=10
-n=500
-n_iter_max=100
+sample_size=500
 
-for rho in 20 35 45
+for rho in 20 #35 45
     do
-    for Delta in 4 3
+    for separation in 4 #3
         do
-        for p in  100 200 300 400
+        for dimension in  100 #200 300 400
             do
-            for ii in {1..10}
+            for ii in 1 #{1..10}
                 do
                     #filename of code
                     filename_code="rho${rho}_Delta${Delta}_p${p}_rep_${ii}"
@@ -40,16 +40,14 @@ for rho in 20 35 45
                     ## parallel computing toolbox
                         cat ${project_dir}/code_basic/matlab_parallel_usc >> ${code_dir}/temp_code
                     ## parameters
+                        echo "n_iter_max = ${n_iter_max};" >> ${code_dir}/temp_code
                         echo "ii = ${ii};" >> ${code_dir}/temp_code #delete this line for non-iterative algorithm
                         echo "rho = ${rho};" >> ${code_dir}/temp_code
-                        echo "n_iter_max = ${n_iter_max};" >> ${code_dir}/temp_code
-                        echo "p = ${p}" >> ${code_dir}/temp_code
-                        echo "Delta = ${Delta}" >> ${code_dir}/temp_code
-                        echo "s = ${s}" >> ${code_dir}/temp_code
-                        echo "n = ${n}" >> ${code_dir}/temp_code
+                        echo "dimension = ${dimension}" >> ${code_dir}/temp_code
+                        echo "separation = ${separation}" >> ${code_dir}/temp_code
+                        echo "sample_size = ${sample_size}" >> ${code_dir}/temp_code
                         echo "table_name = '${table_name}'" >> ${code_dir}/temp_code
-                    ## data setting
-                        cat ${data_setting_dir}/sparse_innovation.${extension_code} >> ${code_dir}/temp_code
+                        echo "db_dir = '${db_dir}'" >> ${code_dir}/temp_code
                     ## method-specific skeleton code
                         cat ${code_dir}/skeleton_code.${extension_code} >> ${code_dir}/temp_code
                 

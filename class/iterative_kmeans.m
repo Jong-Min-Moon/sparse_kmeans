@@ -27,7 +27,7 @@ methods
     
     function run_single_iter(ik, iter)
         fprintf("\n%i th thresholding\n\n", iter)
-        cluster_now = ik.cluster_est_dict(iter-1);
+        cluster_now = ik.fetch_cluster_est(iter-1);
         %estimation and thresholding
         tic
         [data_innovated_small, data_innovated_big, sample_covariance_small] = ik.data_object.threshold(cluster_now, ik.omega_sparsity);
@@ -51,7 +51,7 @@ methods
             fprintf('All entries dead. Re-initializing...')
             cluster_est_vec = ik.get_initial_cluster_assign();
         end
-        ik.cluster_est_dict(iter) = cluster_est(cluster_est_vec);
+        ik.insert_cluster_est(cluster_est_vec, iter);
     end
     
     function [cluster_est_final, iter_stop] = run_iterative_algorithm(ik, max_n_iter, window_size_half, percent_change)
@@ -60,8 +60,8 @@ methods
   
         %initialization
         initial_cluster_assign = ik.get_initial_cluster_assign();
-        ik.cluster_est_dict(0) = cluster_est(initial_cluster_assign);
- 
+        ik.insert_cluster_est(initial_cluster_assign, 0);
+        
         for iter = 1:max_n_iter
             ik.run_single_iter(iter)
             
@@ -74,10 +74,17 @@ methods
                 break 
             end %end of stopping criteria
         end % end one iteration
-        cluster_est_final = ik.cluster_est_dict(ik.iter_stop);
+        cluster_est_final = ik.fetch_cluster_est(ik.iter_stop);
         iter_stop = ik.iter_stop;
     end
 
+    function insert_cluster_est(ik, cluster_info_vec, iter)
+        ik.cluster_est_dict(iter+1) = cluster_est(cluster_info_vec); 
+    end
+
+    function cluster_est_obj = fetch_cluster_est(ik,iter)
+        cluster_est_obj = ik.cluster_est_dict(iter+1);
+    end
 
     function initialize_saving_matrix(ik, max_n_iter)
         p = ik.data_object.dimension;
@@ -91,8 +98,7 @@ methods
         ik.obj_val_original  = zeros(max_n_iter, 1);
 
         cluster_est_dummy   = cluster_est( repelem(1,n) );
-        cluster_est_dummy_vec = repelem(cluster_est_dummy, max_n_iter+1);
-        ik.cluster_est_dict = dictionary( 0:max_n_iter, cluster_est_dummy_vec);
+        ik.cluster_est_dict = repelem(cluster_est_dummy, max_n_iter+1); %dummy
     end
 
     function initial_cluster_assign = get_initial_cluster_assign(ik)
@@ -122,12 +128,17 @@ methods
     function database_subtable = get_database_subtable(ik, rep, Delta, rho, support, cluster_true, Omega)
         s = length(support);
         current_time = get_current_time();
-        acc_dict = ik.evaluate_accuracy(cluster_true);
+        acc_dict = ik.evaluate_accuracy(cluster_true)
         [true_pos_vec, false_pos_vec, false_neg_vec, survived_indices] = ik.evaluate_discovery(support);
         [diff_x_tilde_fro, diff_x_tilde_op, diff_x_tilde_ellone] = ik.evaluate_innovation_est(Omega);
         %fprintf( strcat( "acc =", join(repelem("%f ", length(acc_vec))), "\n"),  acc_vec );
+        
+        
         cluster_string_dict = ik.get_cluster_string_dict();
-    
+        
+        values(acc_dict)
+        values(cluster_string_dict)
+
         n_row = int32(ik.iter_stop);
         database_subtable = table(...
             repelem(rep, n_row+1)',...                      % 01 replication number
@@ -140,7 +151,7 @@ methods
             [false; ik.stop_decider.stop_history{1:n_row, "original"}],... %07
             [false; ik.stop_decider.stop_history{1:n_row, "sdp"}],...      %08
             [false; ik.stop_decider.stop_history{1:n_row, "loop"}],...     %09
-            values(acc_dict),...                                     % 10 accuracy
+            cell2mat(values(acc_dict))',...                                     % 10 accuracy
             ...
             [0; ik.obj_val_prim(1:n_row)],...               % 11 objective function value (relaxed, primal)
             [0; ik.obj_val_dual(1:n_row)],...               % 12 objective function value (relaxed, dual)
@@ -157,7 +168,7 @@ methods
             [0; ik.sdp_solve_time(1:n_row)], ...            % 17 timing elapsed for solving the SDP
             repelem(current_time, n_row+1)', ...            % 18 timestamp
             [""; survived_indices],...                      % 19 indices of survived entry
-            values(cluster_string_dict),...                          % 20 clustering information
+            string(values(cluster_string_dict))',...                          % 20 clustering information
             'VariableNames', ...
             ...  1      2       3      4      5        6         
             ["rep", "iter", "sep", "dim", "rho", "sparsity", ...
@@ -176,14 +187,23 @@ methods
             ]);
     end
 
+    
 
     function acc_dict = evaluate_accuracy(ik, cluster_true)
-        acc_dict = dictionary(0:ik.iter_stop, repelem(0, ik.iter_stop+1));     
-        for i = 0:ik.iter_stop
-            acc_dict(i) = ik.cluster_est_dict(i).evaluate_accuracy(cluster_true);
+        acc_dict = containers.Map(0:ik.iter_stop, repelem(0, ik.iter_stop+1));     
+        for iter = 0:ik.iter_stop
+            cluster_est_now = ik.fetch_cluster_est(iter);
+            acc_dict(iter) = cluster_est_now.evaluate_accuracy(cluster_true);
         end
     end
-    
+
+    function cluster_string_vec = get_cluster_string_dict(ik)
+        cluster_string_vec = containers.Map(0:ik.iter_stop, repelem("", ik.iter_stop+1));     
+        for iter = 0:ik.iter_stop
+            cluster_est_now = ik.fetch_cluster_est(iter);
+            cluster_string_vec(iter) = cluster_est_now.cluster_info_string;
+        end % end of for loop
+    end% end of cluster_string_vec   
  
     function [true_pos_vec, false_pos_vec, false_neg_vec , survived_indices] = evaluate_discovery(ik, support)
         true_pos_vec  = zeros(ik.iter_stop, 1);
@@ -216,12 +236,7 @@ methods
         end
     end
     %
-    function cluster_string_vec = get_cluster_string_dict(ik) 
-        cluster_string_vec = dictionary(0:ik.iter_stop, repelem("", ik.iter_stop+1));     
-        for i = 0:ik.iter_stop
-            cluster_string_vec(i) = ik.cluster_est_dict(i).cluster_info_string;
-        end % end of for loop
-    end% end of cluster_string_vec
+
     
 end %end of methods
 end %end of classdef
