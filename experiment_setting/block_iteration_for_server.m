@@ -13,14 +13,14 @@ classdef block_iteration_for_server < handle
     end % end of properties
 
     methods
-        function blfs = block_iteration_for_server(table_name, db_dir, support, separation, dimension, correlation, sample_size)
+        function blfs = block_iteration_for_server(table_name, db_dir, support, separation, dimension, correlation, sample_size, n_iter_max)
             blfs.number_cluster = 2;
-            blfs.n_iter_max = 100;
+            blfs.n_iter_max = n_iter_max;
             blfs.window_size_half = 2;
             blfs.table_name     = table_name;
             blfs.db_dir         = db_dir;
             blfs.sample_size    = sample_size;
-            blfs.data_generator = sparse_symmetric_data_generator(support, separation, dimension, 2, correlation);
+            blfs.data_generator = sparse_symmetric_data_generator(support, separation, dimension, 2, correlation)
             blfs.init_method    = 'spec';
             blfs.cluster_true = [repelem(1,sample_size/2), repelem(2,sample_size/2)];
         end % end of the constructer
@@ -48,6 +48,8 @@ classdef block_iteration_for_server < handle
         end % end of run_four_iterations
 
         function save_into_database(blfs, database_subtable)
+            random_seconds = randi([4 32],1);
+            pause(random_seconds);
             conn=sqlite(blfs.db_dir);
             pause(2);
             sqlwrite(conn, blfs.table_name, database_subtable)
