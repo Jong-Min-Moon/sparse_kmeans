@@ -68,10 +68,12 @@ methods
             % stopping criterion
             criteria_vec = ik.stop_decider.apply_criteria(ik.obj_val_original, ik.obj_val_prim, iter);
             [is_stop, final_iter] = ik.stop_decider.is_stop_by_two(iter)
-            if is_stop and ~run_full
+            if is_stop
                 ik.iter_stop = final_iter;
                 fprintf("\n final iteration = %i ", ik.iter_stop)
-                break 
+                if ~run_full
+                    break 
+                end
             end %end of stopping criteria
         end % end one iteration
         cluster_est_final = ik.fetch_cluster_est(ik.iter_stop);

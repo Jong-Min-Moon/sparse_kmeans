@@ -33,7 +33,11 @@ classdef stopper < handle
             sp.is_stop = is_stop;
             if is_stop
                 sp.final_iter_calculation = iter;
-                sp.final_iter_return = max(index_converge);
+                if iter < sp.max_iter
+                    sp.final_iter_return = max(index_converge);
+                elseif iter == sp.max_iter
+                    sp.final_iter_return = sp.max_iter;
+                end
             else
                 sp.final_iter_return = 1;
             end
