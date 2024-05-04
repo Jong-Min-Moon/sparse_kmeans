@@ -1,0 +1,240 @@
+\documentclass{beamer}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{tikz}%for figures
+\usepackage{adjustbox}
+\usepackage{subfig}
+\usepackage{pgfplots}\pgfplotsset{compat=1.9}
+\usepackage{pgfplots}
+\usepackage{amsmath}
+\usepackage{amsthm} %theorems
+\usepackage{amsfonts}
+\usepackage{amssymb} %lesssim, etc
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+\usepackage{natbib}
+\usepackage{bbm}
+\usepackage{xcolor}
+\usepackage{hyperref}[] % hyperlink
+\hypersetup{
+colorlinks = true,
+linkcolor = blue, %Colour of internal links
+filecolor = magenta,
+urlcolor = blue, %Colour for external hyperlinks
+citecolor = blue, %Colour of citations
+pdfpagemode=UseOutlines
+}
+
+\newcommand{\jongmin}[1]{
+{ \color{blue} Jongmin: #1}
+}
+
+\newcommand\numberthis{\addtocounter{equation}{1}\tag{\theequation}}
+\newtheorem{thm}{Theorem}[section]
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem{lem}[thm]{Lemma}
+\newtheorem{cor}[thm]{Corollary}
+
+
+%%
+%% If some other type is need, say conjectures, then it is constructed
+%% by editing and uncommenting the following.
+%%
+\theoremstyle{definition}
+\newtheorem{conj}{Conjecture}
+\newtheorem{alg}{Algorithm} 
+%Information to be included in the title page:
+\title{Sample title}
+\author{Anonymous}
+\institute{Overleaf}
+\date{2024}
+
+\begin{document}
+
+\frame{\titlepage}
+
+\begin{frame}
+From 
+\frametitle{SDP relaxation of K-means}
+\begin{equation}\label{kmean_objective_function}
+\mathrm{minimize}_{ G_1, \ldots, G_K}
+    \sum_{k=1}^K
+    \frac{1}{|G_k|}
+    \sum_{i,j \in G_k} \|\boldsymbol{X}_i - \boldsymbol{X}_j \|_2^2,
+\end{equation}
+through several steps,
+relax the problem into 
+\begin{align*}
+ \mathrm{minimize}_{\boldsymbol{Z} \in  S^n_+}~& \langle
+ A, \boldsymbol{Z}  \rangle
+ \\
+ s.t.~&
+ \mathrm{tr}(\boldsymbol{Z}) = K,
+ \boldsymbol{Z} \boldsymbol{1}_n = \boldsymbol{1}_n, \boldsymbol{Z} \geq 0,
+ \numberthis \label{kmeans_SDP_form}
+ \end{align*}
+ where $\boldsymbol{A} = \boldsymbol{X}  \boldsymbol{X}^\top $~\citep{chen_cutoff_2021}.
+\end{frame}
+
+%
+%
+%
+%
+\begin{frame}
+\frametitle{Statistical optimality}
+\citet{chen_cutoff_2021} uses the following model to investigate the statistical optimality:
+\begin{itemize}
+	\item Balanced Gaussian mixture model with K components of equal size $|G_1^\ast| = \ldots |G_K^\ast|$:
+	\begin{equation}
+		\boldsymbol{X}_i = \boldsymbol{\mu}_k + \boldsymbol{\epsilon}_i, 
+		\quad
+		\boldsymbol{\epsilon}_1,  \ldots, \boldsymbol{\epsilon}_n
+		\sim
+		N(\boldsymbol{0}, \sigma^2 \boldsymbol{I}_p)
+	\end{equation}
+	\item Minimal separation: $\Theta^2_{\mathrm{min}} = \min_{1 \leq k \neq l \leq K} \| \boldsymbol{\mu}_k - \boldsymbol{\mu}_l\|_2^2$
+\end{itemize}
+\end{frame}
+%
+%
+%
+%
+\begin{frame}
+\frametitle{Statistical optimality}
+\begin{itemize}
+	\item  Suppose $K \leq \log n / (\log \log n).$ Then
+	\begin{itemize}
+	\item~[minimax upper bound, through an algorithm]~If $\Theta^2_{\mathrm{min}} \geq (1 + \alpha)\bar{\Theta}^2$, where
+	\begin{align*}
+		\Theta^2 = 4 \sigma^2 \left(
+1 + \sqrt{1 + \frac{K\textcolor{red}{p}}{n \log n}\log n}
+\right)
+	\end{align*}
+	the \textbf{SDP relaxation}~\eqref{kmeans_SDP_form} yields the true cluster partitions, with probability tending to one. 
+	\textbf{This is a sharp threshold; not up to a constant}.
+		\end{itemize}
+		%
+	\item~[minimax lower bound, information-theoretic]~If $\Theta^2_{\mathrm{min}} \leq (1 - \alpha)\bar{\Theta}^2$, then probability of exact recovery of  any estimator vanishes to zero.
+\end{itemize}
+\end{frame}
+%
+%
+%
+%
+\begin{frame}
+\frametitle{Our goal}
+For simplicity, let $K=2$ and assume symmetric mean: $\boldsymbol{\mu}_1 = \boldsymbol{\mu}_0$ and $\boldsymbol{\mu}_2 = -\boldsymbol{\mu}_0$
+\begin{enumerate}
+	\item  Assume hard sparsity: only $s$ entries of $\boldsymbol{\mu}_0$ are non-zero, and their positions are unknown
+	\item Assume sparse precision matrix
+\end{enumerate}
+Then we aim to derive an analog of the theorems of~\citet{chen_cutoff_2021}:
+\begin{enumerate}
+	\item  an algorithm-specific bound
+	\item an information theoretic bound 
+\end{enumerate} that match, \textbf{up to a constant}.
+\\
+If things work well, we can try a sharp threshold next.\end{frame}
+%
+%
+%
+%
+\begin{frame}
+\frametitle{A conjecture on the bound}
+Dependence on $p$ inside the square root improves from $p$ to $s (\log p)^\gamma$:
+   \begin{align*}
+4 \left(
+1 + \sqrt{1 + \frac{K\textcolor{red}{s (\log p)^\gamma}}{n \log n}}
+\right)\log n,
+\numberthis \label{lower_bound_sparsity}
+\end{align*}
+i.e.  dependence on $p$ becomes a log factor.\end{frame}
+%
+%
+%
+\section{1. Algorithm-specific bound}
+\begin{frame}
+\frametitle{1.1. Algorithm-specific bound: Adapting to sparsity through iterative thresholding }	
+
+\begin{enumerate}
+	\item The signal (differences in non-zero entries) would be larger than the noise (differences of zero-mean Gaussian noises)
+	\item Thus given current clustering result, we can estimate the support by entrywise thresholding. threshold = $\sqrt{2 \log p}$.
+	\item Using this estimated support, we do the clustering again, and using this clustering result, we estimate the support again. This iteration goes on up to some reasonable number of iterations.
+	\item If we have initialization e.g. by spectral clustering that is not too bad, estimation accuracy of the support will gradually improve over iterations
+\end{enumerate}
+\end{frame}
+%
+%
+%
+\begin{frame}
+\frametitle{1. Algorithm-specific bound: Adapting to sparsity through iterative thresholding }	
+\includegraphics[width=0.6\textwidth]{itereative_1}
+2$\|\boldsymbol{\mu}_0\|_2^2 = 5, n=200, s = 10,  p = 100- 5000$, number of iterations fixed at 10.
+\end{frame}
+
+\begin{frame}
+\frametitle{1.2. Algorithm-specific bound: Generalization from isotropic to  sparse covariance matrix }	
+
+Assume that $\boldsymbol{\Omega} := \boldsymbol{\Sigma}^{-1}$ is sparse
+\begin{itemize}
+	\item Change the data sparsity assumption: $\boldsymbol{\Omega} \boldsymbol{\mu}_0$ is s-sparse, instead of $\boldsymbol{\mu}_0$. The data-generating process is the same.
+	\item Use the same iterative algorithm, but now the estimation of $\Omega$ kicks in and deteriorates the performance
+	\item After some explorations, found out that the full estimation of $\boldsymbol{\Omega}$ is unnecessary, and what we really need to estimate are
+	\begin{enumerate}
+		\item the diagonals of $\boldsymbol{\Omega}$
+		\item the transformed data vectors $\boldsymbol{\Omega X}_1, \ldots,  \boldsymbol{\Omega X}_n$,
+	\end{enumerate}
+	which can be effectively estimated, in parallel, with ISEE algorithm~\citet{fan_innovated_2016}~(runs LASSO for small blocks of $\boldsymbol{\Omega X}_i$, requires Gaussian noise assumption)
+\end{itemize}
+\end{frame}
+\begin{frame}
+\frametitle{1.2. Algorithm-specific bound: Generalization from isotropic to  sparse covariance matrix }	
+\begin{itemize}
+	\item The thresholding now exploits the convergence rate result of ISEE~\citep{fan_innovated_2016}.
+	\item Due to the regression nature, ISEE estimates the mean and the residual separately. 
+	\item The formal method compares mean+noise vs expected noise level~($\sqrt{2\log p}$. 
+	\item If we use ISEE we can just compare mean vs noise.
+\end{itemize}
+Using ISEE and thresholding through the convergence rate is shows the best performance so far.
+\end{frame}
+
+
+\begin{frame}
+\frametitle{1.2. Algorithm-specific bound: Generalization from isotropic to  sparse covariance matrix }	
+
+\includegraphics[width=0.6\textwidth]{isee}
+$\boldsymbol{\Omega} = AR(1), \|\boldsymbol{\Sigma}2\boldsymbol{\mu}_0\|_2^2 = 4, n=500, s = 10,  p = 100- 400$, off-diagonal of $\boldsymbol{\Omega} = 0.45$, number of iterations fixed at 10.	
+\end{frame}
+%
+%
+%
+\begin{frame}
+	\frametitle{1.3. Algorithm-specific bound: when to stop the iteration }	
+	\begin{enumerate}
+		\item percent change criterion: SDP objective or original K-means objective
+		\item Early stopping with patience parameter: keep track of the minimum objective value so far. If the minimum does not change for \{patience\} steps, stop the iteration and use the result of \{current iteration - patience\}
+	\end{enumerate}
+\end{frame}
+%
+\begin{frame}
+\frametitle{1.3. Algorithm-specific bound: when to stop the iteration }
+\includegraphics[width=0.3\textwidth]{early_stop_acc}
+\includegraphics[width=0.3\textwidth]{early_stop_true_pos}
+\includegraphics[width=0.3\textwidth]{early_stop_false_neg}
+$\boldsymbol{\Omega} = AR(1), \|\boldsymbol{\Sigma}2\boldsymbol{\mu}_0\|_2^2 = 4, n=500, s = 10,  p = 400$, off-diagonal of $\boldsymbol{\Omega} = 0.45$, 
+\begin{enumerate}
+	\item purple: early stopping using the k-means objective
+	\item orange: early stopping using the SDP objective
+	\item limegreen: percent change using the k-means objective
+	\item red: percent change using the SDP objective
+\end{enumerate}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{1.4. Algorithm-specific bound: deriving the bound}	
+Proof techniques of~\citet{chen_cutoff_2021}: ... conditions on the dual variable $\lambda$ (trace(Z)=K constraint) are met with high probability... requires degenerate U-process...
+\end{frame}
+
+\bibliographystyle{apalike}
+\bibliography{reference}
+\end{document}
