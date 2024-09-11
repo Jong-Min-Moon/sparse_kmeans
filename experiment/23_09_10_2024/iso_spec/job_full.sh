@@ -21,7 +21,7 @@ for rho in 0
     do
     for separation in  5
         do
-        for dimension in  50 1000 1500 2000 2500 3000 3500 4000 4500 5000
+        for dimension in  50
             do
             for ii in {1..50}
                 do
