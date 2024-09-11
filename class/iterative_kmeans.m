@@ -114,6 +114,9 @@ methods
         elseif strcmp(ik.init_method, "hc")
             Z = linkage(ik.data_object.data', 'ward');
             initial_cluster_assign = cluster(Z, 'Maxclust', ik.number_cluster);
+        elseif strcmp(ik.init_method, "sdp")
+            [Z_now, obj_val] = kmeans_sdp( ik.data_object.data' * ik.data_object.data/ik.data_object.sample_size, ik.number_cluster);
+            initial_cluster_assign = sdp_to_cluster(Z_now, ik.number_cluster);
         end
     end
     

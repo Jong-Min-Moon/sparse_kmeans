@@ -11,13 +11,12 @@ classdef block_replication_for_server < handle
         cluster_true
         learner
         run_full
-        init_method
         matrix_sparsity
-        clustering_algorithm
+        data_obj
     end % end of properties
 
     methods
-        function blfs = block_replication_for_server(table_name, db_dir, support, separation, dimension, correlation, sample_size, n_iter_max, run_full, init_method, matrix_sparsity, clustering_algorithm)
+        function blfs = block_replication_for_server(table_name, db_dir, support, separation, dimension, correlation, sample_size, n_iter_max, run_full, init_method, matrix_sparsity, data_obj)
             %save variables
             blfs.number_cluster = 2;
             blfs.n_iter_max = n_iter_max;
@@ -28,7 +27,7 @@ classdef block_replication_for_server < handle
             blfs.sample_size    = sample_size;
             blfs.init_method    = init_method;
             blfs.matrix_sparsity = matrix_sparsity;
-            blfs.clustering_algorithm = clustering_algorithm;
+            blfs.data_obj = data_obj;
             
             %model setting
             blfs.data_generator = sparse_symmetric_data_generator(support, separation, dimension, matrix_sparsity, correlation)
@@ -45,7 +44,7 @@ classdef block_replication_for_server < handle
 
                 rng(rep)
                 x_noisy = x_noiseless +  mvnrnd(zero_mean, blfs.data_generator.covariance_matrix, blfs.sample_size)';%data generation. each column is one observation
-                blfs.learner = iterative_kmeans(x_noisy, blfs.clustering_algorithm, blfs.number_cluster, blfs.data_generator.conditional_correlation, blfs.init_method);
+                blfs.learner = iterative_kmeans(x_noisy, blfs.data_obj, blfs.number_cluster, blfs.data_generator.conditional_correlation, blfs.init_method);
                 blfs.learner.run_iterative_algorithm(blfs.n_iter_max, blfs.window_size_half, 0.01, blfs.run_full);
     
                 database_subtable = blfs.learner.get_database_subtable(rep, blfs.data_generator.separation, blfs.data_generator.conditional_correlation, blfs.data_generator.support, blfs.cluster_true, blfs.data_generator.sparse_precision_matrix);
@@ -63,7 +62,11 @@ classdef block_replication_for_server < handle
             pause(random_seconds);
             conn=sqlite(blfs.db_dir);
             pause(2);
-            sqlwrite(conn, blfs.table_name, database_subtable)
+            try
+                sqlwrite(conn, blfs.table_name, database_subtable)
+            catch
+                fprintf("db insertion failed")
+            end
             pause(2);
             close(conn)
         end % end of save_into_database
