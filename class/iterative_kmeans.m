@@ -18,8 +18,8 @@ properties
 end
 
 methods
-    function ik = iterative_kmeans(data, estimator_class, number_cluster, omega_sparsity, init_method)
-        ik.data_object = estimator_class(data, omega_sparsity);
+    function ik = iterative_kmeans(data_object, number_cluster, omega_sparsity, init_method)
+        ik.data_object = data_object;
         ik.number_cluster = number_cluster;
         ik.omega_sparsity = omega_sparsity;
         ik.init_method = init_method;

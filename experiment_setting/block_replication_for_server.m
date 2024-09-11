@@ -27,11 +27,22 @@ classdef block_replication_for_server < handle
             blfs.sample_size    = sample_size;
             blfs.init_method    = init_method;
             blfs.matrix_sparsity = matrix_sparsity;
-            blfs.data_obj = data_obj;
+            
             
             %model setting
             blfs.data_generator = sparse_symmetric_data_generator(support, separation, dimension, matrix_sparsity, correlation)
             blfs.cluster_true = [repelem(1,sample_size/2), repelem(2,sample_size/2)];
+
+            %
+            if isstring(data_obj)
+                if strcmp(data_obj, "oracle")
+                    blfs.data_obj = data_gaussian_oracle(data, omega_sparsity, blfso.data_generator.covariance_matrix, blfso.data_generator.sparse_precision_matrix);
+                end
+            else
+                blfs.data_obj = data_obj(data, omega_sparsity);
+            end
+            
+            
         end % end of the constructer
         
         function database_subtable = run_one_replication(blfs, block_num, iter_num)
