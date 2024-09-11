@@ -41,7 +41,7 @@ classdef data_gaussian < handle
             end
             
             entrywise_signal_estimate = dg.get_entrywise_signal();
-            dg.get_support(entrywise_signal_estimate);
+            dg.get_support(entrywise_signal_estimate)
             
             
             data_innovated_small = dg.data_innovated(dg.support,:);
@@ -66,11 +66,11 @@ classdef data_gaussian < handle
         end
 
         function cluster_mean_innovated_mat = get_cluster_mean_innovated(dg)
-            dg.get_innovated_data();
+            dg.data_innovated = dg.data;
             cluster_mean_innovated_mat = zeros(dg.dimension, dg.number_cluster);
             for i = 1:dg.number_cluster
-                data_innovated_cluster = dg.data_innovated(:, (dg.cluster_info_vec ==  i));
-                cluster_mean_innovated_mat(:,i) = mean(data_innovated_cluster, 2);
+                data_cluster = dg.data_innovated(:, (dg.cluster_info_vec ==  i));
+                cluster_mean_innovated_mat(:,i) = mean(data_cluster, 2);
             end
         end
 
@@ -83,24 +83,19 @@ classdef data_gaussian < handle
         end
 
         function cutoff = get_cutoff(dg)
-            cutoff = sqrt(2 * log(dg.dimension));
+            % need to generalize to K clusters. currently only works for two clusters.
+            % also, currently only works for sigma = 1
+            n_1 = sum(dg.cluster_info_vec == 1);
+            n_2 = sum(dg.cluster_info_vec == 2);
+            sample_size_multiplier = sqrt(1/n_1 + 1/n_2);
+            cutoff = sample_size_multiplier * sqrt(2 * log(dg.dimension))
         end
         
         function sparse_affinity = get_sparse_affinity(dg)
             data_small = dg.data(dg.support, :);
             dg.sparse_affinity = data_small' * data_small;
         end
-
-
-
-
-
-
-
- 
-
-
-        
+      
 
         function get_cluster_mean_small(dg)
             dg.cluster_mean_small_mat = zeros(dg.number_support, dg.number_cluster);
