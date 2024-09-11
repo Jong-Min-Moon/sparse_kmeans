@@ -31,6 +31,15 @@ methods (Access = protected)
         end
     end
 
+    function sample_covariance_small = get_sample_covariance_small(dg)
+        %non-oracle, we estimate it
+        dg.get_cluster_mean_small();
+        data_small = dg.data(dg.support,:);
+        for i = 1:dg.number_cluster
+            data_small(:,dg.cluster_info_vec == i) = data_small(:,dg.cluster_info_vec == i) - dg.cluster_mean_small_mat(:,i);
+        end
+        sample_covariance_small = (data_small * data_small')/(dg.sample_size-1);
+    end
 
     
 end
