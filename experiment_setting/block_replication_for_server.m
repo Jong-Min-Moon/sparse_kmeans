@@ -27,22 +27,11 @@ classdef block_replication_for_server < handle
             blfs.sample_size    = sample_size;
             blfs.init_method    = init_method;
             blfs.matrix_sparsity = matrix_sparsity;
-            
+            blfs.data_obj = data_obj;
             
             %model setting
             blfs.data_generator = sparse_symmetric_data_generator(support, separation, dimension, matrix_sparsity, correlation)
-            blfs.cluster_true = [repelem(1,sample_size/2), repelem(2,sample_size/2)];
-
-            %
-            if isstring(data_obj)
-                if strcmp(data_obj, "oracle")
-                    blfs.data_obj = data_gaussian_oracle(data, omega_sparsity, blfso.data_generator.covariance_matrix, blfso.data_generator.sparse_precision_matrix);
-                end
-            else
-                blfs.data_obj = data_obj(data, omega_sparsity);
-            end
-            
-            
+            blfs.cluster_true = [repelem(1,sample_size/2), repelem(2,sample_size/2)];    
         end % end of the constructer
         
         function database_subtable = run_one_replication(blfs, block_num, iter_num)
@@ -55,7 +44,14 @@ classdef block_replication_for_server < handle
 
                 rng(rep)
                 x_noisy = x_noiseless +  mvnrnd(zero_mean, blfs.data_generator.covariance_matrix, blfs.sample_size)';%data generation. each column is one observation
-                blfs.learner = iterative_kmeans(x_noisy, blfs.data_obj, blfs.number_cluster, blfs.data_generator.conditional_correlation, blfs.init_method);
+                if isstring(blfs.data_obj)
+                    if strcmp(blfs.data_obj, "oracle")
+                        data_obj_now = data_gaussian_oracle(x_noisy, omega_sparsity, blfso.data_generator.covariance_matrix, blfso.data_generator.sparse_precision_matrix);
+                    end
+                else
+                    data_obj_now = blfs.data_obj(x_noisy, omega_sparsity);
+                end
+                blfs.learner = iterative_kmeans(data_obj_now, blfs.number_cluster, blfs.data_generator.conditional_correlation, blfs.init_method);
                 blfs.learner.run_iterative_algorithm(blfs.n_iter_max, blfs.window_size_half, 0.01, blfs.run_full);
     
                 database_subtable = blfs.learner.get_database_subtable(rep, blfs.data_generator.separation, blfs.data_generator.conditional_correlation, blfs.data_generator.support, blfs.cluster_true, blfs.data_generator.sparse_precision_matrix);
