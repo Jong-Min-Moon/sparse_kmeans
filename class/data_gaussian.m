@@ -97,16 +97,6 @@ classdef data_gaussian < handle
         end
       
 
-        function get_cluster_mean_small(dg)
-            dg.cluster_mean_small_mat = zeros(dg.number_support, dg.number_cluster);
-            for i = 1:dg.number_cluster
-                data_cluster_small = dg.data(dg.support, (dg.cluster_info_vec ==  i));
-                dg.cluster_mean_small_mat(:,i) = mean(data_cluster_small, 2);
-            end
-        end
-
-
-
         function sample_covariance_small = get_sample_covariance_small(dg)
             dg.get_cluster_mean_small();
             data_small = dg.data(dg.support,:);
@@ -116,7 +106,14 @@ classdef data_gaussian < handle
             sample_covariance_small = (data_small * data_small')/(dg.sample_size-1);
         end
 
-
+        function get_cluster_mean_small(dg)
+            %only used to calculate the sample mean
+            dg.cluster_mean_small_mat = zeros(dg.number_support, dg.number_cluster);
+            for i = 1:dg.number_cluster
+                data_cluster_small = dg.data(dg.support, (dg.cluster_info_vec ==  i));
+                dg.cluster_mean_small_mat(:,i) = mean(data_cluster_small, 2);
+            end
+        end
 
     end %end of hidden method
 end
