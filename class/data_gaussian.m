@@ -91,15 +91,6 @@ classdef data_gaussian < handle
             dg.sparse_affinity = data_small' * data_small;
         end
 
-
-
-
-
-
-
- 
-
-
         
 
         function get_cluster_mean_small(dg)
