@@ -11,12 +11,12 @@ classdef block_replication_for_server < handle
         cluster_true
         learner
         run_full
-        matrix_sparsity
+        omega_sparsity
         data_obj
     end % end of properties
 
     methods
-        function blfs = block_replication_for_server(table_name, db_dir, support, separation, dimension, correlation, sample_size, n_iter_max, run_full, init_method, matrix_sparsity, data_obj)
+        function blfs = block_replication_for_server(table_name, db_dir, support, separation, dimension, correlation, sample_size, n_iter_max, run_full, init_method, omega_sparsity, data_obj)
             %save variables
             blfs.number_cluster = 2;
             blfs.n_iter_max = n_iter_max;
@@ -26,11 +26,11 @@ classdef block_replication_for_server < handle
             blfs.db_dir         = db_dir;
             blfs.sample_size    = sample_size;
             blfs.init_method    = init_method;
-            blfs.matrix_sparsity = matrix_sparsity;
+            blfs.omega_sparsity = omega_sparsity;
             blfs.data_obj = data_obj;
             
             %model setting
-            blfs.data_generator = sparse_symmetric_data_generator(support, separation, dimension, matrix_sparsity, correlation)
+            blfs.data_generator = sparse_symmetric_data_generator(support, separation, dimension, omega_sparsity, correlation)
             blfs.cluster_true = [repelem(1,sample_size/2), repelem(2,sample_size/2)];    
         end % end of the constructer
         
@@ -46,10 +46,10 @@ classdef block_replication_for_server < handle
                 x_noisy = x_noiseless +  mvnrnd(zero_mean, blfs.data_generator.covariance_matrix, blfs.sample_size)';%data generation. each column is one observation
                 if isstring(blfs.data_obj)
                     if strcmp(blfs.data_obj, "oracle")
-                        data_obj_now = data_gaussian_oracle(x_noisy, omega_sparsity, blfso.data_generator.covariance_matrix, blfso.data_generator.sparse_precision_matrix);
+                        data_obj_now = data_gaussian_oracle(x_noisy, blfs.omega_sparsity, blfs.data_generator.covariance_matrix, blfs.data_generator.sparse_precision_matrix);
                     end
                 else
-                    data_obj_now = blfs.data_obj(x_noisy, omega_sparsity);
+                    data_obj_now = blfs.data_obj(x_noisy, blfs.omega_sparsity);
                 end
                 blfs.learner = iterative_kmeans(data_obj_now, blfs.number_cluster, blfs.data_generator.conditional_correlation, blfs.init_method);
                 blfs.learner.run_iterative_algorithm(blfs.n_iter_max, blfs.window_size_half, 0.01, blfs.run_full);
