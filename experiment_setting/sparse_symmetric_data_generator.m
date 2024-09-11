@@ -56,12 +56,15 @@ classdef sparse_symmetric_data_generator < handle
         function get_sparse_precision_matrix(sdg)
             sparse_precision_matrix = eye(sdg.dimension);
             
-            for i = 1 : floor(sdg.precision_sparsity/2)
-                diagonal_vec = sdg.conditional_correlation*ones(sdg.dimension-i,1);
-                off_diag_up  = diag(diagonal_vec, i);
-                off_diag_low = diag(diagonal_vec, -i);
-                sparse_precision_matrix = sparse_precision_matrix + off_diag_up + off_diag_low;
+            if sdg.precision_sparsity >= 2
+                for i = 1 : floor(sdg.precision_sparsity/2)
+                    diagonal_vec = sdg.conditional_correlation*ones(sdg.dimension-i,1);
+                    off_diag_up  = diag(diagonal_vec, i);
+                    off_diag_low = diag(diagonal_vec, -i);
+                    sparse_precision_matrix = sparse_precision_matrix + off_diag_up + off_diag_low;
+                end
             end
+            
             sdg.sparse_precision_matrix = sparse_precision_matrix;
         end
 
