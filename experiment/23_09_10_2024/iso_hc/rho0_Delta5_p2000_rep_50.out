@@ -1,0 +1,3261 @@
+==========================================
+SLURM_JOB_ID = 25533491
+SLURM_JOB_NODELIST = a03-04
+TMPDIR = /tmp/SLURM_25533491
+==========================================
+hello
+Starting parallel pool (parpool) ...
+Connected to the parallel pool (number of workers: 15).
+
+pool = 
+
+ ProcessPool with properties: 
+
+            Connected: true
+           NumWorkers: 15
+                 Busy: false
+              Cluster: Local
+        AttachedFiles: {}
+    AutoAddClientPath: true
+            FileStore: [1x1 parallel.FileStore]
+           ValueStore: [1x1 parallel.ValueStore]
+          IdleTimeout: 30 minutes (30 minutes remaining)
+          SpmdEnabled: true
+
+
+dimension =
+
+        2000
+
+
+separation =
+
+     5
+
+
+sample_size =
+
+   200
+
+
+table_name =
+
+    'iso_hc'
+
+
+db_dir =
+
+    '/home1/jongminm/sparse_kmeans/sparse_kmeans.db'
+
+
+rho =
+
+     0
+
+
+full_run =
+
+  logical
+
+   0
+
+
+blfs = 
+
+  block_replication_for_server with properties:
+
+          table_name: 'iso_hc'
+              db_dir: '/home1/jongminm/sparse_kmeans/sparse_kmeans.db'
+      data_generator: [1x1 sparse_symmetric_data_generator]
+      number_cluster: 2
+          n_iter_max: 100
+    window_size_half: 2
+         sample_size: 200
+         init_method: "hc"
+        cluster_true: []
+             learner: []
+            run_full: 0
+     matrix_sparsity: 0
+            data_obj: @data_gaussian
+
+replication: (197)th 
+
+
+1 th thresholding
+
+
+cutoff =
+
+    0.5524
+
+
+11 entries survived 
+solving SDP...  breakyes=1.4,  maxresidual < 1.00e-06took 11.815586s, relaxed dual: -39.061692, original: 1305.175932 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+2 th thresholding
+
+
+cutoff =
+
+    0.5514
+
+
+10 entries survived 
+solving SDP...  breakyes=1.0,  maxresidual < 1.00e-06took 4.499919s, relaxed dual: -7.135354, original: 1302.173873 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+3 th thresholding
+
+
+cutoff =
+
+    0.5514
+
+
+10 entries survived 
+solving SDP...  breakyes=1.0,  maxresidual < 1.00e-06took 3.947743s, relaxed dual: -7.135354, original: 1302.173873 
+
+is_stop =
+
+  logical
+
+   1
+
+
+final_iter =
+
+     3
+
+
+ final iteration = 3 
+acc_dict = 
+
+  Map with properties:
+
+        Count: 4
+      KeyType: double
+    ValueType: double
+
+
+ans =
+
+  1x4 cell array
+
+    {[0.7000]}    {[0.9950]}    {[0.9950]}    {[0.9950]}
+
+
+ans =
+
+  1x4 cell array
+
+  Columns 1 through 3
+
+    {'2,2,1,1,1,2,1,...'}    {'1,1,1,1,1,1,1,...'}    {'1,1,1,1,1,1,1,...'}
+
+  Column 4
+
+    {'2,2,2,2,2,2,2,...'}
+
+
+database_subtable =
+
+  4x24 table
+
+    rep    iter    sep    dim     rho    sparsity    stop_og    stop_sdp    stop_loop     acc     obj_prim    obj_dual    obj_original    true_pos    false_pos    false_neg    diff_x_tilde_fro    diff_x_tilde_op    diff_x_tilde_ellone    time_est    time_SDP          jobdate                survived_indices                                                                                                                                                                                                             cluster_est                                                                                                                                                                                                   
+    ___    ____    ___    ____    ___    ________    _______    ________    _________    _____    ________    ________    ____________    ________    _________    _________    ________________    _______________    ___________________    ________    ________    ____________________    ___________________________    _________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+
+    197     0       5     2000     0        10        false      false        false        0.7          0           0             0           0           0            0               0                   0                    0                    0          0     11-Sep-2024 13:04:39    ""                             "2,2,1,1,1,2,1,2,2,2,1,1,2,1,2,1,2,1,2,2,2,2,2,1,2,2,2,2,1,2,2,1,2,2,2,2,2,2,1,2,2,2,1,2,2,2,1,1,2,2,2,2,2,2,2,2,2,2,1,2,2,1,1,2,2,2,2,1,2,2,2,2,2,2,2,1,2,1,1,2,2,2,2,2,1,2,2,2,2,2,2,1,2,2,1,2,2,1,2,2,2,2,2,2,1,1,2,1,1,1,1,1,1,2,2,2,1,1,2,1,1,1,2,1,1,1,1,1,2,1,1,1,2,1,1,1,1,1,1,2,1,2,2,1,1,1,1,1,2,1,2,1,1,2,1,1,1,1,2,1,1,2,1,2,1,1,1,1,2,2,1,1,1,1,2,1,1,1,2,2,2,1,1,1,1,1,1,1,1,1,2,1,2,2,2,2,1,1,2,1"
+    197     1       5     2000     0        10        false      false        false      0.995    -39.062     -39.062        1305.2          10           1            0               0                   0                    0             0.018945     11.816     11-Sep-2024 13:04:39    "1,2,3,4,5,6,7,8,9,10,1401"    "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2"
+    197     2       5     2000     0        10        true       false        false      0.995    -7.1354     -7.1354        1302.2          10           0            0               0                   0                    0             0.009858     4.4999     11-Sep-2024 13:04:39    "1,2,3,4,5,6,7,8,9,10"         "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2"
+    197     3       5     2000     0        10        false      true         false      0.995    -7.1354     -7.1354        1302.2          10           0            0               0                   0                    0               0.0108     3.9477     11-Sep-2024 13:04:39    "1,2,3,4,5,6,7,8,9,10"         "2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+
+
+blfs = 
+
+  block_replication_for_server with properties:
+
+          table_name: 'iso_hc'
+              db_dir: '/home1/jongminm/sparse_kmeans/sparse_kmeans.db'
+      data_generator: [1x1 sparse_symmetric_data_generator]
+      number_cluster: 2
+          n_iter_max: 100
+    window_size_half: 2
+         sample_size: 200
+         init_method: "hc"
+        cluster_true: []
+             learner: []
+            run_full: 0
+     matrix_sparsity: 0
+            data_obj: @data_gaussian
+
+replication: (198)th 
+
+
+1 th thresholding
+
+
+cutoff =
+
+    0.5532
+
+
+2 entries survived 
+solving SDP...  breakyes=1.4,  maxresidual < 1.00e-06took 13.808038s, relaxed dual: -0.992860, original: 155.539914 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+2 th thresholding
+
+
+cutoff =
+
+    0.5521
+
+
+1 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=1.4,  maxresidual < 1.00e-06took 6.569218s, relaxed dual: -0.337730, original: 153.106677 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+3 th thresholding
+
+
+cutoff =
+
+    0.5542
+
+
+1 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=1.4,  maxresidual < 1.00e-06took 7.347948s, relaxed dual: -0.310713, original: 153.106677 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+4 th thresholding
+
+
+cutoff =
+
+    0.5542
+
+
+1 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=1.4,  maxresidual < 1.00e-06took 7.427801s, relaxed dual: -0.310713, original: 153.106677 
+
+is_stop =
+
+  logical
+
+   1
+
+
+final_iter =
+
+     4
+
+
+ final iteration = 4 
+acc_dict = 
+
+  Map with properties:
+
+        Count: 5
+      KeyType: double
+    ValueType: double
+
+
+ans =
+
+  1x5 cell array
+
+    {[0.6100]}    {[0.5050]}    {[0.5100]}    {[0.5100]}    {[0.5100]}
+
+
+ans =
+
+  1x5 cell array
+
+  Columns 1 through 3
+
+    {'2,2,1,1,1,2,1,...'}    {'1,1,1,1,1,2,1,...'}    {'2,2,2,2,2,1,2,...'}
+
+  Columns 4 through 5
+
+    {'2,2,2,2,2,1,2,...'}    {'2,2,2,2,2,1,2,...'}
+
+
+database_subtable =
+
+  5x24 table
+
+    rep    iter    sep    dim     rho    sparsity    stop_og    stop_sdp    stop_loop     acc     obj_prim    obj_dual    obj_original    true_pos    false_pos    false_neg    diff_x_tilde_fro    diff_x_tilde_op    diff_x_tilde_ellone    time_est    time_SDP          jobdate           survived_indices                                                                                                                                                                                                       cluster_est                                                                                                                                                                                                   
+    ___    ____    ___    ____    ___    ________    _______    ________    _________    _____    ________    ________    ____________    ________    _________    _________    ________________    _______________    ___________________    ________    ________    ____________________    ________________    _________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+
+    198     0       5     2000     0        10        false      false        false       0.61           0           0            0          0            0            0               0                   0                    0                    0          0     11-Sep-2024 13:05:30       ""               "2,2,1,1,1,2,1,1,1,1,2,2,1,2,1,2,1,1,2,2,2,1,2,2,1,1,1,1,1,2,2,1,2,1,2,1,2,2,1,1,2,1,1,2,2,2,2,1,1,1,2,2,1,1,2,1,1,1,1,1,1,1,2,2,1,2,1,2,2,1,1,1,1,1,1,1,1,2,2,2,2,2,1,1,1,2,1,1,1,2,2,2,1,1,1,1,2,1,2,2,2,2,1,1,2,2,2,1,1,1,1,2,2,2,2,2,2,1,2,2,1,1,2,1,2,2,2,2,2,2,2,1,2,2,1,1,2,2,1,1,1,2,2,2,2,2,1,1,2,2,2,2,2,1,2,2,2,2,1,1,1,2,2,2,2,1,2,2,2,1,1,2,2,2,2,2,2,2,2,2,1,1,2,1,2,2,1,2,1,2,2,1,2,1,2,1,1,2,2,1"
+    198     1       5     2000     0        10        false      false        false      0.505    -0.99286    -0.99286       155.54          0            2           10               0                   0                    0             0.004465     13.808     11-Sep-2024 13:05:30       "811,1678"       "1,1,1,1,1,2,1,2,2,1,1,1,2,2,2,1,2,1,1,2,1,2,1,2,2,2,2,2,2,2,2,2,1,2,1,2,1,1,1,1,1,2,2,2,1,1,2,2,2,1,1,1,2,1,1,2,1,1,1,1,1,2,1,2,2,1,2,1,1,1,1,2,2,2,2,1,2,2,1,1,2,2,1,2,1,1,1,2,1,2,1,1,2,2,2,1,1,2,1,1,1,1,2,1,1,1,1,2,2,2,2,1,1,1,1,1,1,1,2,1,2,2,1,2,2,2,1,2,2,2,1,1,1,1,1,2,2,2,2,2,2,1,1,1,1,1,2,2,2,2,1,1,1,2,2,1,2,1,2,1,2,1,2,2,2,2,2,2,1,1,1,1,2,1,1,1,2,2,1,1,1,2,2,1,2,1,1,1,2,1,2,2,1,2,2,1,1,1,2,2"
+    198     2       5     2000     0        10        false      false        false       0.51    -0.33773    -0.33773       153.11          0            1           10               0                   0                    0              0.01915     6.5692     11-Sep-2024 13:05:30       "1678"           "2,2,2,2,2,1,2,1,1,2,2,2,1,1,1,2,1,2,2,1,2,1,2,2,2,1,1,1,1,1,1,1,2,1,2,1,2,2,2,2,2,1,1,1,2,2,1,1,1,2,1,2,1,2,2,1,2,2,2,2,2,1,2,1,1,2,1,2,2,2,2,1,1,1,1,2,1,1,2,2,1,1,2,1,2,2,2,1,2,1,2,2,1,1,1,2,2,1,2,2,2,2,1,2,2,2,2,1,1,1,1,2,2,2,2,2,2,2,1,2,1,2,2,1,1,1,1,1,1,1,2,2,2,2,2,1,1,1,1,1,1,2,2,2,2,2,2,2,1,1,2,2,2,1,1,2,1,2,1,2,2,2,1,1,1,2,1,1,2,2,2,2,1,2,2,2,1,1,2,2,2,1,1,2,1,2,2,2,1,2,1,1,2,1,1,2,2,2,1,1"
+    198     3       5     2000     0        10        true       false        false       0.51    -0.31071    -0.31071       153.11          0            1           10               0                   0                    0              0.00532     7.3479     11-Sep-2024 13:05:30       "1678"           "2,2,2,2,2,1,2,1,1,2,2,2,1,1,1,2,1,2,2,1,2,1,2,2,2,1,1,1,1,1,1,1,2,1,2,1,2,2,2,2,2,1,1,1,2,2,1,1,1,2,1,2,1,2,2,1,2,2,2,2,2,1,2,1,1,2,1,2,2,2,2,1,1,1,1,2,1,1,2,2,1,1,2,1,2,2,2,1,2,1,2,2,1,1,1,2,2,1,2,2,2,2,1,2,2,2,2,1,1,1,1,2,2,2,2,2,2,2,1,2,1,2,2,1,1,1,1,1,1,1,2,2,2,2,2,1,1,1,1,1,1,2,2,2,2,2,2,2,1,1,2,2,2,1,1,2,1,2,1,2,2,2,1,1,1,2,1,1,2,2,2,2,1,2,2,2,1,1,2,2,2,1,1,2,1,2,2,2,1,2,1,1,2,1,1,2,2,2,1,1"
+    198     4       5     2000     0        10        false      true         false       0.51    -0.31071    -0.31071       153.11          0            1           10               0                   0                    0             0.008579     7.4278     11-Sep-2024 13:05:30       "1678"           "2,2,2,2,2,1,2,1,1,2,2,2,1,1,1,2,1,2,2,1,2,1,2,2,2,1,1,1,1,1,1,1,2,1,2,1,2,2,2,2,2,1,1,1,2,2,1,1,1,2,1,2,1,2,2,1,2,2,2,2,2,1,2,1,1,2,1,2,2,2,2,1,1,1,1,2,1,1,2,2,1,1,2,1,2,2,2,1,2,1,2,2,1,1,1,2,2,1,2,2,2,2,1,2,2,2,2,1,1,1,1,2,2,2,2,2,2,2,1,2,1,2,2,1,1,1,1,1,1,1,2,2,2,2,2,1,1,1,1,1,1,2,2,2,2,2,2,2,1,1,2,2,2,1,1,2,1,2,1,2,2,2,1,1,1,2,1,1,2,2,2,2,1,2,2,2,1,1,2,2,2,1,1,2,1,2,2,2,1,2,1,1,2,1,1,2,2,2,1,1"
+
+
+blfs = 
+
+  block_replication_for_server with properties:
+
+          table_name: 'iso_hc'
+              db_dir: '/home1/jongminm/sparse_kmeans/sparse_kmeans.db'
+      data_generator: [1x1 sparse_symmetric_data_generator]
+      number_cluster: 2
+          n_iter_max: 100
+    window_size_half: 2
+         sample_size: 200
+         init_method: "hc"
+        cluster_true: []
+             learner: []
+            run_full: 0
+     matrix_sparsity: 0
+            data_obj: @data_gaussian
+
+replication: (199)th 
+
+
+1 th thresholding
+
+
+cutoff =
+
+    0.6455
+
+
+11 entries survived 
+solving SDP...  breakyes=1.4,  maxresidual < 1.00e-06took 5.990662s, relaxed dual: -45.425377, original: 1382.276837 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+2 th thresholding
+
+
+cutoff =
+
+    0.5514
+
+
+10 entries survived 
+solving SDP...  breakyes=1.0,  maxresidual < 1.00e-06took 3.877388s, relaxed dual: -7.314713, original: 1372.540424 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+3 th thresholding
+
+
+cutoff =
+
+    0.5516
+
+
+10 entries survived 
+solving SDP...  breakyes=1.4,  maxresidual < 1.00e-06took 5.079077s, relaxed dual: -7.514094, original: 1378.337943 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+4 th thresholding
+
+
+cutoff =
+
+    0.5514
+
+
+10 entries survived 
+solving SDP...  breakyes=1.0,  maxresidual < 1.00e-06took 3.549752s, relaxed dual: -7.314713, original: 1372.540424 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+5 th thresholding
+
+
+cutoff =
+
+    0.5516
+
+
+10 entries survived 
+solving SDP...  breakyes=1.4,  maxresidual < 1.00e-06took 4.675585s, relaxed dual: -7.514094, original: 1378.337943 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+6 th thresholding
+
+
+cutoff =
+
+    0.5514
+
+
+10 entries survived 
+solving SDP...  breakyes=1.0,  maxresidual < 1.00e-06took 4.006485s, relaxed dual: -7.314713, original: 1372.540424 
+
+change =
+
+         0
+   -0.0273
+         0
+   -0.0273
+         0
+
+
+change =
+
+         0
+    0.0042
+         0
+    0.0042
+         0
+
+
+is_stop =
+
+  logical
+
+   1
+
+
+final_iter =
+
+     4
+
+
+ final iteration = 4 
+acc_dict = 
+
+  Map with properties:
+
+        Count: 5
+      KeyType: double
+    ValueType: double
+
+
+ans =
+
+  1x5 cell array
+
+    {[0.6700]}    {[0.9850]}    {[0.9850]}    {[0.9850]}    {[0.9850]}
+
+
+ans =
+
+  1x5 cell array
+
+  Columns 1 through 3
+
+    {'2,2,2,2,2,2,2,...'}    {'1,1,1,1,1,1,1,...'}    {'2,2,2,2,2,2,2,...'}
+
+  Columns 4 through 5
+
+    {'1,1,1,1,1,1,1,...'}    {'1,1,1,1,1,1,1,...'}
+
+
+database_subtable =
+
+  5x24 table
+
+    rep    iter    sep    dim     rho    sparsity    stop_og    stop_sdp    stop_loop     acc     obj_prim    obj_dual    obj_original    true_pos    false_pos    false_neg    diff_x_tilde_fro    diff_x_tilde_op    diff_x_tilde_ellone    time_est    time_SDP          jobdate                survived_indices                                                                                                                                                                                                            cluster_est                                                                                                                                                                                                   
+    ___    ____    ___    ____    ___    ________    _______    ________    _________    _____    ________    ________    ____________    ________    _________    _________    ________________    _______________    ___________________    ________    ________    ____________________    __________________________    _________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+
+    199     0       5     2000     0        10        false      false        false       0.67          0           0             0           0           0            0               0                   0                    0                    0          0     11-Sep-2024 13:06:31    ""                            "2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,2,2,1,2,2,2,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,2,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,2,2,1,2,2,2,2,1,1,1,2,2,1,2,1,2,2,1,2,1,2,2,1,2,2,2,2,2,1,2,2,1,2,1,2,1,2,1,1,2,2,1,1,2,2,1,1,2,1,1,2,2,2,1,1,1,2,1,2,2,2,2,2,2,1,2,2,1,2,2,2,2,1,2,1,1,1,2,1,2,2,2,1,1,1,2,2,2,1,1,1,2,1,2,2,1,2,2,2"
+    199     1       5     2000     0        10        false      false        false      0.985    -45.425     -45.425        1382.3          10           1            0               0                   0                    0             0.004513     5.9907     11-Sep-2024 13:06:31    "1,2,3,4,5,6,7,8,9,10,597"    "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2"
+    199     2       5     2000     0        10        true       false        false      0.985    -7.3147     -7.3147        1372.5          10           0            0               0                   0                    0             0.001755     3.8774     11-Sep-2024 13:06:31    "1,2,3,4,5,6,7,8,9,10"        "2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,1,1,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+    199     3       5     2000     0        10        false      false        false      0.985    -7.5141     -7.5141        1378.3          10           0            0               0                   0                    0             0.002694     5.0791     11-Sep-2024 13:06:31    "1,2,3,4,5,6,7,8,9,10"        "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2"
+    199     4       5     2000     0        10        false      false        true       0.985    -7.3147     -7.3147        1372.5          10           0            0               0                   0                    0             0.003474     3.5498     11-Sep-2024 13:06:31    "1,2,3,4,5,6,7,8,9,10"        "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2"
+
+
+blfs = 
+
+  block_replication_for_server with properties:
+
+          table_name: 'iso_hc'
+              db_dir: '/home1/jongminm/sparse_kmeans/sparse_kmeans.db'
+      data_generator: [1x1 sparse_symmetric_data_generator]
+      number_cluster: 2
+          n_iter_max: 100
+    window_size_half: 2
+         sample_size: 200
+         init_method: "hc"
+        cluster_true: []
+             learner: []
+            run_full: 0
+     matrix_sparsity: 0
+            data_obj: @data_gaussian
+
+replication: (200)th 
+
+
+1 th thresholding
+
+
+cutoff =
+
+    0.6892
+
+
+2 entries survived 
+solving SDP...  breakyes=1.4,  maxresidual < 1.00e-06took 4.298399s, relaxed dual: -1.052757, original: 164.150988 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+2 th thresholding
+
+
+cutoff =
+
+    0.5514
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=3.2,  dualfeasorg deteriorated too much: primfeasorg=1.23e-06,dualfeasorg=3.72e-05took 5.683444s, relaxed dual: -0.744659, original: 132.914845 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+3 th thresholding
+
+
+cutoff =
+
+    0.5516
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=3.2,  dualfeasorg deteriorated too much: primfeasorg=2.54e-06,dualfeasorg=8.09e-05took 2.762697s, relaxed dual: -0.992131, original: 164.984290 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+4 th thresholding
+
+
+cutoff =
+
+    0.5518
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=3.2,  dualfeasorg deteriorated too much: primfeasorg=1.44e-06,dualfeasorg=3.41e-05took 5.622808s, relaxed dual: -0.744595, original: 133.449148 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+5 th thresholding
+
+
+cutoff =
+
+    0.5518
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=1.3,  maxresidual < 1.00e-06took 5.017279s, relaxed dual: -0.990733, original: 164.930770 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+6 th thresholding
+
+
+cutoff =
+
+    0.5515
+
+
+2 entries survived 
+solving SDP...  breakyes=1.4,  maxresidual < 1.00e-06took 6.354203s, relaxed dual: -0.746302, original: 134.037602 
+
+change =
+
+   -0.0001
+   -0.3324
+         0
+   -0.3306
+   -0.0023
+
+
+change =
+
+    0.0040
+    0.2363
+         0
+    0.2359
+    0.0044
+
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+7 th thresholding
+
+
+cutoff =
+
+    0.5515
+
+
+3 entries survived 
+solving SDP...  breakyes=3.2,  dualfeasorg deteriorated too much: primfeasorg=3.00e-06,dualfeasorg=5.19e-05took 8.499207s, relaxed dual: -1.073459, original: 169.193054 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+8 th thresholding
+
+
+cutoff =
+
+    0.5514
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=1.3,  maxresidual < 1.00e-06took 12.469740s, relaxed dual: -0.750572, original: 134.693035 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+9 th thresholding
+
+
+cutoff =
+
+    0.5521
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=3.2,  dualfeasorg deteriorated too much: primfeasorg=2.11e-06,dualfeasorg=3.74e-05took 4.093657s, relaxed dual: -0.981892, original: 164.846495 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+10 th thresholding
+
+
+cutoff =
+
+    0.5516
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=1.3,  maxresidual < 1.00e-06took 11.727588s, relaxed dual: -0.751040, original: 134.693035 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+11 th thresholding
+
+
+cutoff =
+
+    0.5521
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=3.2,  dualfeasorg deteriorated too much: primfeasorg=2.11e-06,dualfeasorg=3.74e-05took 4.124970s, relaxed dual: -0.981892, original: 164.846495 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+12 th thresholding
+
+
+cutoff =
+
+    0.5516
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=1.3,  maxresidual < 1.00e-06took 11.542663s, relaxed dual: -0.751040, original: 134.693035 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+13 th thresholding
+
+
+cutoff =
+
+    0.5521
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=3.2,  dualfeasorg deteriorated too much: primfeasorg=2.11e-06,dualfeasorg=3.74e-05took 4.086640s, relaxed dual: -0.981892, original: 164.846495 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+14 th thresholding
+
+
+cutoff =
+
+    0.5516
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=1.3,  maxresidual < 1.00e-06took 10.704301s, relaxed dual: -0.751040, original: 134.693035 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+15 th thresholding
+
+
+cutoff =
+
+    0.5521
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=3.2,  dualfeasorg deteriorated too much: primfeasorg=2.11e-06,dualfeasorg=3.74e-05took 4.010820s, relaxed dual: -0.981892, original: 164.846495 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+16 th thresholding
+
+
+cutoff =
+
+    0.5516
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=1.3,  maxresidual < 1.00e-06took 10.882040s, relaxed dual: -0.751040, original: 134.693035 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+17 th thresholding
+
+
+cutoff =
+
+    0.5521
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=3.2,  dualfeasorg deteriorated too much: primfeasorg=2.11e-06,dualfeasorg=3.74e-05took 4.298048s, relaxed dual: -0.981892, original: 164.846495 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+18 th thresholding
+
+
+cutoff =
+
+    0.5516
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=1.3,  maxresidual < 1.00e-06took 11.348804s, relaxed dual: -0.751040, original: 134.693035 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+19 th thresholding
+
+
+cutoff =
+
+    0.5521
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=3.2,  dualfeasorg deteriorated too much: primfeasorg=2.11e-06,dualfeasorg=3.74e-05took 3.942753s, relaxed dual: -0.981892, original: 164.846495 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+20 th thresholding
+
+
+cutoff =
+
+    0.5516
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=1.3,  maxresidual < 1.00e-06took 11.219801s, relaxed dual: -0.751040, original: 134.693035 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+21 th thresholding
+
+
+cutoff =
+
+    0.5521
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=3.2,  dualfeasorg deteriorated too much: primfeasorg=2.11e-06,dualfeasorg=3.74e-05took 4.214155s, relaxed dual: -0.981892, original: 164.846495 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+22 th thresholding
+
+
+cutoff =
+
+    0.5516
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=1.3,  maxresidual < 1.00e-06took 11.922535s, relaxed dual: -0.751040, original: 134.693035 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+23 th thresholding
+
+
+cutoff =
+
+    0.5521
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=3.2,  dualfeasorg deteriorated too much: primfeasorg=2.11e-06,dualfeasorg=3.74e-05took 4.441551s, relaxed dual: -0.981892, original: 164.846495 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+24 th thresholding
+
+
+cutoff =
+
+    0.5516
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=1.3,  maxresidual < 1.00e-06took 11.074791s, relaxed dual: -0.751040, original: 134.693035 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+25 th thresholding
+
+
+cutoff =
+
+    0.5521
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=3.2,  dualfeasorg deteriorated too much: primfeasorg=2.11e-06,dualfeasorg=3.74e-05took 4.109269s, relaxed dual: -0.981892, original: 164.846495 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+26 th thresholding
+
+
+cutoff =
+
+    0.5516
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=1.3,  maxresidual < 1.00e-06took 11.026085s, relaxed dual: -0.751040, original: 134.693035 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+27 th thresholding
+
+
+cutoff =
+
+    0.5521
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=3.2,  dualfeasorg deteriorated too much: primfeasorg=2.11e-06,dualfeasorg=3.74e-05took 4.298698s, relaxed dual: -0.981892, original: 164.846495 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+28 th thresholding
+
+
+cutoff =
+
+    0.5516
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=1.3,  maxresidual < 1.00e-06took 11.497109s, relaxed dual: -0.751040, original: 134.693035 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+29 th thresholding
+
+
+cutoff =
+
+    0.5521
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=3.2,  dualfeasorg deteriorated too much: primfeasorg=2.11e-06,dualfeasorg=3.74e-05took 4.347502s, relaxed dual: -0.981892, original: 164.846495 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+30 th thresholding
+
+
+cutoff =
+
+    0.5516
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=1.3,  maxresidual < 1.00e-06took 11.586958s, relaxed dual: -0.751040, original: 134.693035 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+31 th thresholding
+
+
+cutoff =
+
+    0.5521
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=3.2,  dualfeasorg deteriorated too much: primfeasorg=2.11e-06,dualfeasorg=3.74e-05took 4.484238s, relaxed dual: -0.981892, original: 164.846495 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+32 th thresholding
+
+
+cutoff =
+
+    0.5516
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=1.3,  maxresidual < 1.00e-06took 11.432183s, relaxed dual: -0.751040, original: 134.693035 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+33 th thresholding
+
+
+cutoff =
+
+    0.5521
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=3.2,  dualfeasorg deteriorated too much: primfeasorg=2.11e-06,dualfeasorg=3.74e-05took 4.103265s, relaxed dual: -0.981892, original: 164.846495 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+34 th thresholding
+
+
+cutoff =
+
+    0.5516
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=1.3,  maxresidual < 1.00e-06took 11.504663s, relaxed dual: -0.751040, original: 134.693035 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+35 th thresholding
+
+
+cutoff =
+
+    0.5521
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=3.2,  dualfeasorg deteriorated too much: primfeasorg=2.11e-06,dualfeasorg=3.74e-05took 4.196224s, relaxed dual: -0.981892, original: 164.846495 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+36 th thresholding
+
+
+cutoff =
+
+    0.5516
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=1.3,  maxresidual < 1.00e-06took 11.959528s, relaxed dual: -0.751040, original: 134.693035 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+37 th thresholding
+
+
+cutoff =
+
+    0.5521
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=3.2,  dualfeasorg deteriorated too much: primfeasorg=2.11e-06,dualfeasorg=3.74e-05took 4.427505s, relaxed dual: -0.981892, original: 164.846495 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+38 th thresholding
+
+
+cutoff =
+
+    0.5516
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=1.3,  maxresidual < 1.00e-06took 12.011154s, relaxed dual: -0.751040, original: 134.693035 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+39 th thresholding
+
+
+cutoff =
+
+    0.5521
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=3.2,  dualfeasorg deteriorated too much: primfeasorg=2.11e-06,dualfeasorg=3.74e-05took 4.237901s, relaxed dual: -0.981892, original: 164.846495 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+40 th thresholding
+
+
+cutoff =
+
+    0.5516
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=1.3,  maxresidual < 1.00e-06took 10.640202s, relaxed dual: -0.751040, original: 134.693035 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+41 th thresholding
+
+
+cutoff =
+
+    0.5521
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=3.2,  dualfeasorg deteriorated too much: primfeasorg=2.11e-06,dualfeasorg=3.74e-05took 4.754042s, relaxed dual: -0.981892, original: 164.846495 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+42 th thresholding
+
+
+cutoff =
+
+    0.5516
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=1.3,  maxresidual < 1.00e-06took 12.220098s, relaxed dual: -0.751040, original: 134.693035 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+43 th thresholding
+
+
+cutoff =
+
+    0.5521
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=3.2,  dualfeasorg deteriorated too much: primfeasorg=2.11e-06,dualfeasorg=3.74e-05took 4.345575s, relaxed dual: -0.981892, original: 164.846495 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+44 th thresholding
+
+
+cutoff =
+
+    0.5516
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=1.3,  maxresidual < 1.00e-06took 11.571495s, relaxed dual: -0.751040, original: 134.693035 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+45 th thresholding
+
+
+cutoff =
+
+    0.5521
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=3.2,  dualfeasorg deteriorated too much: primfeasorg=2.11e-06,dualfeasorg=3.74e-05took 4.060701s, relaxed dual: -0.981892, original: 164.846495 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+46 th thresholding
+
+
+cutoff =
+
+    0.5516
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=1.3,  maxresidual < 1.00e-06took 12.222268s, relaxed dual: -0.751040, original: 134.693035 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+47 th thresholding
+
+
+cutoff =
+
+    0.5521
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=3.2,  dualfeasorg deteriorated too much: primfeasorg=2.11e-06,dualfeasorg=3.74e-05took 3.993524s, relaxed dual: -0.981892, original: 164.846495 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+48 th thresholding
+
+
+cutoff =
+
+    0.5516
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=1.3,  maxresidual < 1.00e-06took 10.670307s, relaxed dual: -0.751040, original: 134.693035 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+49 th thresholding
+
+
+cutoff =
+
+    0.5521
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=3.2,  dualfeasorg deteriorated too much: primfeasorg=2.11e-06,dualfeasorg=3.74e-05took 4.156712s, relaxed dual: -0.981892, original: 164.846495 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+50 th thresholding
+
+
+cutoff =
+
+    0.5516
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=1.3,  maxresidual < 1.00e-06took 10.401769s, relaxed dual: -0.751040, original: 134.693035 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+51 th thresholding
+
+
+cutoff =
+
+    0.5521
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=3.2,  dualfeasorg deteriorated too much: primfeasorg=2.11e-06,dualfeasorg=3.74e-05took 4.353076s, relaxed dual: -0.981892, original: 164.846495 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+52 th thresholding
+
+
+cutoff =
+
+    0.5516
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=1.3,  maxresidual < 1.00e-06took 10.891167s, relaxed dual: -0.751040, original: 134.693035 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+53 th thresholding
+
+
+cutoff =
+
+    0.5521
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=3.2,  dualfeasorg deteriorated too much: primfeasorg=2.11e-06,dualfeasorg=3.74e-05took 4.188898s, relaxed dual: -0.981892, original: 164.846495 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+54 th thresholding
+
+
+cutoff =
+
+    0.5516
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=1.3,  maxresidual < 1.00e-06took 11.810034s, relaxed dual: -0.751040, original: 134.693035 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+55 th thresholding
+
+
+cutoff =
+
+    0.5521
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=3.2,  dualfeasorg deteriorated too much: primfeasorg=2.11e-06,dualfeasorg=3.74e-05took 4.215298s, relaxed dual: -0.981892, original: 164.846495 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+56 th thresholding
+
+
+cutoff =
+
+    0.5516
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=1.3,  maxresidual < 1.00e-06took 11.917396s, relaxed dual: -0.751040, original: 134.693035 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+57 th thresholding
+
+
+cutoff =
+
+    0.5521
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=3.2,  dualfeasorg deteriorated too much: primfeasorg=2.11e-06,dualfeasorg=3.74e-05took 4.184923s, relaxed dual: -0.981892, original: 164.846495 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+58 th thresholding
+
+
+cutoff =
+
+    0.5516
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=1.3,  maxresidual < 1.00e-06took 11.655058s, relaxed dual: -0.751040, original: 134.693035 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+59 th thresholding
+
+
+cutoff =
+
+    0.5521
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=3.2,  dualfeasorg deteriorated too much: primfeasorg=2.11e-06,dualfeasorg=3.74e-05took 4.282336s, relaxed dual: -0.981892, original: 164.846495 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+60 th thresholding
+
+
+cutoff =
+
+    0.5516
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=1.3,  maxresidual < 1.00e-06took 11.262003s, relaxed dual: -0.751040, original: 134.693035 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+61 th thresholding
+
+
+cutoff =
+
+    0.5521
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=3.2,  dualfeasorg deteriorated too much: primfeasorg=2.11e-06,dualfeasorg=3.74e-05took 3.974963s, relaxed dual: -0.981892, original: 164.846495 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+62 th thresholding
+
+
+cutoff =
+
+    0.5516
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=1.3,  maxresidual < 1.00e-06took 11.249673s, relaxed dual: -0.751040, original: 134.693035 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+63 th thresholding
+
+
+cutoff =
+
+    0.5521
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=3.2,  dualfeasorg deteriorated too much: primfeasorg=2.11e-06,dualfeasorg=3.74e-05took 4.478406s, relaxed dual: -0.981892, original: 164.846495 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+64 th thresholding
+
+
+cutoff =
+
+    0.5516
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=1.3,  maxresidual < 1.00e-06took 11.455357s, relaxed dual: -0.751040, original: 134.693035 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+65 th thresholding
+
+
+cutoff =
+
+    0.5521
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=3.2,  dualfeasorg deteriorated too much: primfeasorg=2.11e-06,dualfeasorg=3.74e-05took 3.853045s, relaxed dual: -0.981892, original: 164.846495 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+66 th thresholding
+
+
+cutoff =
+
+    0.5516
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=1.3,  maxresidual < 1.00e-06took 10.683161s, relaxed dual: -0.751040, original: 134.693035 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+67 th thresholding
+
+
+cutoff =
+
+    0.5521
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=3.2,  dualfeasorg deteriorated too much: primfeasorg=2.11e-06,dualfeasorg=3.74e-05took 3.917191s, relaxed dual: -0.981892, original: 164.846495 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+68 th thresholding
+
+
+cutoff =
+
+    0.5516
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=1.3,  maxresidual < 1.00e-06took 11.423666s, relaxed dual: -0.751040, original: 134.693035 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+69 th thresholding
+
+
+cutoff =
+
+    0.5521
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=3.2,  dualfeasorg deteriorated too much: primfeasorg=2.11e-06,dualfeasorg=3.74e-05took 4.079786s, relaxed dual: -0.981892, original: 164.846495 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+70 th thresholding
+
+
+cutoff =
+
+    0.5516
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=1.3,  maxresidual < 1.00e-06took 10.698764s, relaxed dual: -0.751040, original: 134.693035 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+71 th thresholding
+
+
+cutoff =
+
+    0.5521
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=3.2,  dualfeasorg deteriorated too much: primfeasorg=2.11e-06,dualfeasorg=3.74e-05took 4.032810s, relaxed dual: -0.981892, original: 164.846495 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+72 th thresholding
+
+
+cutoff =
+
+    0.5516
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=1.3,  maxresidual < 1.00e-06took 10.983777s, relaxed dual: -0.751040, original: 134.693035 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+73 th thresholding
+
+
+cutoff =
+
+    0.5521
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=3.2,  dualfeasorg deteriorated too much: primfeasorg=2.11e-06,dualfeasorg=3.74e-05took 4.125660s, relaxed dual: -0.981892, original: 164.846495 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+74 th thresholding
+
+
+cutoff =
+
+    0.5516
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=1.3,  maxresidual < 1.00e-06took 11.083789s, relaxed dual: -0.751040, original: 134.693035 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+75 th thresholding
+
+
+cutoff =
+
+    0.5521
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=3.2,  dualfeasorg deteriorated too much: primfeasorg=2.11e-06,dualfeasorg=3.74e-05took 3.945240s, relaxed dual: -0.981892, original: 164.846495 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+76 th thresholding
+
+
+cutoff =
+
+    0.5516
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=1.3,  maxresidual < 1.00e-06took 10.543079s, relaxed dual: -0.751040, original: 134.693035 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+77 th thresholding
+
+
+cutoff =
+
+    0.5521
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=3.2,  dualfeasorg deteriorated too much: primfeasorg=2.11e-06,dualfeasorg=3.74e-05took 4.071877s, relaxed dual: -0.981892, original: 164.846495 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+78 th thresholding
+
+
+cutoff =
+
+    0.5516
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=1.3,  maxresidual < 1.00e-06took 10.949369s, relaxed dual: -0.751040, original: 134.693035 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+79 th thresholding
+
+
+cutoff =
+
+    0.5521
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=3.2,  dualfeasorg deteriorated too much: primfeasorg=2.11e-06,dualfeasorg=3.74e-05took 4.031266s, relaxed dual: -0.981892, original: 164.846495 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+80 th thresholding
+
+
+cutoff =
+
+    0.5516
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=1.3,  maxresidual < 1.00e-06took 10.831003s, relaxed dual: -0.751040, original: 134.693035 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+81 th thresholding
+
+
+cutoff =
+
+    0.5521
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=3.2,  dualfeasorg deteriorated too much: primfeasorg=2.11e-06,dualfeasorg=3.74e-05took 3.760958s, relaxed dual: -0.981892, original: 164.846495 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+82 th thresholding
+
+
+cutoff =
+
+    0.5516
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=1.3,  maxresidual < 1.00e-06took 10.487830s, relaxed dual: -0.751040, original: 134.693035 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+83 th thresholding
+
+
+cutoff =
+
+    0.5521
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=3.2,  dualfeasorg deteriorated too much: primfeasorg=2.11e-06,dualfeasorg=3.74e-05took 4.045193s, relaxed dual: -0.981892, original: 164.846495 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+84 th thresholding
+
+
+cutoff =
+
+    0.5516
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=1.3,  maxresidual < 1.00e-06took 10.693170s, relaxed dual: -0.751040, original: 134.693035 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+85 th thresholding
+
+
+cutoff =
+
+    0.5521
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=3.2,  dualfeasorg deteriorated too much: primfeasorg=2.11e-06,dualfeasorg=3.74e-05took 3.980058s, relaxed dual: -0.981892, original: 164.846495 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+86 th thresholding
+
+
+cutoff =
+
+    0.5516
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=1.3,  maxresidual < 1.00e-06took 10.853249s, relaxed dual: -0.751040, original: 134.693035 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+87 th thresholding
+
+
+cutoff =
+
+    0.5521
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=3.2,  dualfeasorg deteriorated too much: primfeasorg=2.11e-06,dualfeasorg=3.74e-05took 3.948805s, relaxed dual: -0.981892, original: 164.846495 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+88 th thresholding
+
+
+cutoff =
+
+    0.5516
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=1.3,  maxresidual < 1.00e-06took 10.767231s, relaxed dual: -0.751040, original: 134.693035 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+89 th thresholding
+
+
+cutoff =
+
+    0.5521
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=3.2,  dualfeasorg deteriorated too much: primfeasorg=2.11e-06,dualfeasorg=3.74e-05took 4.001380s, relaxed dual: -0.981892, original: 164.846495 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+90 th thresholding
+
+
+cutoff =
+
+    0.5516
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=1.3,  maxresidual < 1.00e-06took 12.211764s, relaxed dual: -0.751040, original: 134.693035 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+91 th thresholding
+
+
+cutoff =
+
+    0.5521
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=3.2,  dualfeasorg deteriorated too much: primfeasorg=2.11e-06,dualfeasorg=3.74e-05took 3.913708s, relaxed dual: -0.981892, original: 164.846495 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+92 th thresholding
+
+
+cutoff =
+
+    0.5516
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=1.3,  maxresidual < 1.00e-06took 10.543117s, relaxed dual: -0.751040, original: 134.693035 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+93 th thresholding
+
+
+cutoff =
+
+    0.5521
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=3.2,  dualfeasorg deteriorated too much: primfeasorg=2.11e-06,dualfeasorg=3.74e-05took 4.129838s, relaxed dual: -0.981892, original: 164.846495 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+94 th thresholding
+
+
+cutoff =
+
+    0.5516
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=1.3,  maxresidual < 1.00e-06took 11.780003s, relaxed dual: -0.751040, original: 134.693035 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+95 th thresholding
+
+
+cutoff =
+
+    0.5521
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=3.2,  dualfeasorg deteriorated too much: primfeasorg=2.11e-06,dualfeasorg=3.74e-05took 4.390257s, relaxed dual: -0.981892, original: 164.846495 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+96 th thresholding
+
+
+cutoff =
+
+    0.5516
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=1.3,  maxresidual < 1.00e-06took 10.952992s, relaxed dual: -0.751040, original: 134.693035 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+97 th thresholding
+
+
+cutoff =
+
+    0.5521
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=3.2,  dualfeasorg deteriorated too much: primfeasorg=2.11e-06,dualfeasorg=3.74e-05took 3.905554s, relaxed dual: -0.981892, original: 164.846495 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+98 th thresholding
+
+
+cutoff =
+
+    0.5516
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=1.3,  maxresidual < 1.00e-06took 10.965935s, relaxed dual: -0.751040, original: 134.693035 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+99 th thresholding
+
+
+cutoff =
+
+    0.5521
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=3.2,  dualfeasorg deteriorated too much: primfeasorg=2.11e-06,dualfeasorg=3.74e-05took 3.926330s, relaxed dual: -0.981892, original: 164.846495 
+
+is_stop =
+
+  logical
+
+   0
+
+
+final_iter =
+
+     1
+
+
+100 th thresholding
+
+
+cutoff =
+
+    0.5516
+
+
+2 entries survived 
+solving SDP...  breakyes = 1.0,  maxresidual < 1.00e-04  breakyes=1.3,  maxresidual < 1.00e-06took 10.818099s, relaxed dual: -0.751040, original: 134.693035 
+
+is_stop =
+
+  logical
+
+   1
+
+
+final_iter =
+
+   100
+
+
+ final iteration = 100 
+acc_dict = 
+
+  Map with properties:
+
+        Count: 101
+      KeyType: double
+    ValueType: double
+
+
+ans =
+
+  1x101 cell array
+
+  Columns 1 through 5
+
+    {[0.5300]}    {[0.5050]}    {[0.5250]}    {[0.5200]}    {[0.5200]}
+
+  Columns 6 through 10
+
+    {[0.5200]}    {[0.5100]}    {[0.5100]}    {[0.5050]}    {[0.5150]}
+
+  Columns 11 through 15
+
+    {[0.5050]}    {[0.5150]}    {[0.5050]}    {[0.5150]}    {[0.5050]}
+
+  Columns 16 through 20
+
+    {[0.5150]}    {[0.5050]}    {[0.5150]}    {[0.5050]}    {[0.5150]}
+
+  Columns 21 through 25
+
+    {[0.5050]}    {[0.5150]}    {[0.5050]}    {[0.5150]}    {[0.5050]}
+
+  Columns 26 through 30
+
+    {[0.5150]}    {[0.5050]}    {[0.5150]}    {[0.5050]}    {[0.5150]}
+
+  Columns 31 through 35
+
+    {[0.5050]}    {[0.5150]}    {[0.5050]}    {[0.5150]}    {[0.5050]}
+
+  Columns 36 through 40
+
+    {[0.5150]}    {[0.5050]}    {[0.5150]}    {[0.5050]}    {[0.5150]}
+
+  Columns 41 through 45
+
+    {[0.5050]}    {[0.5150]}    {[0.5050]}    {[0.5150]}    {[0.5050]}
+
+  Columns 46 through 50
+
+    {[0.5150]}    {[0.5050]}    {[0.5150]}    {[0.5050]}    {[0.5150]}
+
+  Columns 51 through 55
+
+    {[0.5050]}    {[0.5150]}    {[0.5050]}    {[0.5150]}    {[0.5050]}
+
+  Columns 56 through 60
+
+    {[0.5150]}    {[0.5050]}    {[0.5150]}    {[0.5050]}    {[0.5150]}
+
+  Columns 61 through 65
+
+    {[0.5050]}    {[0.5150]}    {[0.5050]}    {[0.5150]}    {[0.5050]}
+
+  Columns 66 through 70
+
+    {[0.5150]}    {[0.5050]}    {[0.5150]}    {[0.5050]}    {[0.5150]}
+
+  Columns 71 through 75
+
+    {[0.5050]}    {[0.5150]}    {[0.5050]}    {[0.5150]}    {[0.5050]}
+
+  Columns 76 through 80
+
+    {[0.5150]}    {[0.5050]}    {[0.5150]}    {[0.5050]}    {[0.5150]}
+
+  Columns 81 through 85
+
+    {[0.5050]}    {[0.5150]}    {[0.5050]}    {[0.5150]}    {[0.5050]}
+
+  Columns 86 through 90
+
+    {[0.5150]}    {[0.5050]}    {[0.5150]}    {[0.5050]}    {[0.5150]}
+
+  Columns 91 through 95
+
+    {[0.5050]}    {[0.5150]}    {[0.5050]}    {[0.5150]}    {[0.5050]}
+
+  Columns 96 through 100
+
+    {[0.5150]}    {[0.5050]}    {[0.5150]}    {[0.5050]}    {[0.5150]}
+
+  Column 101
+
+    {[0.5050]}
+
+
+ans =
+
+  1x101 cell array
+
+  Columns 1 through 3
+
+    {'2,2,2,2,2,1,2,...'}    {'2,2,2,2,1,2,2,...'}    {'1,1,1,1,2,1,1,...'}
+
+  Columns 4 through 6
+
+    {'1,2,2,2,1,2,2,...'}    {'1,1,1,1,2,1,1,...'}    {'2,1,1,1,2,1,1,...'}
+
+  Columns 7 through 9
+
+    {'2,2,2,2,1,2,2,...'}    {'1,2,2,2,1,2,2,...'}    {'2,2,2,2,1,2,2,...'}
+
+  Columns 10 through 12
+
+    {'1,2,2,2,1,2,2,...'}    {'1,1,1,1,2,1,1,...'}    {'2,1,1,1,2,1,1,...'}
+
+  Columns 13 through 15
+
+    {'2,2,2,2,1,2,2,...'}    {'2,1,1,1,2,1,1,...'}    {'2,2,2,2,1,2,2,...'}
+
+  Columns 16 through 18
+
+    {'1,2,2,2,1,2,2,...'}    {'1,1,1,1,2,1,1,...'}    {'2,1,1,1,2,1,1,...'}
+
+  Columns 19 through 21
+
+    {'1,1,1,1,2,1,1,...'}    {'1,2,2,2,1,2,2,...'}    {'1,1,1,1,2,1,1,...'}
+
+  Columns 22 through 24
+
+    {'1,2,2,2,1,2,2,...'}    {'2,2,2,2,1,2,2,...'}    {'2,1,1,1,2,1,1,...'}
+
+  Columns 25 through 27
+
+    {'2,2,2,2,1,2,2,...'}    {'2,1,1,1,2,1,1,...'}    {'2,2,2,2,1,2,2,...'}
+
+  Columns 28 through 30
+
+    {'1,2,2,2,1,2,2,...'}    {'2,2,2,2,1,2,2,...'}    {'2,1,1,1,2,1,1,...'}
+
+  Columns 31 through 33
+
+    {'1,1,1,1,2,1,1,...'}    {'2,1,1,1,2,1,1,...'}    {'2,2,2,2,1,2,2,...'}
+
+  Columns 34 through 36
+
+    {'2,1,1,1,2,1,1,...'}    {'1,1,1,1,2,1,1,...'}    {'1,2,2,2,1,2,2,...'}
+
+  Columns 37 through 39
+
+    {'1,1,1,1,2,1,1,...'}    {'2,1,1,1,2,1,1,...'}    {'1,1,1,1,2,1,1,...'}
+
+  Columns 40 through 42
+
+    {'1,2,2,2,1,2,2,...'}    {'1,1,1,1,2,1,1,...'}    {'1,2,2,2,1,2,2,...'}
+
+  Columns 43 through 45
+
+    {'2,2,2,2,1,2,2,...'}    {'1,2,2,2,1,2,2,...'}    {'2,2,2,2,1,2,2,...'}
+
+  Columns 46 through 48
+
+    {'1,2,2,2,1,2,2,...'}    {'2,2,2,2,1,2,2,...'}    {'1,2,2,2,1,2,2,...'}
+
+  Columns 49 through 51
+
+    {'1,1,1,1,2,1,1,...'}    {'2,1,1,1,2,1,1,...'}    {'2,2,2,2,1,2,2,...'}
+
+  Columns 52 through 54
+
+    {'2,1,1,1,2,1,1,...'}    {'1,1,1,1,2,1,1,...'}    {'2,1,1,1,2,1,1,...'}
+
+  Columns 55 through 57
+
+    {'2,2,2,2,1,2,2,...'}    {'1,2,2,2,1,2,2,...'}    {'1,1,1,1,2,1,1,...'}
+
+  Columns 58 through 60
+
+    {'1,2,2,2,1,2,2,...'}    {'1,1,1,1,2,1,1,...'}    {'1,2,2,2,1,2,2,...'}
+
+  Columns 61 through 63
+
+    {'1,1,1,1,2,1,1,...'}    {'1,2,2,2,1,2,2,...'}    {'2,2,2,2,1,2,2,...'}
+
+  Columns 64 through 66
+
+    {'2,1,1,1,2,1,1,...'}    {'2,2,2,2,1,2,2,...'}    {'1,2,2,2,1,2,2,...'}
+
+  Columns 67 through 69
+
+    {'1,1,1,1,2,1,1,...'}    {'2,1,1,1,2,1,1,...'}    {'2,2,2,2,1,2,2,...'}
+
+  Columns 70 through 72
+
+    {'2,1,1,1,2,1,1,...'}    {'2,2,2,2,1,2,2,...'}    {'2,1,1,1,2,1,1,...'}
+
+  Columns 73 through 75
+
+    {'1,1,1,1,2,1,1,...'}    {'1,2,2,2,1,2,2,...'}    {'2,2,2,2,1,2,2,...'}
+
+  Columns 76 through 78
+
+    {'2,1,1,1,2,1,1,...'}    {'1,1,1,1,2,1,1,...'}    {'1,2,2,2,1,2,2,...'}
+
+  Columns 79 through 81
+
+    {'2,2,2,2,1,2,2,...'}    {'1,2,2,2,1,2,2,...'}    {'2,2,2,2,1,2,2,...'}
+
+  Columns 82 through 84
+
+    {'2,1,1,1,2,1,1,...'}    {'1,1,1,1,2,1,1,...'}    {'2,1,1,1,2,1,1,...'}
+
+  Columns 85 through 87
+
+    {'2,2,2,2,1,2,2,...'}    {'2,1,1,1,2,1,1,...'}    {'2,2,2,2,1,2,2,...'}
+
+  Columns 88 through 90
+
+    {'1,2,2,2,1,2,2,...'}    {'2,2,2,2,1,2,2,...'}    {'2,1,1,1,2,1,1,...'}
+
+  Columns 91 through 93
+
+    {'2,2,2,2,1,2,2,...'}    {'2,1,1,1,2,1,1,...'}    {'2,2,2,2,1,2,2,...'}
+
+  Columns 94 through 96
+
+    {'2,1,1,1,2,1,1,...'}    {'1,1,1,1,2,1,1,...'}    {'1,2,2,2,1,2,2,...'}
+
+  Columns 97 through 99
+
+    {'1,1,1,1,2,1,1,...'}    {'2,1,1,1,2,1,1,...'}    {'2,2,2,2,1,2,2,...'}
+
+  Columns 100 through 101
+
+    {'1,2,2,2,1,2,2,...'}    {'2,2,2,2,1,2,2,...'}
+
+
+database_subtable =
+
+  101x24 table
+
+    rep    iter    sep    dim     rho    sparsity    stop_og    stop_sdp    stop_loop     acc     obj_prim    obj_dual    obj_original    true_pos    false_pos    false_neg    diff_x_tilde_fro    diff_x_tilde_op    diff_x_tilde_ellone    time_est    time_SDP          jobdate           survived_indices                                                                                                                                                                                                       cluster_est                                                                                                                                                                                                   
+    ___    ____    ___    ____    ___    ________    _______    ________    _________    _____    ________    ________    ____________    ________    _________    _________    ________________    _______________    ___________________    ________    ________    ____________________    ________________    _________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+
+    200      0      5     2000     0        10        false      false        false       0.53           0           0            0          0            0            0               0                   0                    0                    0          0     11-Sep-2024 13:19:42     ""                 "2,2,2,2,2,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,1,2,2,2,2,2,2,2,2,2,2,2,2,1,2,1,2,2,2,1,2,1,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,1,2,1,2,2,2,2,1,2,2,2,1,2,2,1,2,2,2,1,2,2,1,2,1,2,2,2,2,2,2,2,2,2,2,1,2,2,2,2,1,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,2,1,2,1,2,2,1,1,2,1,2,1,1,2,2,1,2,2,2,2,2,2,2,1,1,2,1,1,1,2,2,2,2,2,2,2,2,2,1,2,1,2,2,2,2,2,2,2,2,2,2,2,2,2,1,1,1,2,2,2,1"
+    200      1      5     2000     0        10        false      false        false      0.505     -1.0528     -1.0528       164.15          0            2           10               0                   0                    0             0.001453     4.2984     11-Sep-2024 13:19:42     "45,884"           "2,2,2,2,1,2,2,2,2,2,1,2,1,2,2,1,2,1,2,2,1,2,1,2,2,2,1,2,1,1,1,1,2,1,2,1,2,2,2,2,1,1,2,1,2,1,2,2,2,1,1,1,2,1,1,1,1,2,1,1,2,1,2,1,2,1,1,2,2,1,2,2,1,2,1,2,2,1,1,1,1,1,2,1,1,1,2,1,2,1,2,1,1,2,1,2,1,2,2,1,2,1,1,2,2,2,2,1,2,2,2,1,1,2,1,2,2,1,1,1,1,1,1,2,2,1,1,2,2,2,2,1,2,2,2,2,2,1,1,1,2,1,1,2,1,1,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,2,1,1,1,2,2,1,2,1,1,1,2,2,2,2,2,1,1,2,1,1,1,1,1,2,2,1,1,2,1,2,2,2,2,1,1,2,2"
+    200      2      5     2000     0        10        false      false        false      0.525    -0.74466    -0.74466       132.91          0            2           10               0                   0                    0             0.001677     5.6834     11-Sep-2024 13:19:42     "45,884"           "1,1,1,1,2,1,1,2,1,2,2,1,2,2,1,1,1,1,2,2,1,2,2,2,2,2,2,1,1,2,1,2,1,1,1,1,2,2,2,1,2,2,1,1,1,1,1,2,1,1,2,2,2,2,1,1,2,2,2,1,1,1,2,1,2,2,1,2,1,1,1,2,1,1,2,2,1,2,2,1,1,2,2,2,1,2,2,1,1,2,1,1,2,2,1,2,1,2,1,2,1,2,1,1,2,2,1,1,2,1,1,1,2,2,2,2,1,2,2,1,2,1,2,1,1,2,2,1,2,1,2,1,2,1,2,2,1,2,1,2,2,1,1,1,2,2,1,1,2,2,2,1,1,2,1,1,2,2,1,2,1,1,2,1,2,2,2,2,2,2,2,2,1,1,1,2,1,2,1,2,1,1,1,2,1,1,2,2,2,2,1,1,2,1,2,2,1,2,2,2"
+    200      3      5     2000     0        10        false      false        false       0.52    -0.99213    -0.99213       164.98          0            2           10               0                   0                    0             0.001925     2.7627     11-Sep-2024 13:19:42     "45,884"           "1,2,2,2,1,2,2,2,1,2,1,2,1,2,2,1,2,1,2,2,1,2,1,2,2,2,1,2,1,1,1,1,2,1,1,1,2,2,2,2,1,1,2,1,2,1,2,1,2,1,1,1,2,1,1,1,1,2,1,1,2,1,2,1,2,1,1,2,1,1,2,2,1,2,1,2,2,1,1,1,1,1,2,1,1,1,2,1,2,1,2,1,1,2,1,2,1,2,2,1,2,2,1,2,2,2,2,1,2,2,2,1,1,2,1,2,2,1,1,1,1,1,1,2,2,1,1,2,2,2,2,1,2,2,2,2,2,1,1,1,1,1,1,2,1,1,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,2,1,1,1,2,2,1,2,1,1,1,2,2,2,2,2,1,1,2,1,1,1,1,1,2,2,1,1,2,1,2,2,2,2,1,1,2,2"
+    200      4      5     2000     0        10        false      false        true        0.52     -0.7446     -0.7446       133.45          0            2           10               0                   0                    0             0.002424     5.6228     11-Sep-2024 13:19:42     "45,884"           "1,1,1,1,2,1,1,2,1,1,2,1,2,2,1,1,1,1,2,2,1,2,2,2,2,2,2,1,1,2,2,2,1,1,1,2,2,2,2,1,2,2,1,1,1,1,1,2,1,1,2,2,2,2,1,1,2,2,2,1,1,1,2,1,2,2,1,2,1,1,1,2,1,1,2,2,1,2,2,1,1,2,2,2,1,2,2,1,1,2,1,1,2,2,1,2,1,2,1,2,1,2,1,1,2,2,1,1,2,1,1,1,2,2,2,2,1,2,2,1,2,1,2,1,1,2,2,1,2,1,2,1,2,1,2,2,1,2,1,2,2,1,1,1,2,2,1,1,2,2,2,1,1,2,1,1,2,2,1,2,1,1,2,1,2,2,2,2,2,2,2,2,1,1,1,2,1,2,1,2,1,1,1,2,1,1,2,2,2,2,1,1,2,1,2,2,1,2,2,2"
+    200      5      5     2000     0        10        false      false        false       0.52    -0.99073    -0.99073       164.93          0            2           10               0                   0                    0             0.002547     5.0173     11-Sep-2024 13:19:42     "45,884"           "2,1,1,1,2,1,1,1,2,1,2,1,2,1,1,2,1,2,1,1,2,1,2,1,1,1,2,1,2,2,2,2,1,2,2,2,1,1,1,1,2,2,1,2,1,2,1,2,1,2,2,2,1,2,2,2,2,1,2,2,1,2,1,2,1,2,2,1,2,2,1,1,2,1,2,1,1,2,2,2,2,2,1,1,2,2,1,2,1,2,1,2,2,1,2,1,2,1,1,2,1,1,2,1,1,1,1,2,1,1,1,2,2,1,2,1,1,2,2,2,2,2,2,1,1,2,2,1,1,1,1,2,1,1,1,1,1,2,2,2,1,2,2,1,2,2,1,2,1,2,2,1,1,1,1,2,2,1,2,2,2,2,1,2,2,2,1,1,2,1,2,2,2,1,1,1,1,1,2,2,1,2,2,2,2,2,1,1,2,2,1,2,1,1,1,1,2,2,1,1"
+    200      6      5     2000     0        10        false      false        false       0.51     -0.7463     -0.7463       134.04          0            2           10               0                   0                    0             0.002001     6.3542     11-Sep-2024 13:19:42     "45,884"           "2,2,2,2,1,2,2,1,2,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,1,1,2,2,1,1,1,2,2,2,1,1,1,1,2,1,1,2,2,2,2,2,1,2,2,1,1,1,1,2,2,1,1,1,2,2,2,1,2,1,1,2,1,2,2,2,1,2,2,1,1,2,1,1,2,2,1,1,1,2,1,1,2,2,1,2,2,1,1,2,1,2,1,2,1,2,1,2,2,1,1,2,2,1,2,2,2,1,1,1,1,2,1,1,1,1,2,1,2,2,1,1,2,1,2,1,2,1,2,1,1,2,1,2,1,1,2,2,2,1,1,2,2,2,1,1,2,2,1,2,2,1,1,2,1,1,2,2,2,1,1,1,1,1,1,1,1,2,2,2,2,2,1,2,1,2,2,2,1,2,2,1,2,1,1,2,2,1,2,1,1,2,1,1,1"
+    200      7      5     2000     0        10        false      false        false       0.51     -1.0735     -1.0735       169.19          0            3           10               0                   0                    0             0.001932     8.4992     11-Sep-2024 13:19:42     "45,884,1468"      "1,2,2,2,1,2,2,2,2,2,1,2,1,2,2,1,1,1,2,2,1,2,2,2,2,2,1,2,1,1,1,1,2,1,1,1,2,2,2,2,1,1,2,1,2,1,2,2,2,1,1,1,2,1,1,1,1,2,1,1,2,1,2,1,2,1,1,2,1,1,2,2,1,2,1,2,2,1,1,1,1,1,2,2,1,1,2,1,2,1,2,1,1,2,1,2,1,2,2,1,2,2,1,2,2,2,2,1,2,2,2,1,1,2,1,2,2,1,1,1,1,1,1,2,2,1,1,2,2,2,2,1,2,2,2,2,2,1,1,1,2,1,1,2,1,1,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,2,1,1,1,2,2,1,2,1,1,1,2,2,2,2,2,1,1,1,1,1,1,1,1,2,2,1,2,2,1,2,2,2,2,1,1,2,2"
+    200      8      5     2000     0        10        false      false        false      0.505    -0.75057    -0.75057       134.69          0            2           10               0                   0                    0             0.001899      12.47     11-Sep-2024 13:19:42     "45,884"           "2,2,2,2,1,2,2,1,2,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,1,1,2,2,1,1,1,2,2,2,1,1,1,1,2,1,1,2,2,2,2,2,1,2,2,1,1,1,1,2,2,1,1,1,2,2,2,1,2,1,1,2,1,2,2,2,1,2,2,1,1,2,1,1,1,1,1,1,1,2,1,1,2,2,1,2,2,1,1,2,1,2,1,2,1,2,1,2,2,1,1,2,2,1,2,2,2,1,1,1,1,2,1,1,1,1,1,1,2,2,1,1,2,1,2,1,2,1,2,1,1,2,1,2,1,1,2,2,2,1,1,2,2,2,1,1,2,2,2,2,2,1,1,2,1,1,2,2,2,1,1,1,1,1,1,1,1,2,2,2,2,2,1,2,1,2,2,2,1,1,2,1,2,1,1,2,2,1,2,1,1,2,1,1,1"
+    200      9      5     2000     0        10        false      false        false      0.515    -0.98189    -0.98189       164.85          0            2           10               0                   0                    0             0.002055     4.0937     11-Sep-2024 13:19:42     "45,884"           "1,2,2,2,1,2,2,2,1,2,1,2,1,2,1,1,1,1,2,2,1,2,2,2,2,2,1,2,1,1,1,1,2,1,1,1,2,2,2,2,1,1,2,1,2,1,2,2,2,1,1,1,2,1,1,1,1,2,1,1,2,1,2,1,2,1,1,2,1,1,2,2,1,2,1,2,2,1,1,1,1,1,2,2,1,1,2,1,2,1,2,1,1,2,1,2,1,2,2,1,2,2,1,2,2,2,2,1,2,2,2,1,1,2,1,2,2,1,1,1,1,1,1,2,2,1,1,2,2,2,2,1,2,2,2,2,2,1,1,1,2,1,1,2,1,1,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,2,1,1,1,2,2,1,2,1,1,1,2,2,2,2,2,1,1,1,1,1,1,1,1,2,2,1,1,2,1,2,2,2,2,1,1,2,2"
+    200     10      5     2000     0        10        false      false        false      0.505    -0.75104    -0.75104       134.69          0            2           10               0                   0                    0             0.001351     11.728     11-Sep-2024 13:19:42     "45,884"           "1,1,1,1,2,1,1,2,1,1,2,1,2,2,1,1,1,1,2,2,1,2,2,2,2,2,2,1,1,2,2,2,1,1,1,2,2,2,2,1,2,2,1,1,1,1,1,2,1,1,2,2,2,2,1,1,2,2,2,1,1,1,2,1,2,2,1,2,1,1,1,2,1,1,2,2,1,2,2,2,2,2,2,2,1,2,2,1,1,2,1,1,2,2,1,2,1,2,1,2,1,2,1,1,2,2,1,1,2,1,1,1,2,2,2,2,1,2,2,2,2,2,2,1,1,2,2,1,2,1,2,1,2,1,2,2,1,2,1,2,2,1,1,1,2,2,1,1,1,2,2,1,1,1,1,1,2,2,1,2,2,1,1,1,2,2,2,2,2,2,2,2,1,1,1,1,1,2,1,2,1,1,1,2,2,1,2,1,2,2,1,1,2,1,2,2,1,2,2,2"
+    200     11      5     2000     0        10        false      false        false      0.515    -0.98189    -0.98189       164.85          0            2           10               0                   0                    0             0.001741      4.125     11-Sep-2024 13:19:42     "45,884"           "2,1,1,1,2,1,1,1,2,1,2,1,2,1,2,2,2,2,1,1,2,1,1,1,1,1,2,1,2,2,2,2,1,2,2,2,1,1,1,1,2,2,1,2,1,2,1,1,1,2,2,2,1,2,2,2,2,1,2,2,1,2,1,2,1,2,2,1,2,2,1,1,2,1,2,1,1,2,2,2,2,2,1,1,2,2,1,2,1,2,1,2,2,1,2,1,2,1,1,2,1,1,2,1,1,1,1,2,1,1,1,2,2,1,2,1,1,2,2,2,2,2,2,1,1,2,2,1,1,1,1,2,1,1,1,1,1,2,2,2,1,2,2,1,2,2,1,2,1,2,2,1,1,1,1,2,2,1,2,2,2,2,1,2,2,2,1,1,2,1,2,2,2,1,1,1,1,1,2,2,2,2,2,2,2,2,1,1,2,2,1,2,1,1,1,1,2,2,1,1"
+    200     12      5     2000     0        10        false      false        false      0.505    -0.75104    -0.75104       134.69          0            2           10               0                   0                    0             0.001371     11.543     11-Sep-2024 13:19:42     "45,884"           "2,2,2,2,1,2,2,1,2,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,1,1,2,2,1,1,1,2,2,2,1,1,1,1,2,1,1,2,2,2,2,2,1,2,2,1,1,1,1,2,2,1,1,1,2,2,2,1,2,1,1,2,1,2,2,2,1,2,2,1,1,2,1,1,1,1,1,1,1,2,1,1,2,2,1,2,2,1,1,2,1,2,1,2,1,2,1,2,2,1,1,2,2,1,2,2,2,1,1,1,1,2,1,1,1,1,1,1,2,2,1,1,2,1,2,1,2,1,2,1,1,2,1,2,1,1,2,2,2,1,1,2,2,2,1,1,2,2,2,2,2,1,1,2,1,1,2,2,2,1,1,1,1,1,1,1,1,2,2,2,2,2,1,2,1,2,2,2,1,1,2,1,2,1,1,2,2,1,2,1,1,2,1,1,1"
+    200     13      5     2000     0        10        false      false        false      0.515    -0.98189    -0.98189       164.85          0            2           10               0                   0                    0              0.00176     4.0866     11-Sep-2024 13:19:42     "45,884"           "2,1,1,1,2,1,1,1,2,1,2,1,2,1,2,2,2,2,1,1,2,1,1,1,1,1,2,1,2,2,2,2,1,2,2,2,1,1,1,1,2,2,1,2,1,2,1,1,1,2,2,2,1,2,2,2,2,1,2,2,1,2,1,2,1,2,2,1,2,2,1,1,2,1,2,1,1,2,2,2,2,2,1,1,2,2,1,2,1,2,1,2,2,1,2,1,2,1,1,2,1,1,2,1,1,1,1,2,1,1,1,2,2,1,2,1,1,2,2,2,2,2,2,1,1,2,2,1,1,1,1,2,1,1,1,1,1,2,2,2,1,2,2,1,2,2,1,2,1,2,2,1,1,1,1,2,2,1,2,2,2,2,1,2,2,2,1,1,2,1,2,2,2,1,1,1,1,1,2,2,2,2,2,2,2,2,1,1,2,2,1,2,1,1,1,1,2,2,1,1"
+    200     14      5     2000     0        10        false      false        false      0.505    -0.75104    -0.75104       134.69          0            2           10               0                   0                    0             0.001631     10.704     11-Sep-2024 13:19:42     "45,884"           "2,2,2,2,1,2,2,1,2,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,1,1,2,2,1,1,1,2,2,2,1,1,1,1,2,1,1,2,2,2,2,2,1,2,2,1,1,1,1,2,2,1,1,1,2,2,2,1,2,1,1,2,1,2,2,2,1,2,2,1,1,2,1,1,1,1,1,1,1,2,1,1,2,2,1,2,2,1,1,2,1,2,1,2,1,2,1,2,2,1,1,2,2,1,2,2,2,1,1,1,1,2,1,1,1,1,1,1,2,2,1,1,2,1,2,1,2,1,2,1,1,2,1,2,1,1,2,2,2,1,1,2,2,2,1,1,2,2,2,2,2,1,1,2,1,1,2,2,2,1,1,1,1,1,1,1,1,2,2,2,2,2,1,2,1,2,2,2,1,1,2,1,2,1,1,2,2,1,2,1,1,2,1,1,1"
+    200     15      5     2000     0        10        false      false        false      0.515    -0.98189    -0.98189       164.85          0            2           10               0                   0                    0             0.002389     4.0108     11-Sep-2024 13:19:42     "45,884"           "1,2,2,2,1,2,2,2,1,2,1,2,1,2,1,1,1,1,2,2,1,2,2,2,2,2,1,2,1,1,1,1,2,1,1,1,2,2,2,2,1,1,2,1,2,1,2,2,2,1,1,1,2,1,1,1,1,2,1,1,2,1,2,1,2,1,1,2,1,1,2,2,1,2,1,2,2,1,1,1,1,1,2,2,1,1,2,1,2,1,2,1,1,2,1,2,1,2,2,1,2,2,1,2,2,2,2,1,2,2,2,1,1,2,1,2,2,1,1,1,1,1,1,2,2,1,1,2,2,2,2,1,2,2,2,2,2,1,1,1,2,1,1,2,1,1,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,2,1,1,1,2,2,1,2,1,1,1,2,2,2,2,2,1,1,1,1,1,1,1,1,2,2,1,1,2,1,2,2,2,2,1,1,2,2"
+    200     16      5     2000     0        10        false      false        false      0.505    -0.75104    -0.75104       134.69          0            2           10               0                   0                    0             0.001747     10.882     11-Sep-2024 13:19:42     "45,884"           "1,1,1,1,2,1,1,2,1,1,2,1,2,2,1,1,1,1,2,2,1,2,2,2,2,2,2,1,1,2,2,2,1,1,1,2,2,2,2,1,2,2,1,1,1,1,1,2,1,1,2,2,2,2,1,1,2,2,2,1,1,1,2,1,2,2,1,2,1,1,1,2,1,1,2,2,1,2,2,2,2,2,2,2,1,2,2,1,1,2,1,1,2,2,1,2,1,2,1,2,1,2,1,1,2,2,1,1,2,1,1,1,2,2,2,2,1,2,2,2,2,2,2,1,1,2,2,1,2,1,2,1,2,1,2,2,1,2,1,2,2,1,1,1,2,2,1,1,1,2,2,1,1,1,1,1,2,2,1,2,2,1,1,1,2,2,2,2,2,2,2,2,1,1,1,1,1,2,1,2,1,1,1,2,2,1,2,1,2,2,1,1,2,1,2,2,1,2,2,2"
+    200     17      5     2000     0        10        false      false        false      0.515    -0.98189    -0.98189       164.85          0            2           10               0                   0                    0              0.00183      4.298     11-Sep-2024 13:19:42     "45,884"           "2,1,1,1,2,1,1,1,2,1,2,1,2,1,2,2,2,2,1,1,2,1,1,1,1,1,2,1,2,2,2,2,1,2,2,2,1,1,1,1,2,2,1,2,1,2,1,1,1,2,2,2,1,2,2,2,2,1,2,2,1,2,1,2,1,2,2,1,2,2,1,1,2,1,2,1,1,2,2,2,2,2,1,1,2,2,1,2,1,2,1,2,2,1,2,1,2,1,1,2,1,1,2,1,1,1,1,2,1,1,1,2,2,1,2,1,1,2,2,2,2,2,2,1,1,2,2,1,1,1,1,2,1,1,1,1,1,2,2,2,1,2,2,1,2,2,1,2,1,2,2,1,1,1,1,2,2,1,2,2,2,2,1,2,2,2,1,1,2,1,2,2,2,1,1,1,1,1,2,2,2,2,2,2,2,2,1,1,2,2,1,2,1,1,1,1,2,2,1,1"
+    200     18      5     2000     0        10        false      false        false      0.505    -0.75104    -0.75104       134.69          0            2           10               0                   0                    0              0.00228     11.349     11-Sep-2024 13:19:42     "45,884"           "1,1,1,1,2,1,1,2,1,1,2,1,2,2,1,1,1,1,2,2,1,2,2,2,2,2,2,1,1,2,2,2,1,1,1,2,2,2,2,1,2,2,1,1,1,1,1,2,1,1,2,2,2,2,1,1,2,2,2,1,1,1,2,1,2,2,1,2,1,1,1,2,1,1,2,2,1,2,2,2,2,2,2,2,1,2,2,1,1,2,1,1,2,2,1,2,1,2,1,2,1,2,1,1,2,2,1,1,2,1,1,1,2,2,2,2,1,2,2,2,2,2,2,1,1,2,2,1,2,1,2,1,2,1,2,2,1,2,1,2,2,1,1,1,2,2,1,1,1,2,2,1,1,1,1,1,2,2,1,2,2,1,1,1,2,2,2,2,2,2,2,2,1,1,1,1,1,2,1,2,1,1,1,2,2,1,2,1,2,2,1,1,2,1,2,2,1,2,2,2"
+    200     19      5     2000     0        10        false      false        false      0.515    -0.98189    -0.98189       164.85          0            2           10               0                   0                    0             0.001724     3.9428     11-Sep-2024 13:19:42     "45,884"           "1,2,2,2,1,2,2,2,1,2,1,2,1,2,1,1,1,1,2,2,1,2,2,2,2,2,1,2,1,1,1,1,2,1,1,1,2,2,2,2,1,1,2,1,2,1,2,2,2,1,1,1,2,1,1,1,1,2,1,1,2,1,2,1,2,1,1,2,1,1,2,2,1,2,1,2,2,1,1,1,1,1,2,2,1,1,2,1,2,1,2,1,1,2,1,2,1,2,2,1,2,2,1,2,2,2,2,1,2,2,2,1,1,2,1,2,2,1,1,1,1,1,1,2,2,1,1,2,2,2,2,1,2,2,2,2,2,1,1,1,2,1,1,2,1,1,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,2,1,1,1,2,2,1,2,1,1,1,2,2,2,2,2,1,1,1,1,1,1,1,1,2,2,1,1,2,1,2,2,2,2,1,1,2,2"
+    200     20      5     2000     0        10        false      false        false      0.505    -0.75104    -0.75104       134.69          0            2           10               0                   0                    0             0.002168      11.22     11-Sep-2024 13:19:42     "45,884"           "1,1,1,1,2,1,1,2,1,1,2,1,2,2,1,1,1,1,2,2,1,2,2,2,2,2,2,1,1,2,2,2,1,1,1,2,2,2,2,1,2,2,1,1,1,1,1,2,1,1,2,2,2,2,1,1,2,2,2,1,1,1,2,1,2,2,1,2,1,1,1,2,1,1,2,2,1,2,2,2,2,2,2,2,1,2,2,1,1,2,1,1,2,2,1,2,1,2,1,2,1,2,1,1,2,2,1,1,2,1,1,1,2,2,2,2,1,2,2,2,2,2,2,1,1,2,2,1,2,1,2,1,2,1,2,2,1,2,1,2,2,1,1,1,2,2,1,1,1,2,2,1,1,1,1,1,2,2,1,2,2,1,1,1,2,2,2,2,2,2,2,2,1,1,1,1,1,2,1,2,1,1,1,2,2,1,2,1,2,2,1,1,2,1,2,2,1,2,2,2"
+    200     21      5     2000     0        10        false      false        false      0.515    -0.98189    -0.98189       164.85          0            2           10               0                   0                    0             0.001926     4.2142     11-Sep-2024 13:19:42     "45,884"           "1,2,2,2,1,2,2,2,1,2,1,2,1,2,1,1,1,1,2,2,1,2,2,2,2,2,1,2,1,1,1,1,2,1,1,1,2,2,2,2,1,1,2,1,2,1,2,2,2,1,1,1,2,1,1,1,1,2,1,1,2,1,2,1,2,1,1,2,1,1,2,2,1,2,1,2,2,1,1,1,1,1,2,2,1,1,2,1,2,1,2,1,1,2,1,2,1,2,2,1,2,2,1,2,2,2,2,1,2,2,2,1,1,2,1,2,2,1,1,1,1,1,1,2,2,1,1,2,2,2,2,1,2,2,2,2,2,1,1,1,2,1,1,2,1,1,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,2,1,1,1,2,2,1,2,1,1,1,2,2,2,2,2,1,1,1,1,1,1,1,1,2,2,1,1,2,1,2,2,2,2,1,1,2,2"
+    200     22      5     2000     0        10        false      false        false      0.505    -0.75104    -0.75104       134.69          0            2           10               0                   0                    0             0.001975     11.923     11-Sep-2024 13:19:42     "45,884"           "2,2,2,2,1,2,2,1,2,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,1,1,2,2,1,1,1,2,2,2,1,1,1,1,2,1,1,2,2,2,2,2,1,2,2,1,1,1,1,2,2,1,1,1,2,2,2,1,2,1,1,2,1,2,2,2,1,2,2,1,1,2,1,1,1,1,1,1,1,2,1,1,2,2,1,2,2,1,1,2,1,2,1,2,1,2,1,2,2,1,1,2,2,1,2,2,2,1,1,1,1,2,1,1,1,1,1,1,2,2,1,1,2,1,2,1,2,1,2,1,1,2,1,2,1,1,2,2,2,1,1,2,2,2,1,1,2,2,2,2,2,1,1,2,1,1,2,2,2,1,1,1,1,1,1,1,1,2,2,2,2,2,1,2,1,2,2,2,1,1,2,1,2,1,1,2,2,1,2,1,1,2,1,1,1"
+    200     23      5     2000     0        10        false      false        false      0.515    -0.98189    -0.98189       164.85          0            2           10               0                   0                    0              0.00226     4.4416     11-Sep-2024 13:19:42     "45,884"           "2,1,1,1,2,1,1,1,2,1,2,1,2,1,2,2,2,2,1,1,2,1,1,1,1,1,2,1,2,2,2,2,1,2,2,2,1,1,1,1,2,2,1,2,1,2,1,1,1,2,2,2,1,2,2,2,2,1,2,2,1,2,1,2,1,2,2,1,2,2,1,1,2,1,2,1,1,2,2,2,2,2,1,1,2,2,1,2,1,2,1,2,2,1,2,1,2,1,1,2,1,1,2,1,1,1,1,2,1,1,1,2,2,1,2,1,1,2,2,2,2,2,2,1,1,2,2,1,1,1,1,2,1,1,1,1,1,2,2,2,1,2,2,1,2,2,1,2,1,2,2,1,1,1,1,2,2,1,2,2,2,2,1,2,2,2,1,1,2,1,2,2,2,1,1,1,1,1,2,2,2,2,2,2,2,2,1,1,2,2,1,2,1,1,1,1,2,2,1,1"
+    200     24      5     2000     0        10        false      false        false      0.505    -0.75104    -0.75104       134.69          0            2           10               0                   0                    0             0.001544     11.075     11-Sep-2024 13:19:42     "45,884"           "2,2,2,2,1,2,2,1,2,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,1,1,2,2,1,1,1,2,2,2,1,1,1,1,2,1,1,2,2,2,2,2,1,2,2,1,1,1,1,2,2,1,1,1,2,2,2,1,2,1,1,2,1,2,2,2,1,2,2,1,1,2,1,1,1,1,1,1,1,2,1,1,2,2,1,2,2,1,1,2,1,2,1,2,1,2,1,2,2,1,1,2,2,1,2,2,2,1,1,1,1,2,1,1,1,1,1,1,2,2,1,1,2,1,2,1,2,1,2,1,1,2,1,2,1,1,2,2,2,1,1,2,2,2,1,1,2,2,2,2,2,1,1,2,1,1,2,2,2,1,1,1,1,1,1,1,1,2,2,2,2,2,1,2,1,2,2,2,1,1,2,1,2,1,1,2,2,1,2,1,1,2,1,1,1"
+    200     25      5     2000     0        10        false      false        false      0.515    -0.98189    -0.98189       164.85          0            2           10               0                   0                    0             0.001886     4.1093     11-Sep-2024 13:19:42     "45,884"           "2,1,1,1,2,1,1,1,2,1,2,1,2,1,2,2,2,2,1,1,2,1,1,1,1,1,2,1,2,2,2,2,1,2,2,2,1,1,1,1,2,2,1,2,1,2,1,1,1,2,2,2,1,2,2,2,2,1,2,2,1,2,1,2,1,2,2,1,2,2,1,1,2,1,2,1,1,2,2,2,2,2,1,1,2,2,1,2,1,2,1,2,2,1,2,1,2,1,1,2,1,1,2,1,1,1,1,2,1,1,1,2,2,1,2,1,1,2,2,2,2,2,2,1,1,2,2,1,1,1,1,2,1,1,1,1,1,2,2,2,1,2,2,1,2,2,1,2,1,2,2,1,1,1,1,2,2,1,2,2,2,2,1,2,2,2,1,1,2,1,2,2,2,1,1,1,1,1,2,2,2,2,2,2,2,2,1,1,2,2,1,2,1,1,1,1,2,2,1,1"
+    200     26      5     2000     0        10        false      false        false      0.505    -0.75104    -0.75104       134.69          0            2           10               0                   0                    0             0.002173     11.026     11-Sep-2024 13:19:42     "45,884"           "2,2,2,2,1,2,2,1,2,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,1,1,2,2,1,1,1,2,2,2,1,1,1,1,2,1,1,2,2,2,2,2,1,2,2,1,1,1,1,2,2,1,1,1,2,2,2,1,2,1,1,2,1,2,2,2,1,2,2,1,1,2,1,1,1,1,1,1,1,2,1,1,2,2,1,2,2,1,1,2,1,2,1,2,1,2,1,2,2,1,1,2,2,1,2,2,2,1,1,1,1,2,1,1,1,1,1,1,2,2,1,1,2,1,2,1,2,1,2,1,1,2,1,2,1,1,2,2,2,1,1,2,2,2,1,1,2,2,2,2,2,1,1,2,1,1,2,2,2,1,1,1,1,1,1,1,1,2,2,2,2,2,1,2,1,2,2,2,1,1,2,1,2,1,1,2,2,1,2,1,1,2,1,1,1"
+    200     27      5     2000     0        10        false      false        false      0.515    -0.98189    -0.98189       164.85          0            2           10               0                   0                    0              0.00185     4.2987     11-Sep-2024 13:19:42     "45,884"           "1,2,2,2,1,2,2,2,1,2,1,2,1,2,1,1,1,1,2,2,1,2,2,2,2,2,1,2,1,1,1,1,2,1,1,1,2,2,2,2,1,1,2,1,2,1,2,2,2,1,1,1,2,1,1,1,1,2,1,1,2,1,2,1,2,1,1,2,1,1,2,2,1,2,1,2,2,1,1,1,1,1,2,2,1,1,2,1,2,1,2,1,1,2,1,2,1,2,2,1,2,2,1,2,2,2,2,1,2,2,2,1,1,2,1,2,2,1,1,1,1,1,1,2,2,1,1,2,2,2,2,1,2,2,2,2,2,1,1,1,2,1,1,2,1,1,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,2,1,1,1,2,2,1,2,1,1,1,2,2,2,2,2,1,1,1,1,1,1,1,1,2,2,1,1,2,1,2,2,2,2,1,1,2,2"
+    200     28      5     2000     0        10        false      false        false      0.505    -0.75104    -0.75104       134.69          0            2           10               0                   0                    0             0.001724     11.497     11-Sep-2024 13:19:42     "45,884"           "2,2,2,2,1,2,2,1,2,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,1,1,2,2,1,1,1,2,2,2,1,1,1,1,2,1,1,2,2,2,2,2,1,2,2,1,1,1,1,2,2,1,1,1,2,2,2,1,2,1,1,2,1,2,2,2,1,2,2,1,1,2,1,1,1,1,1,1,1,2,1,1,2,2,1,2,2,1,1,2,1,2,1,2,1,2,1,2,2,1,1,2,2,1,2,2,2,1,1,1,1,2,1,1,1,1,1,1,2,2,1,1,2,1,2,1,2,1,2,1,1,2,1,2,1,1,2,2,2,1,1,2,2,2,1,1,2,2,2,2,2,1,1,2,1,1,2,2,2,1,1,1,1,1,1,1,1,2,2,2,2,2,1,2,1,2,2,2,1,1,2,1,2,1,1,2,2,1,2,1,1,2,1,1,1"
+    200     29      5     2000     0        10        false      false        false      0.515    -0.98189    -0.98189       164.85          0            2           10               0                   0                    0             0.001971     4.3475     11-Sep-2024 13:19:42     "45,884"           "2,1,1,1,2,1,1,1,2,1,2,1,2,1,2,2,2,2,1,1,2,1,1,1,1,1,2,1,2,2,2,2,1,2,2,2,1,1,1,1,2,2,1,2,1,2,1,1,1,2,2,2,1,2,2,2,2,1,2,2,1,2,1,2,1,2,2,1,2,2,1,1,2,1,2,1,1,2,2,2,2,2,1,1,2,2,1,2,1,2,1,2,2,1,2,1,2,1,1,2,1,1,2,1,1,1,1,2,1,1,1,2,2,1,2,1,1,2,2,2,2,2,2,1,1,2,2,1,1,1,1,2,1,1,1,1,1,2,2,2,1,2,2,1,2,2,1,2,1,2,2,1,1,1,1,2,2,1,2,2,2,2,1,2,2,2,1,1,2,1,2,2,2,1,1,1,1,1,2,2,2,2,2,2,2,2,1,1,2,2,1,2,1,1,1,1,2,2,1,1"
+    200     30      5     2000     0        10        false      false        false      0.505    -0.75104    -0.75104       134.69          0            2           10               0                   0                    0             0.001884     11.587     11-Sep-2024 13:19:42     "45,884"           "1,1,1,1,2,1,1,2,1,1,2,1,2,2,1,1,1,1,2,2,1,2,2,2,2,2,2,1,1,2,2,2,1,1,1,2,2,2,2,1,2,2,1,1,1,1,1,2,1,1,2,2,2,2,1,1,2,2,2,1,1,1,2,1,2,2,1,2,1,1,1,2,1,1,2,2,1,2,2,2,2,2,2,2,1,2,2,1,1,2,1,1,2,2,1,2,1,2,1,2,1,2,1,1,2,2,1,1,2,1,1,1,2,2,2,2,1,2,2,2,2,2,2,1,1,2,2,1,2,1,2,1,2,1,2,2,1,2,1,2,2,1,1,1,2,2,1,1,1,2,2,1,1,1,1,1,2,2,1,2,2,1,1,1,2,2,2,2,2,2,2,2,1,1,1,1,1,2,1,2,1,1,1,2,2,1,2,1,2,2,1,1,2,1,2,2,1,2,2,2"
+    200     31      5     2000     0        10        false      false        false      0.515    -0.98189    -0.98189       164.85          0            2           10               0                   0                    0             0.001572     4.4842     11-Sep-2024 13:19:42     "45,884"           "2,1,1,1,2,1,1,1,2,1,2,1,2,1,2,2,2,2,1,1,2,1,1,1,1,1,2,1,2,2,2,2,1,2,2,2,1,1,1,1,2,2,1,2,1,2,1,1,1,2,2,2,1,2,2,2,2,1,2,2,1,2,1,2,1,2,2,1,2,2,1,1,2,1,2,1,1,2,2,2,2,2,1,1,2,2,1,2,1,2,1,2,2,1,2,1,2,1,1,2,1,1,2,1,1,1,1,2,1,1,1,2,2,1,2,1,1,2,2,2,2,2,2,1,1,2,2,1,1,1,1,2,1,1,1,1,1,2,2,2,1,2,2,1,2,2,1,2,1,2,2,1,1,1,1,2,2,1,2,2,2,2,1,2,2,2,1,1,2,1,2,2,2,1,1,1,1,1,2,2,2,2,2,2,2,2,1,1,2,2,1,2,1,1,1,1,2,2,1,1"
+    200     32      5     2000     0        10        false      false        false      0.505    -0.75104    -0.75104       134.69          0            2           10               0                   0                    0             0.001438     11.432     11-Sep-2024 13:19:42     "45,884"           "2,2,2,2,1,2,2,1,2,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,1,1,2,2,1,1,1,2,2,2,1,1,1,1,2,1,1,2,2,2,2,2,1,2,2,1,1,1,1,2,2,1,1,1,2,2,2,1,2,1,1,2,1,2,2,2,1,2,2,1,1,2,1,1,1,1,1,1,1,2,1,1,2,2,1,2,2,1,1,2,1,2,1,2,1,2,1,2,2,1,1,2,2,1,2,2,2,1,1,1,1,2,1,1,1,1,1,1,2,2,1,1,2,1,2,1,2,1,2,1,1,2,1,2,1,1,2,2,2,1,1,2,2,2,1,1,2,2,2,2,2,1,1,2,1,1,2,2,2,1,1,1,1,1,1,1,1,2,2,2,2,2,1,2,1,2,2,2,1,1,2,1,2,1,1,2,2,1,2,1,1,2,1,1,1"
+    200     33      5     2000     0        10        false      false        false      0.515    -0.98189    -0.98189       164.85          0            2           10               0                   0                    0             0.002425     4.1033     11-Sep-2024 13:19:42     "45,884"           "2,1,1,1,2,1,1,1,2,1,2,1,2,1,2,2,2,2,1,1,2,1,1,1,1,1,2,1,2,2,2,2,1,2,2,2,1,1,1,1,2,2,1,2,1,2,1,1,1,2,2,2,1,2,2,2,2,1,2,2,1,2,1,2,1,2,2,1,2,2,1,1,2,1,2,1,1,2,2,2,2,2,1,1,2,2,1,2,1,2,1,2,2,1,2,1,2,1,1,2,1,1,2,1,1,1,1,2,1,1,1,2,2,1,2,1,1,2,2,2,2,2,2,1,1,2,2,1,1,1,1,2,1,1,1,1,1,2,2,2,1,2,2,1,2,2,1,2,1,2,2,1,1,1,1,2,2,1,2,2,2,2,1,2,2,2,1,1,2,1,2,2,2,1,1,1,1,1,2,2,2,2,2,2,2,2,1,1,2,2,1,2,1,1,1,1,2,2,1,1"
+    200     34      5     2000     0        10        false      false        false      0.505    -0.75104    -0.75104       134.69          0            2           10               0                   0                    0             0.001594     11.505     11-Sep-2024 13:19:42     "45,884"           "1,1,1,1,2,1,1,2,1,1,2,1,2,2,1,1,1,1,2,2,1,2,2,2,2,2,2,1,1,2,2,2,1,1,1,2,2,2,2,1,2,2,1,1,1,1,1,2,1,1,2,2,2,2,1,1,2,2,2,1,1,1,2,1,2,2,1,2,1,1,1,2,1,1,2,2,1,2,2,2,2,2,2,2,1,2,2,1,1,2,1,1,2,2,1,2,1,2,1,2,1,2,1,1,2,2,1,1,2,1,1,1,2,2,2,2,1,2,2,2,2,2,2,1,1,2,2,1,2,1,2,1,2,1,2,2,1,2,1,2,2,1,1,1,2,2,1,1,1,2,2,1,1,1,1,1,2,2,1,2,2,1,1,1,2,2,2,2,2,2,2,2,1,1,1,1,1,2,1,2,1,1,1,2,2,1,2,1,2,2,1,1,2,1,2,2,1,2,2,2"
+    200     35      5     2000     0        10        false      false        false      0.515    -0.98189    -0.98189       164.85          0            2           10               0                   0                    0             0.002454     4.1962     11-Sep-2024 13:19:42     "45,884"           "1,2,2,2,1,2,2,2,1,2,1,2,1,2,1,1,1,1,2,2,1,2,2,2,2,2,1,2,1,1,1,1,2,1,1,1,2,2,2,2,1,1,2,1,2,1,2,2,2,1,1,1,2,1,1,1,1,2,1,1,2,1,2,1,2,1,1,2,1,1,2,2,1,2,1,2,2,1,1,1,1,1,2,2,1,1,2,1,2,1,2,1,1,2,1,2,1,2,2,1,2,2,1,2,2,2,2,1,2,2,2,1,1,2,1,2,2,1,1,1,1,1,1,2,2,1,1,2,2,2,2,1,2,2,2,2,2,1,1,1,2,1,1,2,1,1,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,2,1,1,1,2,2,1,2,1,1,1,2,2,2,2,2,1,1,1,1,1,1,1,1,2,2,1,1,2,1,2,2,2,2,1,1,2,2"
+    200     36      5     2000     0        10        false      false        false      0.505    -0.75104    -0.75104       134.69          0            2           10               0                   0                    0             0.001737      11.96     11-Sep-2024 13:19:42     "45,884"           "1,1,1,1,2,1,1,2,1,1,2,1,2,2,1,1,1,1,2,2,1,2,2,2,2,2,2,1,1,2,2,2,1,1,1,2,2,2,2,1,2,2,1,1,1,1,1,2,1,1,2,2,2,2,1,1,2,2,2,1,1,1,2,1,2,2,1,2,1,1,1,2,1,1,2,2,1,2,2,2,2,2,2,2,1,2,2,1,1,2,1,1,2,2,1,2,1,2,1,2,1,2,1,1,2,2,1,1,2,1,1,1,2,2,2,2,1,2,2,2,2,2,2,1,1,2,2,1,2,1,2,1,2,1,2,2,1,2,1,2,2,1,1,1,2,2,1,1,1,2,2,1,1,1,1,1,2,2,1,2,2,1,1,1,2,2,2,2,2,2,2,2,1,1,1,1,1,2,1,2,1,1,1,2,2,1,2,1,2,2,1,1,2,1,2,2,1,2,2,2"
+    200     37      5     2000     0        10        false      false        false      0.515    -0.98189    -0.98189       164.85          0            2           10               0                   0                    0             0.002877     4.4275     11-Sep-2024 13:19:42     "45,884"           "2,1,1,1,2,1,1,1,2,1,2,1,2,1,2,2,2,2,1,1,2,1,1,1,1,1,2,1,2,2,2,2,1,2,2,2,1,1,1,1,2,2,1,2,1,2,1,1,1,2,2,2,1,2,2,2,2,1,2,2,1,2,1,2,1,2,2,1,2,2,1,1,2,1,2,1,1,2,2,2,2,2,1,1,2,2,1,2,1,2,1,2,2,1,2,1,2,1,1,2,1,1,2,1,1,1,1,2,1,1,1,2,2,1,2,1,1,2,2,2,2,2,2,1,1,2,2,1,1,1,1,2,1,1,1,1,1,2,2,2,1,2,2,1,2,2,1,2,1,2,2,1,1,1,1,2,2,1,2,2,2,2,1,2,2,2,1,1,2,1,2,2,2,1,1,1,1,1,2,2,2,2,2,2,2,2,1,1,2,2,1,2,1,1,1,1,2,2,1,1"
+    200     38      5     2000     0        10        false      false        false      0.505    -0.75104    -0.75104       134.69          0            2           10               0                   0                    0             0.002125     12.011     11-Sep-2024 13:19:42     "45,884"           "1,1,1,1,2,1,1,2,1,1,2,1,2,2,1,1,1,1,2,2,1,2,2,2,2,2,2,1,1,2,2,2,1,1,1,2,2,2,2,1,2,2,1,1,1,1,1,2,1,1,2,2,2,2,1,1,2,2,2,1,1,1,2,1,2,2,1,2,1,1,1,2,1,1,2,2,1,2,2,2,2,2,2,2,1,2,2,1,1,2,1,1,2,2,1,2,1,2,1,2,1,2,1,1,2,2,1,1,2,1,1,1,2,2,2,2,1,2,2,2,2,2,2,1,1,2,2,1,2,1,2,1,2,1,2,2,1,2,1,2,2,1,1,1,2,2,1,1,1,2,2,1,1,1,1,1,2,2,1,2,2,1,1,1,2,2,2,2,2,2,2,2,1,1,1,1,1,2,1,2,1,1,1,2,2,1,2,1,2,2,1,1,2,1,2,2,1,2,2,2"
+    200     39      5     2000     0        10        false      false        false      0.515    -0.98189    -0.98189       164.85          0            2           10               0                   0                    0             0.001762     4.2379     11-Sep-2024 13:19:42     "45,884"           "1,2,2,2,1,2,2,2,1,2,1,2,1,2,1,1,1,1,2,2,1,2,2,2,2,2,1,2,1,1,1,1,2,1,1,1,2,2,2,2,1,1,2,1,2,1,2,2,2,1,1,1,2,1,1,1,1,2,1,1,2,1,2,1,2,1,1,2,1,1,2,2,1,2,1,2,2,1,1,1,1,1,2,2,1,1,2,1,2,1,2,1,1,2,1,2,1,2,2,1,2,2,1,2,2,2,2,1,2,2,2,1,1,2,1,2,2,1,1,1,1,1,1,2,2,1,1,2,2,2,2,1,2,2,2,2,2,1,1,1,2,1,1,2,1,1,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,2,1,1,1,2,2,1,2,1,1,1,2,2,2,2,2,1,1,1,1,1,1,1,1,2,2,1,1,2,1,2,2,2,2,1,1,2,2"
+    200     40      5     2000     0        10        false      false        false      0.505    -0.75104    -0.75104       134.69          0            2           10               0                   0                    0             0.002577      10.64     11-Sep-2024 13:19:42     "45,884"           "1,1,1,1,2,1,1,2,1,1,2,1,2,2,1,1,1,1,2,2,1,2,2,2,2,2,2,1,1,2,2,2,1,1,1,2,2,2,2,1,2,2,1,1,1,1,1,2,1,1,2,2,2,2,1,1,2,2,2,1,1,1,2,1,2,2,1,2,1,1,1,2,1,1,2,2,1,2,2,2,2,2,2,2,1,2,2,1,1,2,1,1,2,2,1,2,1,2,1,2,1,2,1,1,2,2,1,1,2,1,1,1,2,2,2,2,1,2,2,2,2,2,2,1,1,2,2,1,2,1,2,1,2,1,2,2,1,2,1,2,2,1,1,1,2,2,1,1,1,2,2,1,1,1,1,1,2,2,1,2,2,1,1,1,2,2,2,2,2,2,2,2,1,1,1,1,1,2,1,2,1,1,1,2,2,1,2,1,2,2,1,1,2,1,2,2,1,2,2,2"
+    200     41      5     2000     0        10        false      false        false      0.515    -0.98189    -0.98189       164.85          0            2           10               0                   0                    0             0.002148      4.754     11-Sep-2024 13:19:42     "45,884"           "1,2,2,2,1,2,2,2,1,2,1,2,1,2,1,1,1,1,2,2,1,2,2,2,2,2,1,2,1,1,1,1,2,1,1,1,2,2,2,2,1,1,2,1,2,1,2,2,2,1,1,1,2,1,1,1,1,2,1,1,2,1,2,1,2,1,1,2,1,1,2,2,1,2,1,2,2,1,1,1,1,1,2,2,1,1,2,1,2,1,2,1,1,2,1,2,1,2,2,1,2,2,1,2,2,2,2,1,2,2,2,1,1,2,1,2,2,1,1,1,1,1,1,2,2,1,1,2,2,2,2,1,2,2,2,2,2,1,1,1,2,1,1,2,1,1,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,2,1,1,1,2,2,1,2,1,1,1,2,2,2,2,2,1,1,1,1,1,1,1,1,2,2,1,1,2,1,2,2,2,2,1,1,2,2"
+    200     42      5     2000     0        10        false      false        false      0.505    -0.75104    -0.75104       134.69          0            2           10               0                   0                    0             0.002608      12.22     11-Sep-2024 13:19:42     "45,884"           "2,2,2,2,1,2,2,1,2,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,1,1,2,2,1,1,1,2,2,2,1,1,1,1,2,1,1,2,2,2,2,2,1,2,2,1,1,1,1,2,2,1,1,1,2,2,2,1,2,1,1,2,1,2,2,2,1,2,2,1,1,2,1,1,1,1,1,1,1,2,1,1,2,2,1,2,2,1,1,2,1,2,1,2,1,2,1,2,2,1,1,2,2,1,2,2,2,1,1,1,1,2,1,1,1,1,1,1,2,2,1,1,2,1,2,1,2,1,2,1,1,2,1,2,1,1,2,2,2,1,1,2,2,2,1,1,2,2,2,2,2,1,1,2,1,1,2,2,2,1,1,1,1,1,1,1,1,2,2,2,2,2,1,2,1,2,2,2,1,1,2,1,2,1,1,2,2,1,2,1,1,2,1,1,1"
+    200     43      5     2000     0        10        false      false        false      0.515    -0.98189    -0.98189       164.85          0            2           10               0                   0                    0             0.002126     4.3456     11-Sep-2024 13:19:42     "45,884"           "1,2,2,2,1,2,2,2,1,2,1,2,1,2,1,1,1,1,2,2,1,2,2,2,2,2,1,2,1,1,1,1,2,1,1,1,2,2,2,2,1,1,2,1,2,1,2,2,2,1,1,1,2,1,1,1,1,2,1,1,2,1,2,1,2,1,1,2,1,1,2,2,1,2,1,2,2,1,1,1,1,1,2,2,1,1,2,1,2,1,2,1,1,2,1,2,1,2,2,1,2,2,1,2,2,2,2,1,2,2,2,1,1,2,1,2,2,1,1,1,1,1,1,2,2,1,1,2,2,2,2,1,2,2,2,2,2,1,1,1,2,1,1,2,1,1,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,2,1,1,1,2,2,1,2,1,1,1,2,2,2,2,2,1,1,1,1,1,1,1,1,2,2,1,1,2,1,2,2,2,2,1,1,2,2"
+    200     44      5     2000     0        10        false      false        false      0.505    -0.75104    -0.75104       134.69          0            2           10               0                   0                    0             0.002669     11.571     11-Sep-2024 13:19:42     "45,884"           "2,2,2,2,1,2,2,1,2,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,1,1,2,2,1,1,1,2,2,2,1,1,1,1,2,1,1,2,2,2,2,2,1,2,2,1,1,1,1,2,2,1,1,1,2,2,2,1,2,1,1,2,1,2,2,2,1,2,2,1,1,2,1,1,1,1,1,1,1,2,1,1,2,2,1,2,2,1,1,2,1,2,1,2,1,2,1,2,2,1,1,2,2,1,2,2,2,1,1,1,1,2,1,1,1,1,1,1,2,2,1,1,2,1,2,1,2,1,2,1,1,2,1,2,1,1,2,2,2,1,1,2,2,2,1,1,2,2,2,2,2,1,1,2,1,1,2,2,2,1,1,1,1,1,1,1,1,2,2,2,2,2,1,2,1,2,2,2,1,1,2,1,2,1,1,2,2,1,2,1,1,2,1,1,1"
+    200     45      5     2000     0        10        false      false        false      0.515    -0.98189    -0.98189       164.85          0            2           10               0                   0                    0             0.002004     4.0607     11-Sep-2024 13:19:42     "45,884"           "1,2,2,2,1,2,2,2,1,2,1,2,1,2,1,1,1,1,2,2,1,2,2,2,2,2,1,2,1,1,1,1,2,1,1,1,2,2,2,2,1,1,2,1,2,1,2,2,2,1,1,1,2,1,1,1,1,2,1,1,2,1,2,1,2,1,1,2,1,1,2,2,1,2,1,2,2,1,1,1,1,1,2,2,1,1,2,1,2,1,2,1,1,2,1,2,1,2,2,1,2,2,1,2,2,2,2,1,2,2,2,1,1,2,1,2,2,1,1,1,1,1,1,2,2,1,1,2,2,2,2,1,2,2,2,2,2,1,1,1,2,1,1,2,1,1,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,2,1,1,1,2,2,1,2,1,1,1,2,2,2,2,2,1,1,1,1,1,1,1,1,2,2,1,1,2,1,2,2,2,2,1,1,2,2"
+    200     46      5     2000     0        10        false      false        false      0.505    -0.75104    -0.75104       134.69          0            2           10               0                   0                    0             0.001568     12.222     11-Sep-2024 13:19:42     "45,884"           "2,2,2,2,1,2,2,1,2,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,1,1,2,2,1,1,1,2,2,2,1,1,1,1,2,1,1,2,2,2,2,2,1,2,2,1,1,1,1,2,2,1,1,1,2,2,2,1,2,1,1,2,1,2,2,2,1,2,2,1,1,2,1,1,1,1,1,1,1,2,1,1,2,2,1,2,2,1,1,2,1,2,1,2,1,2,1,2,2,1,1,2,2,1,2,2,2,1,1,1,1,2,1,1,1,1,1,1,2,2,1,1,2,1,2,1,2,1,2,1,1,2,1,2,1,1,2,2,2,1,1,2,2,2,1,1,2,2,2,2,2,1,1,2,1,1,2,2,2,1,1,1,1,1,1,1,1,2,2,2,2,2,1,2,1,2,2,2,1,1,2,1,2,1,1,2,2,1,2,1,1,2,1,1,1"
+    200     47      5     2000     0        10        false      false        false      0.515    -0.98189    -0.98189       164.85          0            2           10               0                   0                    0             0.001855     3.9935     11-Sep-2024 13:19:42     "45,884"           "1,2,2,2,1,2,2,2,1,2,1,2,1,2,1,1,1,1,2,2,1,2,2,2,2,2,1,2,1,1,1,1,2,1,1,1,2,2,2,2,1,1,2,1,2,1,2,2,2,1,1,1,2,1,1,1,1,2,1,1,2,1,2,1,2,1,1,2,1,1,2,2,1,2,1,2,2,1,1,1,1,1,2,2,1,1,2,1,2,1,2,1,1,2,1,2,1,2,2,1,2,2,1,2,2,2,2,1,2,2,2,1,1,2,1,2,2,1,1,1,1,1,1,2,2,1,1,2,2,2,2,1,2,2,2,2,2,1,1,1,2,1,1,2,1,1,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,2,1,1,1,2,2,1,2,1,1,1,2,2,2,2,2,1,1,1,1,1,1,1,1,2,2,1,1,2,1,2,2,2,2,1,1,2,2"
+    200     48      5     2000     0        10        false      false        false      0.505    -0.75104    -0.75104       134.69          0            2           10               0                   0                    0             0.001916      10.67     11-Sep-2024 13:19:42     "45,884"           "1,1,1,1,2,1,1,2,1,1,2,1,2,2,1,1,1,1,2,2,1,2,2,2,2,2,2,1,1,2,2,2,1,1,1,2,2,2,2,1,2,2,1,1,1,1,1,2,1,1,2,2,2,2,1,1,2,2,2,1,1,1,2,1,2,2,1,2,1,1,1,2,1,1,2,2,1,2,2,2,2,2,2,2,1,2,2,1,1,2,1,1,2,2,1,2,1,2,1,2,1,2,1,1,2,2,1,1,2,1,1,1,2,2,2,2,1,2,2,2,2,2,2,1,1,2,2,1,2,1,2,1,2,1,2,2,1,2,1,2,2,1,1,1,2,2,1,1,1,2,2,1,1,1,1,1,2,2,1,2,2,1,1,1,2,2,2,2,2,2,2,2,1,1,1,1,1,2,1,2,1,1,1,2,2,1,2,1,2,2,1,1,2,1,2,2,1,2,2,2"
+    200     49      5     2000     0        10        false      false        false      0.515    -0.98189    -0.98189       164.85          0            2           10               0                   0                    0             0.002006     4.1567     11-Sep-2024 13:19:42     "45,884"           "2,1,1,1,2,1,1,1,2,1,2,1,2,1,2,2,2,2,1,1,2,1,1,1,1,1,2,1,2,2,2,2,1,2,2,2,1,1,1,1,2,2,1,2,1,2,1,1,1,2,2,2,1,2,2,2,2,1,2,2,1,2,1,2,1,2,2,1,2,2,1,1,2,1,2,1,1,2,2,2,2,2,1,1,2,2,1,2,1,2,1,2,2,1,2,1,2,1,1,2,1,1,2,1,1,1,1,2,1,1,1,2,2,1,2,1,1,2,2,2,2,2,2,1,1,2,2,1,1,1,1,2,1,1,1,1,1,2,2,2,1,2,2,1,2,2,1,2,1,2,2,1,1,1,1,2,2,1,2,2,2,2,1,2,2,2,1,1,2,1,2,2,2,1,1,1,1,1,2,2,2,2,2,2,2,2,1,1,2,2,1,2,1,1,1,1,2,2,1,1"
+    200     50      5     2000     0        10        false      false        false      0.505    -0.75104    -0.75104       134.69          0            2           10               0                   0                    0             0.001932     10.402     11-Sep-2024 13:19:42     "45,884"           "2,2,2,2,1,2,2,1,2,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,1,1,2,2,1,1,1,2,2,2,1,1,1,1,2,1,1,2,2,2,2,2,1,2,2,1,1,1,1,2,2,1,1,1,2,2,2,1,2,1,1,2,1,2,2,2,1,2,2,1,1,2,1,1,1,1,1,1,1,2,1,1,2,2,1,2,2,1,1,2,1,2,1,2,1,2,1,2,2,1,1,2,2,1,2,2,2,1,1,1,1,2,1,1,1,1,1,1,2,2,1,1,2,1,2,1,2,1,2,1,1,2,1,2,1,1,2,2,2,1,1,2,2,2,1,1,2,2,2,2,2,1,1,2,1,1,2,2,2,1,1,1,1,1,1,1,1,2,2,2,2,2,1,2,1,2,2,2,1,1,2,1,2,1,1,2,2,1,2,1,1,2,1,1,1"
+    200     51      5     2000     0        10        false      false        false      0.515    -0.98189    -0.98189       164.85          0            2           10               0                   0                    0             0.001309     4.3531     11-Sep-2024 13:19:42     "45,884"           "2,1,1,1,2,1,1,1,2,1,2,1,2,1,2,2,2,2,1,1,2,1,1,1,1,1,2,1,2,2,2,2,1,2,2,2,1,1,1,1,2,2,1,2,1,2,1,1,1,2,2,2,1,2,2,2,2,1,2,2,1,2,1,2,1,2,2,1,2,2,1,1,2,1,2,1,1,2,2,2,2,2,1,1,2,2,1,2,1,2,1,2,2,1,2,1,2,1,1,2,1,1,2,1,1,1,1,2,1,1,1,2,2,1,2,1,1,2,2,2,2,2,2,1,1,2,2,1,1,1,1,2,1,1,1,1,1,2,2,2,1,2,2,1,2,2,1,2,1,2,2,1,1,1,1,2,2,1,2,2,2,2,1,2,2,2,1,1,2,1,2,2,2,1,1,1,1,1,2,2,2,2,2,2,2,2,1,1,2,2,1,2,1,1,1,1,2,2,1,1"
+    200     52      5     2000     0        10        false      false        false      0.505    -0.75104    -0.75104       134.69          0            2           10               0                   0                    0             0.001849     10.891     11-Sep-2024 13:19:42     "45,884"           "1,1,1,1,2,1,1,2,1,1,2,1,2,2,1,1,1,1,2,2,1,2,2,2,2,2,2,1,1,2,2,2,1,1,1,2,2,2,2,1,2,2,1,1,1,1,1,2,1,1,2,2,2,2,1,1,2,2,2,1,1,1,2,1,2,2,1,2,1,1,1,2,1,1,2,2,1,2,2,2,2,2,2,2,1,2,2,1,1,2,1,1,2,2,1,2,1,2,1,2,1,2,1,1,2,2,1,1,2,1,1,1,2,2,2,2,1,2,2,2,2,2,2,1,1,2,2,1,2,1,2,1,2,1,2,2,1,2,1,2,2,1,1,1,2,2,1,1,1,2,2,1,1,1,1,1,2,2,1,2,2,1,1,1,2,2,2,2,2,2,2,2,1,1,1,1,1,2,1,2,1,1,1,2,2,1,2,1,2,2,1,1,2,1,2,2,1,2,2,2"
+    200     53      5     2000     0        10        false      false        false      0.515    -0.98189    -0.98189       164.85          0            2           10               0                   0                    0              0.00247     4.1889     11-Sep-2024 13:19:42     "45,884"           "2,1,1,1,2,1,1,1,2,1,2,1,2,1,2,2,2,2,1,1,2,1,1,1,1,1,2,1,2,2,2,2,1,2,2,2,1,1,1,1,2,2,1,2,1,2,1,1,1,2,2,2,1,2,2,2,2,1,2,2,1,2,1,2,1,2,2,1,2,2,1,1,2,1,2,1,1,2,2,2,2,2,1,1,2,2,1,2,1,2,1,2,2,1,2,1,2,1,1,2,1,1,2,1,1,1,1,2,1,1,1,2,2,1,2,1,1,2,2,2,2,2,2,1,1,2,2,1,1,1,1,2,1,1,1,1,1,2,2,2,1,2,2,1,2,2,1,2,1,2,2,1,1,1,1,2,2,1,2,2,2,2,1,2,2,2,1,1,2,1,2,2,2,1,1,1,1,1,2,2,2,2,2,2,2,2,1,1,2,2,1,2,1,1,1,1,2,2,1,1"
+    200     54      5     2000     0        10        false      false        false      0.505    -0.75104    -0.75104       134.69          0            2           10               0                   0                    0             0.002045      11.81     11-Sep-2024 13:19:42     "45,884"           "2,2,2,2,1,2,2,1,2,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,1,1,2,2,1,1,1,2,2,2,1,1,1,1,2,1,1,2,2,2,2,2,1,2,2,1,1,1,1,2,2,1,1,1,2,2,2,1,2,1,1,2,1,2,2,2,1,2,2,1,1,2,1,1,1,1,1,1,1,2,1,1,2,2,1,2,2,1,1,2,1,2,1,2,1,2,1,2,2,1,1,2,2,1,2,2,2,1,1,1,1,2,1,1,1,1,1,1,2,2,1,1,2,1,2,1,2,1,2,1,1,2,1,2,1,1,2,2,2,1,1,2,2,2,1,1,2,2,2,2,2,1,1,2,1,1,2,2,2,1,1,1,1,1,1,1,1,2,2,2,2,2,1,2,1,2,2,2,1,1,2,1,2,1,1,2,2,1,2,1,1,2,1,1,1"
+    200     55      5     2000     0        10        false      false        false      0.515    -0.98189    -0.98189       164.85          0            2           10               0                   0                    0             0.002121     4.2153     11-Sep-2024 13:19:42     "45,884"           "1,2,2,2,1,2,2,2,1,2,1,2,1,2,1,1,1,1,2,2,1,2,2,2,2,2,1,2,1,1,1,1,2,1,1,1,2,2,2,2,1,1,2,1,2,1,2,2,2,1,1,1,2,1,1,1,1,2,1,1,2,1,2,1,2,1,1,2,1,1,2,2,1,2,1,2,2,1,1,1,1,1,2,2,1,1,2,1,2,1,2,1,1,2,1,2,1,2,2,1,2,2,1,2,2,2,2,1,2,2,2,1,1,2,1,2,2,1,1,1,1,1,1,2,2,1,1,2,2,2,2,1,2,2,2,2,2,1,1,1,2,1,1,2,1,1,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,2,1,1,1,2,2,1,2,1,1,1,2,2,2,2,2,1,1,1,1,1,1,1,1,2,2,1,1,2,1,2,2,2,2,1,1,2,2"
+    200     56      5     2000     0        10        false      false        false      0.505    -0.75104    -0.75104       134.69          0            2           10               0                   0                    0             0.002079     11.917     11-Sep-2024 13:19:42     "45,884"           "1,1,1,1,2,1,1,2,1,1,2,1,2,2,1,1,1,1,2,2,1,2,2,2,2,2,2,1,1,2,2,2,1,1,1,2,2,2,2,1,2,2,1,1,1,1,1,2,1,1,2,2,2,2,1,1,2,2,2,1,1,1,2,1,2,2,1,2,1,1,1,2,1,1,2,2,1,2,2,2,2,2,2,2,1,2,2,1,1,2,1,1,2,2,1,2,1,2,1,2,1,2,1,1,2,2,1,1,2,1,1,1,2,2,2,2,1,2,2,2,2,2,2,1,1,2,2,1,2,1,2,1,2,1,2,2,1,2,1,2,2,1,1,1,2,2,1,1,1,2,2,1,1,1,1,1,2,2,1,2,2,1,1,1,2,2,2,2,2,2,2,2,1,1,1,1,1,2,1,2,1,1,1,2,2,1,2,1,2,2,1,1,2,1,2,2,1,2,2,2"
+    200     57      5     2000     0        10        false      false        false      0.515    -0.98189    -0.98189       164.85          0            2           10               0                   0                    0             0.002157     4.1849     11-Sep-2024 13:19:42     "45,884"           "1,2,2,2,1,2,2,2,1,2,1,2,1,2,1,1,1,1,2,2,1,2,2,2,2,2,1,2,1,1,1,1,2,1,1,1,2,2,2,2,1,1,2,1,2,1,2,2,2,1,1,1,2,1,1,1,1,2,1,1,2,1,2,1,2,1,1,2,1,1,2,2,1,2,1,2,2,1,1,1,1,1,2,2,1,1,2,1,2,1,2,1,1,2,1,2,1,2,2,1,2,2,1,2,2,2,2,1,2,2,2,1,1,2,1,2,2,1,1,1,1,1,1,2,2,1,1,2,2,2,2,1,2,2,2,2,2,1,1,1,2,1,1,2,1,1,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,2,1,1,1,2,2,1,2,1,1,1,2,2,2,2,2,1,1,1,1,1,1,1,1,2,2,1,1,2,1,2,2,2,2,1,1,2,2"
+    200     58      5     2000     0        10        false      false        false      0.505    -0.75104    -0.75104       134.69          0            2           10               0                   0                    0              0.00195     11.655     11-Sep-2024 13:19:42     "45,884"           "1,1,1,1,2,1,1,2,1,1,2,1,2,2,1,1,1,1,2,2,1,2,2,2,2,2,2,1,1,2,2,2,1,1,1,2,2,2,2,1,2,2,1,1,1,1,1,2,1,1,2,2,2,2,1,1,2,2,2,1,1,1,2,1,2,2,1,2,1,1,1,2,1,1,2,2,1,2,2,2,2,2,2,2,1,2,2,1,1,2,1,1,2,2,1,2,1,2,1,2,1,2,1,1,2,2,1,1,2,1,1,1,2,2,2,2,1,2,2,2,2,2,2,1,1,2,2,1,2,1,2,1,2,1,2,2,1,2,1,2,2,1,1,1,2,2,1,1,1,2,2,1,1,1,1,1,2,2,1,2,2,1,1,1,2,2,2,2,2,2,2,2,1,1,1,1,1,2,1,2,1,1,1,2,2,1,2,1,2,2,1,1,2,1,2,2,1,2,2,2"
+    200     59      5     2000     0        10        false      false        false      0.515    -0.98189    -0.98189       164.85          0            2           10               0                   0                    0             0.002395     4.2823     11-Sep-2024 13:19:42     "45,884"           "1,2,2,2,1,2,2,2,1,2,1,2,1,2,1,1,1,1,2,2,1,2,2,2,2,2,1,2,1,1,1,1,2,1,1,1,2,2,2,2,1,1,2,1,2,1,2,2,2,1,1,1,2,1,1,1,1,2,1,1,2,1,2,1,2,1,1,2,1,1,2,2,1,2,1,2,2,1,1,1,1,1,2,2,1,1,2,1,2,1,2,1,1,2,1,2,1,2,2,1,2,2,1,2,2,2,2,1,2,2,2,1,1,2,1,2,2,1,1,1,1,1,1,2,2,1,1,2,2,2,2,1,2,2,2,2,2,1,1,1,2,1,1,2,1,1,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,2,1,1,1,2,2,1,2,1,1,1,2,2,2,2,2,1,1,1,1,1,1,1,1,2,2,1,1,2,1,2,2,2,2,1,1,2,2"
+    200     60      5     2000     0        10        false      false        false      0.505    -0.75104    -0.75104       134.69          0            2           10               0                   0                    0             0.002503     11.262     11-Sep-2024 13:19:42     "45,884"           "1,1,1,1,2,1,1,2,1,1,2,1,2,2,1,1,1,1,2,2,1,2,2,2,2,2,2,1,1,2,2,2,1,1,1,2,2,2,2,1,2,2,1,1,1,1,1,2,1,1,2,2,2,2,1,1,2,2,2,1,1,1,2,1,2,2,1,2,1,1,1,2,1,1,2,2,1,2,2,2,2,2,2,2,1,2,2,1,1,2,1,1,2,2,1,2,1,2,1,2,1,2,1,1,2,2,1,1,2,1,1,1,2,2,2,2,1,2,2,2,2,2,2,1,1,2,2,1,2,1,2,1,2,1,2,2,1,2,1,2,2,1,1,1,2,2,1,1,1,2,2,1,1,1,1,1,2,2,1,2,2,1,1,1,2,2,2,2,2,2,2,2,1,1,1,1,1,2,1,2,1,1,1,2,2,1,2,1,2,2,1,1,2,1,2,2,1,2,2,2"
+    200     61      5     2000     0        10        false      false        false      0.515    -0.98189    -0.98189       164.85          0            2           10               0                   0                    0             0.001888      3.975     11-Sep-2024 13:19:42     "45,884"           "1,2,2,2,1,2,2,2,1,2,1,2,1,2,1,1,1,1,2,2,1,2,2,2,2,2,1,2,1,1,1,1,2,1,1,1,2,2,2,2,1,1,2,1,2,1,2,2,2,1,1,1,2,1,1,1,1,2,1,1,2,1,2,1,2,1,1,2,1,1,2,2,1,2,1,2,2,1,1,1,1,1,2,2,1,1,2,1,2,1,2,1,1,2,1,2,1,2,2,1,2,2,1,2,2,2,2,1,2,2,2,1,1,2,1,2,2,1,1,1,1,1,1,2,2,1,1,2,2,2,2,1,2,2,2,2,2,1,1,1,2,1,1,2,1,1,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,2,1,1,1,2,2,1,2,1,1,1,2,2,2,2,2,1,1,1,1,1,1,1,1,2,2,1,1,2,1,2,2,2,2,1,1,2,2"
+    200     62      5     2000     0        10        false      false        false      0.505    -0.75104    -0.75104       134.69          0            2           10               0                   0                    0             0.001798      11.25     11-Sep-2024 13:19:42     "45,884"           "2,2,2,2,1,2,2,1,2,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,1,1,2,2,1,1,1,2,2,2,1,1,1,1,2,1,1,2,2,2,2,2,1,2,2,1,1,1,1,2,2,1,1,1,2,2,2,1,2,1,1,2,1,2,2,2,1,2,2,1,1,2,1,1,1,1,1,1,1,2,1,1,2,2,1,2,2,1,1,2,1,2,1,2,1,2,1,2,2,1,1,2,2,1,2,2,2,1,1,1,1,2,1,1,1,1,1,1,2,2,1,1,2,1,2,1,2,1,2,1,1,2,1,2,1,1,2,2,2,1,1,2,2,2,1,1,2,2,2,2,2,1,1,2,1,1,2,2,2,1,1,1,1,1,1,1,1,2,2,2,2,2,1,2,1,2,2,2,1,1,2,1,2,1,1,2,2,1,2,1,1,2,1,1,1"
+    200     63      5     2000     0        10        false      false        false      0.515    -0.98189    -0.98189       164.85          0            2           10               0                   0                    0             0.002145     4.4784     11-Sep-2024 13:19:42     "45,884"           "2,1,1,1,2,1,1,1,2,1,2,1,2,1,2,2,2,2,1,1,2,1,1,1,1,1,2,1,2,2,2,2,1,2,2,2,1,1,1,1,2,2,1,2,1,2,1,1,1,2,2,2,1,2,2,2,2,1,2,2,1,2,1,2,1,2,2,1,2,2,1,1,2,1,2,1,1,2,2,2,2,2,1,1,2,2,1,2,1,2,1,2,2,1,2,1,2,1,1,2,1,1,2,1,1,1,1,2,1,1,1,2,2,1,2,1,1,2,2,2,2,2,2,1,1,2,2,1,1,1,1,2,1,1,1,1,1,2,2,2,1,2,2,1,2,2,1,2,1,2,2,1,1,1,1,2,2,1,2,2,2,2,1,2,2,2,1,1,2,1,2,2,2,1,1,1,1,1,2,2,2,2,2,2,2,2,1,1,2,2,1,2,1,1,1,1,2,2,1,1"
+    200     64      5     2000     0        10        false      false        false      0.505    -0.75104    -0.75104       134.69          0            2           10               0                   0                    0             0.001772     11.455     11-Sep-2024 13:19:42     "45,884"           "2,2,2,2,1,2,2,1,2,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,1,1,2,2,1,1,1,2,2,2,1,1,1,1,2,1,1,2,2,2,2,2,1,2,2,1,1,1,1,2,2,1,1,1,2,2,2,1,2,1,1,2,1,2,2,2,1,2,2,1,1,2,1,1,1,1,1,1,1,2,1,1,2,2,1,2,2,1,1,2,1,2,1,2,1,2,1,2,2,1,1,2,2,1,2,2,2,1,1,1,1,2,1,1,1,1,1,1,2,2,1,1,2,1,2,1,2,1,2,1,1,2,1,2,1,1,2,2,2,1,1,2,2,2,1,1,2,2,2,2,2,1,1,2,1,1,2,2,2,1,1,1,1,1,1,1,1,2,2,2,2,2,1,2,1,2,2,2,1,1,2,1,2,1,1,2,2,1,2,1,1,2,1,1,1"
+    200     65      5     2000     0        10        false      false        false      0.515    -0.98189    -0.98189       164.85          0            2           10               0                   0                    0             0.001822      3.853     11-Sep-2024 13:19:42     "45,884"           "1,2,2,2,1,2,2,2,1,2,1,2,1,2,1,1,1,1,2,2,1,2,2,2,2,2,1,2,1,1,1,1,2,1,1,1,2,2,2,2,1,1,2,1,2,1,2,2,2,1,1,1,2,1,1,1,1,2,1,1,2,1,2,1,2,1,1,2,1,1,2,2,1,2,1,2,2,1,1,1,1,1,2,2,1,1,2,1,2,1,2,1,1,2,1,2,1,2,2,1,2,2,1,2,2,2,2,1,2,2,2,1,1,2,1,2,2,1,1,1,1,1,1,2,2,1,1,2,2,2,2,1,2,2,2,2,2,1,1,1,2,1,1,2,1,1,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,2,1,1,1,2,2,1,2,1,1,1,2,2,2,2,2,1,1,1,1,1,1,1,1,2,2,1,1,2,1,2,2,2,2,1,1,2,2"
+    200     66      5     2000     0        10        false      false        false      0.505    -0.75104    -0.75104       134.69          0            2           10               0                   0                    0             0.003114     10.683     11-Sep-2024 13:19:42     "45,884"           "1,1,1,1,2,1,1,2,1,1,2,1,2,2,1,1,1,1,2,2,1,2,2,2,2,2,2,1,1,2,2,2,1,1,1,2,2,2,2,1,2,2,1,1,1,1,1,2,1,1,2,2,2,2,1,1,2,2,2,1,1,1,2,1,2,2,1,2,1,1,1,2,1,1,2,2,1,2,2,2,2,2,2,2,1,2,2,1,1,2,1,1,2,2,1,2,1,2,1,2,1,2,1,1,2,2,1,1,2,1,1,1,2,2,2,2,1,2,2,2,2,2,2,1,1,2,2,1,2,1,2,1,2,1,2,2,1,2,1,2,2,1,1,1,2,2,1,1,1,2,2,1,1,1,1,1,2,2,1,2,2,1,1,1,2,2,2,2,2,2,2,2,1,1,1,1,1,2,1,2,1,1,1,2,2,1,2,1,2,2,1,1,2,1,2,2,1,2,2,2"
+    200     67      5     2000     0        10        false      false        false      0.515    -0.98189    -0.98189       164.85          0            2           10               0                   0                    0             0.001512     3.9172     11-Sep-2024 13:19:42     "45,884"           "2,1,1,1,2,1,1,1,2,1,2,1,2,1,2,2,2,2,1,1,2,1,1,1,1,1,2,1,2,2,2,2,1,2,2,2,1,1,1,1,2,2,1,2,1,2,1,1,1,2,2,2,1,2,2,2,2,1,2,2,1,2,1,2,1,2,2,1,2,2,1,1,2,1,2,1,1,2,2,2,2,2,1,1,2,2,1,2,1,2,1,2,2,1,2,1,2,1,1,2,1,1,2,1,1,1,1,2,1,1,1,2,2,1,2,1,1,2,2,2,2,2,2,1,1,2,2,1,1,1,1,2,1,1,1,1,1,2,2,2,1,2,2,1,2,2,1,2,1,2,2,1,1,1,1,2,2,1,2,2,2,2,1,2,2,2,1,1,2,1,2,2,2,1,1,1,1,1,2,2,2,2,2,2,2,2,1,1,2,2,1,2,1,1,1,1,2,2,1,1"
+    200     68      5     2000     0        10        false      false        false      0.505    -0.75104    -0.75104       134.69          0            2           10               0                   0                    0              0.00183     11.424     11-Sep-2024 13:19:42     "45,884"           "2,2,2,2,1,2,2,1,2,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,1,1,2,2,1,1,1,2,2,2,1,1,1,1,2,1,1,2,2,2,2,2,1,2,2,1,1,1,1,2,2,1,1,1,2,2,2,1,2,1,1,2,1,2,2,2,1,2,2,1,1,2,1,1,1,1,1,1,1,2,1,1,2,2,1,2,2,1,1,2,1,2,1,2,1,2,1,2,2,1,1,2,2,1,2,2,2,1,1,1,1,2,1,1,1,1,1,1,2,2,1,1,2,1,2,1,2,1,2,1,1,2,1,2,1,1,2,2,2,1,1,2,2,2,1,1,2,2,2,2,2,1,1,2,1,1,2,2,2,1,1,1,1,1,1,1,1,2,2,2,2,2,1,2,1,2,2,2,1,1,2,1,2,1,1,2,2,1,2,1,1,2,1,1,1"
+    200     69      5     2000     0        10        false      false        false      0.515    -0.98189    -0.98189       164.85          0            2           10               0                   0                    0             0.002596     4.0798     11-Sep-2024 13:19:42     "45,884"           "2,1,1,1,2,1,1,1,2,1,2,1,2,1,2,2,2,2,1,1,2,1,1,1,1,1,2,1,2,2,2,2,1,2,2,2,1,1,1,1,2,2,1,2,1,2,1,1,1,2,2,2,1,2,2,2,2,1,2,2,1,2,1,2,1,2,2,1,2,2,1,1,2,1,2,1,1,2,2,2,2,2,1,1,2,2,1,2,1,2,1,2,2,1,2,1,2,1,1,2,1,1,2,1,1,1,1,2,1,1,1,2,2,1,2,1,1,2,2,2,2,2,2,1,1,2,2,1,1,1,1,2,1,1,1,1,1,2,2,2,1,2,2,1,2,2,1,2,1,2,2,1,1,1,1,2,2,1,2,2,2,2,1,2,2,2,1,1,2,1,2,2,2,1,1,1,1,1,2,2,2,2,2,2,2,2,1,1,2,2,1,2,1,1,1,1,2,2,1,1"
+    200     70      5     2000     0        10        false      false        false      0.505    -0.75104    -0.75104       134.69          0            2           10               0                   0                    0             0.001593     10.699     11-Sep-2024 13:19:42     "45,884"           "2,2,2,2,1,2,2,1,2,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,1,1,2,2,1,1,1,2,2,2,1,1,1,1,2,1,1,2,2,2,2,2,1,2,2,1,1,1,1,2,2,1,1,1,2,2,2,1,2,1,1,2,1,2,2,2,1,2,2,1,1,2,1,1,1,1,1,1,1,2,1,1,2,2,1,2,2,1,1,2,1,2,1,2,1,2,1,2,2,1,1,2,2,1,2,2,2,1,1,1,1,2,1,1,1,1,1,1,2,2,1,1,2,1,2,1,2,1,2,1,1,2,1,2,1,1,2,2,2,1,1,2,2,2,1,1,2,2,2,2,2,1,1,2,1,1,2,2,2,1,1,1,1,1,1,1,1,2,2,2,2,2,1,2,1,2,2,2,1,1,2,1,2,1,1,2,2,1,2,1,1,2,1,1,1"
+    200     71      5     2000     0        10        false      false        false      0.515    -0.98189    -0.98189       164.85          0            2           10               0                   0                    0             0.001846     4.0328     11-Sep-2024 13:19:42     "45,884"           "2,1,1,1,2,1,1,1,2,1,2,1,2,1,2,2,2,2,1,1,2,1,1,1,1,1,2,1,2,2,2,2,1,2,2,2,1,1,1,1,2,2,1,2,1,2,1,1,1,2,2,2,1,2,2,2,2,1,2,2,1,2,1,2,1,2,2,1,2,2,1,1,2,1,2,1,1,2,2,2,2,2,1,1,2,2,1,2,1,2,1,2,2,1,2,1,2,1,1,2,1,1,2,1,1,1,1,2,1,1,1,2,2,1,2,1,1,2,2,2,2,2,2,1,1,2,2,1,1,1,1,2,1,1,1,1,1,2,2,2,1,2,2,1,2,2,1,2,1,2,2,1,1,1,1,2,2,1,2,2,2,2,1,2,2,2,1,1,2,1,2,2,2,1,1,1,1,1,2,2,2,2,2,2,2,2,1,1,2,2,1,2,1,1,1,1,2,2,1,1"
+    200     72      5     2000     0        10        false      false        false      0.505    -0.75104    -0.75104       134.69          0            2           10               0                   0                    0             0.001269     10.984     11-Sep-2024 13:19:42     "45,884"           "1,1,1,1,2,1,1,2,1,1,2,1,2,2,1,1,1,1,2,2,1,2,2,2,2,2,2,1,1,2,2,2,1,1,1,2,2,2,2,1,2,2,1,1,1,1,1,2,1,1,2,2,2,2,1,1,2,2,2,1,1,1,2,1,2,2,1,2,1,1,1,2,1,1,2,2,1,2,2,2,2,2,2,2,1,2,2,1,1,2,1,1,2,2,1,2,1,2,1,2,1,2,1,1,2,2,1,1,2,1,1,1,2,2,2,2,1,2,2,2,2,2,2,1,1,2,2,1,2,1,2,1,2,1,2,2,1,2,1,2,2,1,1,1,2,2,1,1,1,2,2,1,1,1,1,1,2,2,1,2,2,1,1,1,2,2,2,2,2,2,2,2,1,1,1,1,1,2,1,2,1,1,1,2,2,1,2,1,2,2,1,1,2,1,2,2,1,2,2,2"
+    200     73      5     2000     0        10        false      false        false      0.515    -0.98189    -0.98189       164.85          0            2           10               0                   0                    0             0.002027     4.1257     11-Sep-2024 13:19:42     "45,884"           "1,2,2,2,1,2,2,2,1,2,1,2,1,2,1,1,1,1,2,2,1,2,2,2,2,2,1,2,1,1,1,1,2,1,1,1,2,2,2,2,1,1,2,1,2,1,2,2,2,1,1,1,2,1,1,1,1,2,1,1,2,1,2,1,2,1,1,2,1,1,2,2,1,2,1,2,2,1,1,1,1,1,2,2,1,1,2,1,2,1,2,1,1,2,1,2,1,2,2,1,2,2,1,2,2,2,2,1,2,2,2,1,1,2,1,2,2,1,1,1,1,1,1,2,2,1,1,2,2,2,2,1,2,2,2,2,2,1,1,1,2,1,1,2,1,1,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,2,1,1,1,2,2,1,2,1,1,1,2,2,2,2,2,1,1,1,1,1,1,1,1,2,2,1,1,2,1,2,2,2,2,1,1,2,2"
+    200     74      5     2000     0        10        false      false        false      0.505    -0.75104    -0.75104       134.69          0            2           10               0                   0                    0             0.001897     11.084     11-Sep-2024 13:19:42     "45,884"           "2,2,2,2,1,2,2,1,2,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,1,1,2,2,1,1,1,2,2,2,1,1,1,1,2,1,1,2,2,2,2,2,1,2,2,1,1,1,1,2,2,1,1,1,2,2,2,1,2,1,1,2,1,2,2,2,1,2,2,1,1,2,1,1,1,1,1,1,1,2,1,1,2,2,1,2,2,1,1,2,1,2,1,2,1,2,1,2,2,1,1,2,2,1,2,2,2,1,1,1,1,2,1,1,1,1,1,1,2,2,1,1,2,1,2,1,2,1,2,1,1,2,1,2,1,1,2,2,2,1,1,2,2,2,1,1,2,2,2,2,2,1,1,2,1,1,2,2,2,1,1,1,1,1,1,1,1,2,2,2,2,2,1,2,1,2,2,2,1,1,2,1,2,1,1,2,2,1,2,1,1,2,1,1,1"
+    200     75      5     2000     0        10        false      false        false      0.515    -0.98189    -0.98189       164.85          0            2           10               0                   0                    0             0.001645     3.9452     11-Sep-2024 13:19:42     "45,884"           "2,1,1,1,2,1,1,1,2,1,2,1,2,1,2,2,2,2,1,1,2,1,1,1,1,1,2,1,2,2,2,2,1,2,2,2,1,1,1,1,2,2,1,2,1,2,1,1,1,2,2,2,1,2,2,2,2,1,2,2,1,2,1,2,1,2,2,1,2,2,1,1,2,1,2,1,1,2,2,2,2,2,1,1,2,2,1,2,1,2,1,2,2,1,2,1,2,1,1,2,1,1,2,1,1,1,1,2,1,1,1,2,2,1,2,1,1,2,2,2,2,2,2,1,1,2,2,1,1,1,1,2,1,1,1,1,1,2,2,2,1,2,2,1,2,2,1,2,1,2,2,1,1,1,1,2,2,1,2,2,2,2,1,2,2,2,1,1,2,1,2,2,2,1,1,1,1,1,2,2,2,2,2,2,2,2,1,1,2,2,1,2,1,1,1,1,2,2,1,1"
+    200     76      5     2000     0        10        false      false        false      0.505    -0.75104    -0.75104       134.69          0            2           10               0                   0                    0             0.001718     10.543     11-Sep-2024 13:19:42     "45,884"           "1,1,1,1,2,1,1,2,1,1,2,1,2,2,1,1,1,1,2,2,1,2,2,2,2,2,2,1,1,2,2,2,1,1,1,2,2,2,2,1,2,2,1,1,1,1,1,2,1,1,2,2,2,2,1,1,2,2,2,1,1,1,2,1,2,2,1,2,1,1,1,2,1,1,2,2,1,2,2,2,2,2,2,2,1,2,2,1,1,2,1,1,2,2,1,2,1,2,1,2,1,2,1,1,2,2,1,1,2,1,1,1,2,2,2,2,1,2,2,2,2,2,2,1,1,2,2,1,2,1,2,1,2,1,2,2,1,2,1,2,2,1,1,1,2,2,1,1,1,2,2,1,1,1,1,1,2,2,1,2,2,1,1,1,2,2,2,2,2,2,2,2,1,1,1,1,1,2,1,2,1,1,1,2,2,1,2,1,2,2,1,1,2,1,2,2,1,2,2,2"
+    200     77      5     2000     0        10        false      false        false      0.515    -0.98189    -0.98189       164.85          0            2           10               0                   0                    0             0.001973     4.0719     11-Sep-2024 13:19:42     "45,884"           "1,2,2,2,1,2,2,2,1,2,1,2,1,2,1,1,1,1,2,2,1,2,2,2,2,2,1,2,1,1,1,1,2,1,1,1,2,2,2,2,1,1,2,1,2,1,2,2,2,1,1,1,2,1,1,1,1,2,1,1,2,1,2,1,2,1,1,2,1,1,2,2,1,2,1,2,2,1,1,1,1,1,2,2,1,1,2,1,2,1,2,1,1,2,1,2,1,2,2,1,2,2,1,2,2,2,2,1,2,2,2,1,1,2,1,2,2,1,1,1,1,1,1,2,2,1,1,2,2,2,2,1,2,2,2,2,2,1,1,1,2,1,1,2,1,1,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,2,1,1,1,2,2,1,2,1,1,1,2,2,2,2,2,1,1,1,1,1,1,1,1,2,2,1,1,2,1,2,2,2,2,1,1,2,2"
+    200     78      5     2000     0        10        false      false        false      0.505    -0.75104    -0.75104       134.69          0            2           10               0                   0                    0             0.002173     10.949     11-Sep-2024 13:19:42     "45,884"           "2,2,2,2,1,2,2,1,2,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,1,1,2,2,1,1,1,2,2,2,1,1,1,1,2,1,1,2,2,2,2,2,1,2,2,1,1,1,1,2,2,1,1,1,2,2,2,1,2,1,1,2,1,2,2,2,1,2,2,1,1,2,1,1,1,1,1,1,1,2,1,1,2,2,1,2,2,1,1,2,1,2,1,2,1,2,1,2,2,1,1,2,2,1,2,2,2,1,1,1,1,2,1,1,1,1,1,1,2,2,1,1,2,1,2,1,2,1,2,1,1,2,1,2,1,1,2,2,2,1,1,2,2,2,1,1,2,2,2,2,2,1,1,2,1,1,2,2,2,1,1,1,1,1,1,1,1,2,2,2,2,2,1,2,1,2,2,2,1,1,2,1,2,1,1,2,2,1,2,1,1,2,1,1,1"
+    200     79      5     2000     0        10        false      false        false      0.515    -0.98189    -0.98189       164.85          0            2           10               0                   0                    0             0.002001     4.0313     11-Sep-2024 13:19:42     "45,884"           "1,2,2,2,1,2,2,2,1,2,1,2,1,2,1,1,1,1,2,2,1,2,2,2,2,2,1,2,1,1,1,1,2,1,1,1,2,2,2,2,1,1,2,1,2,1,2,2,2,1,1,1,2,1,1,1,1,2,1,1,2,1,2,1,2,1,1,2,1,1,2,2,1,2,1,2,2,1,1,1,1,1,2,2,1,1,2,1,2,1,2,1,1,2,1,2,1,2,2,1,2,2,1,2,2,2,2,1,2,2,2,1,1,2,1,2,2,1,1,1,1,1,1,2,2,1,1,2,2,2,2,1,2,2,2,2,2,1,1,1,2,1,1,2,1,1,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,2,1,1,1,2,2,1,2,1,1,1,2,2,2,2,2,1,1,1,1,1,1,1,1,2,2,1,1,2,1,2,2,2,2,1,1,2,2"
+    200     80      5     2000     0        10        false      false        false      0.505    -0.75104    -0.75104       134.69          0            2           10               0                   0                    0             0.001976     10.831     11-Sep-2024 13:19:42     "45,884"           "2,2,2,2,1,2,2,1,2,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,1,1,2,2,1,1,1,2,2,2,1,1,1,1,2,1,1,2,2,2,2,2,1,2,2,1,1,1,1,2,2,1,1,1,2,2,2,1,2,1,1,2,1,2,2,2,1,2,2,1,1,2,1,1,1,1,1,1,1,2,1,1,2,2,1,2,2,1,1,2,1,2,1,2,1,2,1,2,2,1,1,2,2,1,2,2,2,1,1,1,1,2,1,1,1,1,1,1,2,2,1,1,2,1,2,1,2,1,2,1,1,2,1,2,1,1,2,2,2,1,1,2,2,2,1,1,2,2,2,2,2,1,1,2,1,1,2,2,2,1,1,1,1,1,1,1,1,2,2,2,2,2,1,2,1,2,2,2,1,1,2,1,2,1,1,2,2,1,2,1,1,2,1,1,1"
+    200     81      5     2000     0        10        false      false        false      0.515    -0.98189    -0.98189       164.85          0            2           10               0                   0                    0             0.002845      3.761     11-Sep-2024 13:19:42     "45,884"           "2,1,1,1,2,1,1,1,2,1,2,1,2,1,2,2,2,2,1,1,2,1,1,1,1,1,2,1,2,2,2,2,1,2,2,2,1,1,1,1,2,2,1,2,1,2,1,1,1,2,2,2,1,2,2,2,2,1,2,2,1,2,1,2,1,2,2,1,2,2,1,1,2,1,2,1,1,2,2,2,2,2,1,1,2,2,1,2,1,2,1,2,2,1,2,1,2,1,1,2,1,1,2,1,1,1,1,2,1,1,1,2,2,1,2,1,1,2,2,2,2,2,2,1,1,2,2,1,1,1,1,2,1,1,1,1,1,2,2,2,1,2,2,1,2,2,1,2,1,2,2,1,1,1,1,2,2,1,2,2,2,2,1,2,2,2,1,1,2,1,2,2,2,1,1,1,1,1,2,2,2,2,2,2,2,2,1,1,2,2,1,2,1,1,1,1,2,2,1,1"
+    200     82      5     2000     0        10        false      false        false      0.505    -0.75104    -0.75104       134.69          0            2           10               0                   0                    0             0.001729     10.488     11-Sep-2024 13:19:42     "45,884"           "1,1,1,1,2,1,1,2,1,1,2,1,2,2,1,1,1,1,2,2,1,2,2,2,2,2,2,1,1,2,2,2,1,1,1,2,2,2,2,1,2,2,1,1,1,1,1,2,1,1,2,2,2,2,1,1,2,2,2,1,1,1,2,1,2,2,1,2,1,1,1,2,1,1,2,2,1,2,2,2,2,2,2,2,1,2,2,1,1,2,1,1,2,2,1,2,1,2,1,2,1,2,1,1,2,2,1,1,2,1,1,1,2,2,2,2,1,2,2,2,2,2,2,1,1,2,2,1,2,1,2,1,2,1,2,2,1,2,1,2,2,1,1,1,2,2,1,1,1,2,2,1,1,1,1,1,2,2,1,2,2,1,1,1,2,2,2,2,2,2,2,2,1,1,1,1,1,2,1,2,1,1,1,2,2,1,2,1,2,2,1,1,2,1,2,2,1,2,2,2"
+    200     83      5     2000     0        10        false      false        false      0.515    -0.98189    -0.98189       164.85          0            2           10               0                   0                    0             0.001724     4.0452     11-Sep-2024 13:19:42     "45,884"           "2,1,1,1,2,1,1,1,2,1,2,1,2,1,2,2,2,2,1,1,2,1,1,1,1,1,2,1,2,2,2,2,1,2,2,2,1,1,1,1,2,2,1,2,1,2,1,1,1,2,2,2,1,2,2,2,2,1,2,2,1,2,1,2,1,2,2,1,2,2,1,1,2,1,2,1,1,2,2,2,2,2,1,1,2,2,1,2,1,2,1,2,2,1,2,1,2,1,1,2,1,1,2,1,1,1,1,2,1,1,1,2,2,1,2,1,1,2,2,2,2,2,2,1,1,2,2,1,1,1,1,2,1,1,1,1,1,2,2,2,1,2,2,1,2,2,1,2,1,2,2,1,1,1,1,2,2,1,2,2,2,2,1,2,2,2,1,1,2,1,2,2,2,1,1,1,1,1,2,2,2,2,2,2,2,2,1,1,2,2,1,2,1,1,1,1,2,2,1,1"
+    200     84      5     2000     0        10        false      false        false      0.505    -0.75104    -0.75104       134.69          0            2           10               0                   0                    0             0.002155     10.693     11-Sep-2024 13:19:42     "45,884"           "2,2,2,2,1,2,2,1,2,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,1,1,2,2,1,1,1,2,2,2,1,1,1,1,2,1,1,2,2,2,2,2,1,2,2,1,1,1,1,2,2,1,1,1,2,2,2,1,2,1,1,2,1,2,2,2,1,2,2,1,1,2,1,1,1,1,1,1,1,2,1,1,2,2,1,2,2,1,1,2,1,2,1,2,1,2,1,2,2,1,1,2,2,1,2,2,2,1,1,1,1,2,1,1,1,1,1,1,2,2,1,1,2,1,2,1,2,1,2,1,1,2,1,2,1,1,2,2,2,1,1,2,2,2,1,1,2,2,2,2,2,1,1,2,1,1,2,2,2,1,1,1,1,1,1,1,1,2,2,2,2,2,1,2,1,2,2,2,1,1,2,1,2,1,1,2,2,1,2,1,1,2,1,1,1"
+    200     85      5     2000     0        10        false      false        false      0.515    -0.98189    -0.98189       164.85          0            2           10               0                   0                    0             0.002339     3.9801     11-Sep-2024 13:19:42     "45,884"           "2,1,1,1,2,1,1,1,2,1,2,1,2,1,2,2,2,2,1,1,2,1,1,1,1,1,2,1,2,2,2,2,1,2,2,2,1,1,1,1,2,2,1,2,1,2,1,1,1,2,2,2,1,2,2,2,2,1,2,2,1,2,1,2,1,2,2,1,2,2,1,1,2,1,2,1,1,2,2,2,2,2,1,1,2,2,1,2,1,2,1,2,2,1,2,1,2,1,1,2,1,1,2,1,1,1,1,2,1,1,1,2,2,1,2,1,1,2,2,2,2,2,2,1,1,2,2,1,1,1,1,2,1,1,1,1,1,2,2,2,1,2,2,1,2,2,1,2,1,2,2,1,1,1,1,2,2,1,2,2,2,2,1,2,2,2,1,1,2,1,2,2,2,1,1,1,1,1,2,2,2,2,2,2,2,2,1,1,2,2,1,2,1,1,1,1,2,2,1,1"
+    200     86      5     2000     0        10        false      false        false      0.505    -0.75104    -0.75104       134.69          0            2           10               0                   0                    0             0.001622     10.853     11-Sep-2024 13:19:42     "45,884"           "2,2,2,2,1,2,2,1,2,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,1,1,2,2,1,1,1,2,2,2,1,1,1,1,2,1,1,2,2,2,2,2,1,2,2,1,1,1,1,2,2,1,1,1,2,2,2,1,2,1,1,2,1,2,2,2,1,2,2,1,1,2,1,1,1,1,1,1,1,2,1,1,2,2,1,2,2,1,1,2,1,2,1,2,1,2,1,2,2,1,1,2,2,1,2,2,2,1,1,1,1,2,1,1,1,1,1,1,2,2,1,1,2,1,2,1,2,1,2,1,1,2,1,2,1,1,2,2,2,1,1,2,2,2,1,1,2,2,2,2,2,1,1,2,1,1,2,2,2,1,1,1,1,1,1,1,1,2,2,2,2,2,1,2,1,2,2,2,1,1,2,1,2,1,1,2,2,1,2,1,1,2,1,1,1"
+    200     87      5     2000     0        10        false      false        false      0.515    -0.98189    -0.98189       164.85          0            2           10               0                   0                    0             0.001624     3.9488     11-Sep-2024 13:19:42     "45,884"           "1,2,2,2,1,2,2,2,1,2,1,2,1,2,1,1,1,1,2,2,1,2,2,2,2,2,1,2,1,1,1,1,2,1,1,1,2,2,2,2,1,1,2,1,2,1,2,2,2,1,1,1,2,1,1,1,1,2,1,1,2,1,2,1,2,1,1,2,1,1,2,2,1,2,1,2,2,1,1,1,1,1,2,2,1,1,2,1,2,1,2,1,1,2,1,2,1,2,2,1,2,2,1,2,2,2,2,1,2,2,2,1,1,2,1,2,2,1,1,1,1,1,1,2,2,1,1,2,2,2,2,1,2,2,2,2,2,1,1,1,2,1,1,2,1,1,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,2,1,1,1,2,2,1,2,1,1,1,2,2,2,2,2,1,1,1,1,1,1,1,1,2,2,1,1,2,1,2,2,2,2,1,1,2,2"
+    200     88      5     2000     0        10        false      false        false      0.505    -0.75104    -0.75104       134.69          0            2           10               0                   0                    0             0.001513     10.767     11-Sep-2024 13:19:42     "45,884"           "2,2,2,2,1,2,2,1,2,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,1,1,2,2,1,1,1,2,2,2,1,1,1,1,2,1,1,2,2,2,2,2,1,2,2,1,1,1,1,2,2,1,1,1,2,2,2,1,2,1,1,2,1,2,2,2,1,2,2,1,1,2,1,1,1,1,1,1,1,2,1,1,2,2,1,2,2,1,1,2,1,2,1,2,1,2,1,2,2,1,1,2,2,1,2,2,2,1,1,1,1,2,1,1,1,1,1,1,2,2,1,1,2,1,2,1,2,1,2,1,1,2,1,2,1,1,2,2,2,1,1,2,2,2,1,1,2,2,2,2,2,1,1,2,1,1,2,2,2,1,1,1,1,1,1,1,1,2,2,2,2,2,1,2,1,2,2,2,1,1,2,1,2,1,1,2,2,1,2,1,1,2,1,1,1"
+    200     89      5     2000     0        10        false      false        false      0.515    -0.98189    -0.98189       164.85          0            2           10               0                   0                    0             0.001245     4.0014     11-Sep-2024 13:19:42     "45,884"           "2,1,1,1,2,1,1,1,2,1,2,1,2,1,2,2,2,2,1,1,2,1,1,1,1,1,2,1,2,2,2,2,1,2,2,2,1,1,1,1,2,2,1,2,1,2,1,1,1,2,2,2,1,2,2,2,2,1,2,2,1,2,1,2,1,2,2,1,2,2,1,1,2,1,2,1,1,2,2,2,2,2,1,1,2,2,1,2,1,2,1,2,2,1,2,1,2,1,1,2,1,1,2,1,1,1,1,2,1,1,1,2,2,1,2,1,1,2,2,2,2,2,2,1,1,2,2,1,1,1,1,2,1,1,1,1,1,2,2,2,1,2,2,1,2,2,1,2,1,2,2,1,1,1,1,2,2,1,2,2,2,2,1,2,2,2,1,1,2,1,2,2,2,1,1,1,1,1,2,2,2,2,2,2,2,2,1,1,2,2,1,2,1,1,1,1,2,2,1,1"
+    200     90      5     2000     0        10        false      false        false      0.505    -0.75104    -0.75104       134.69          0            2           10               0                   0                    0             0.001168     12.212     11-Sep-2024 13:19:42     "45,884"           "2,2,2,2,1,2,2,1,2,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,1,1,2,2,1,1,1,2,2,2,1,1,1,1,2,1,1,2,2,2,2,2,1,2,2,1,1,1,1,2,2,1,1,1,2,2,2,1,2,1,1,2,1,2,2,2,1,2,2,1,1,2,1,1,1,1,1,1,1,2,1,1,2,2,1,2,2,1,1,2,1,2,1,2,1,2,1,2,2,1,1,2,2,1,2,2,2,1,1,1,1,2,1,1,1,1,1,1,2,2,1,1,2,1,2,1,2,1,2,1,1,2,1,2,1,1,2,2,2,1,1,2,2,2,1,1,2,2,2,2,2,1,1,2,1,1,2,2,2,1,1,1,1,1,1,1,1,2,2,2,2,2,1,2,1,2,2,2,1,1,2,1,2,1,1,2,2,1,2,1,1,2,1,1,1"
+    200     91      5     2000     0        10        false      false        false      0.515    -0.98189    -0.98189       164.85          0            2           10               0                   0                    0             0.002799     3.9137     11-Sep-2024 13:19:42     "45,884"           "2,1,1,1,2,1,1,1,2,1,2,1,2,1,2,2,2,2,1,1,2,1,1,1,1,1,2,1,2,2,2,2,1,2,2,2,1,1,1,1,2,2,1,2,1,2,1,1,1,2,2,2,1,2,2,2,2,1,2,2,1,2,1,2,1,2,2,1,2,2,1,1,2,1,2,1,1,2,2,2,2,2,1,1,2,2,1,2,1,2,1,2,2,1,2,1,2,1,1,2,1,1,2,1,1,1,1,2,1,1,1,2,2,1,2,1,1,2,2,2,2,2,2,1,1,2,2,1,1,1,1,2,1,1,1,1,1,2,2,2,1,2,2,1,2,2,1,2,1,2,2,1,1,1,1,2,2,1,2,2,2,2,1,2,2,2,1,1,2,1,2,2,2,1,1,1,1,1,2,2,2,2,2,2,2,2,1,1,2,2,1,2,1,1,1,1,2,2,1,1"
+    200     92      5     2000     0        10        false      false        false      0.505    -0.75104    -0.75104       134.69          0            2           10               0                   0                    0             0.002281     10.543     11-Sep-2024 13:19:42     "45,884"           "2,2,2,2,1,2,2,1,2,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,1,1,2,2,1,1,1,2,2,2,1,1,1,1,2,1,1,2,2,2,2,2,1,2,2,1,1,1,1,2,2,1,1,1,2,2,2,1,2,1,1,2,1,2,2,2,1,2,2,1,1,2,1,1,1,1,1,1,1,2,1,1,2,2,1,2,2,1,1,2,1,2,1,2,1,2,1,2,2,1,1,2,2,1,2,2,2,1,1,1,1,2,1,1,1,1,1,1,2,2,1,1,2,1,2,1,2,1,2,1,1,2,1,2,1,1,2,2,2,1,1,2,2,2,1,1,2,2,2,2,2,1,1,2,1,1,2,2,2,1,1,1,1,1,1,1,1,2,2,2,2,2,1,2,1,2,2,2,1,1,2,1,2,1,1,2,2,1,2,1,1,2,1,1,1"
+    200     93      5     2000     0        10        false      false        false      0.515    -0.98189    -0.98189       164.85          0            2           10               0                   0                    0             0.001928     4.1298     11-Sep-2024 13:19:42     "45,884"           "2,1,1,1,2,1,1,1,2,1,2,1,2,1,2,2,2,2,1,1,2,1,1,1,1,1,2,1,2,2,2,2,1,2,2,2,1,1,1,1,2,2,1,2,1,2,1,1,1,2,2,2,1,2,2,2,2,1,2,2,1,2,1,2,1,2,2,1,2,2,1,1,2,1,2,1,1,2,2,2,2,2,1,1,2,2,1,2,1,2,1,2,2,1,2,1,2,1,1,2,1,1,2,1,1,1,1,2,1,1,1,2,2,1,2,1,1,2,2,2,2,2,2,1,1,2,2,1,1,1,1,2,1,1,1,1,1,2,2,2,1,2,2,1,2,2,1,2,1,2,2,1,1,1,1,2,2,1,2,2,2,2,1,2,2,2,1,1,2,1,2,2,2,1,1,1,1,1,2,2,2,2,2,2,2,2,1,1,2,2,1,2,1,1,1,1,2,2,1,1"
+    200     94      5     2000     0        10        false      false        false      0.505    -0.75104    -0.75104       134.69          0            2           10               0                   0                    0             0.001978      11.78     11-Sep-2024 13:19:42     "45,884"           "1,1,1,1,2,1,1,2,1,1,2,1,2,2,1,1,1,1,2,2,1,2,2,2,2,2,2,1,1,2,2,2,1,1,1,2,2,2,2,1,2,2,1,1,1,1,1,2,1,1,2,2,2,2,1,1,2,2,2,1,1,1,2,1,2,2,1,2,1,1,1,2,1,1,2,2,1,2,2,2,2,2,2,2,1,2,2,1,1,2,1,1,2,2,1,2,1,2,1,2,1,2,1,1,2,2,1,1,2,1,1,1,2,2,2,2,1,2,2,2,2,2,2,1,1,2,2,1,2,1,2,1,2,1,2,2,1,2,1,2,2,1,1,1,2,2,1,1,1,2,2,1,1,1,1,1,2,2,1,2,2,1,1,1,2,2,2,2,2,2,2,2,1,1,1,1,1,2,1,2,1,1,1,2,2,1,2,1,2,2,1,1,2,1,2,2,1,2,2,2"
+    200     95      5     2000     0        10        false      false        false      0.515    -0.98189    -0.98189       164.85          0            2           10               0                   0                    0             0.001799     4.3903     11-Sep-2024 13:19:42     "45,884"           "1,2,2,2,1,2,2,2,1,2,1,2,1,2,1,1,1,1,2,2,1,2,2,2,2,2,1,2,1,1,1,1,2,1,1,1,2,2,2,2,1,1,2,1,2,1,2,2,2,1,1,1,2,1,1,1,1,2,1,1,2,1,2,1,2,1,1,2,1,1,2,2,1,2,1,2,2,1,1,1,1,1,2,2,1,1,2,1,2,1,2,1,1,2,1,2,1,2,2,1,2,2,1,2,2,2,2,1,2,2,2,1,1,2,1,2,2,1,1,1,1,1,1,2,2,1,1,2,2,2,2,1,2,2,2,2,2,1,1,1,2,1,1,2,1,1,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,2,1,1,1,2,2,1,2,1,1,1,2,2,2,2,2,1,1,1,1,1,1,1,1,2,2,1,1,2,1,2,2,2,2,1,1,2,2"
+    200     96      5     2000     0        10        false      false        false      0.505    -0.75104    -0.75104       134.69          0            2           10               0                   0                    0             0.006125     10.953     11-Sep-2024 13:19:42     "45,884"           "1,1,1,1,2,1,1,2,1,1,2,1,2,2,1,1,1,1,2,2,1,2,2,2,2,2,2,1,1,2,2,2,1,1,1,2,2,2,2,1,2,2,1,1,1,1,1,2,1,1,2,2,2,2,1,1,2,2,2,1,1,1,2,1,2,2,1,2,1,1,1,2,1,1,2,2,1,2,2,2,2,2,2,2,1,2,2,1,1,2,1,1,2,2,1,2,1,2,1,2,1,2,1,1,2,2,1,1,2,1,1,1,2,2,2,2,1,2,2,2,2,2,2,1,1,2,2,1,2,1,2,1,2,1,2,2,1,2,1,2,2,1,1,1,2,2,1,1,1,2,2,1,1,1,1,1,2,2,1,2,2,1,1,1,2,2,2,2,2,2,2,2,1,1,1,1,1,2,1,2,1,1,1,2,2,1,2,1,2,2,1,1,2,1,2,2,1,2,2,2"
+    200     97      5     2000     0        10        false      false        false      0.515    -0.98189    -0.98189       164.85          0            2           10               0                   0                    0             0.001601     3.9056     11-Sep-2024 13:19:42     "45,884"           "2,1,1,1,2,1,1,1,2,1,2,1,2,1,2,2,2,2,1,1,2,1,1,1,1,1,2,1,2,2,2,2,1,2,2,2,1,1,1,1,2,2,1,2,1,2,1,1,1,2,2,2,1,2,2,2,2,1,2,2,1,2,1,2,1,2,2,1,2,2,1,1,2,1,2,1,1,2,2,2,2,2,1,1,2,2,1,2,1,2,1,2,2,1,2,1,2,1,1,2,1,1,2,1,1,1,1,2,1,1,1,2,2,1,2,1,1,2,2,2,2,2,2,1,1,2,2,1,1,1,1,2,1,1,1,1,1,2,2,2,1,2,2,1,2,2,1,2,1,2,2,1,1,1,1,2,2,1,2,2,2,2,1,2,2,2,1,1,2,1,2,2,2,1,1,1,1,1,2,2,2,2,2,2,2,2,1,1,2,2,1,2,1,1,1,1,2,2,1,1"
+    200     98      5     2000     0        10        false      false        false      0.505    -0.75104    -0.75104       134.69          0            2           10               0                   0                    0             0.001909     10.966     11-Sep-2024 13:19:42     "45,884"           "2,2,2,2,1,2,2,1,2,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,1,1,2,2,1,1,1,2,2,2,1,1,1,1,2,1,1,2,2,2,2,2,1,2,2,1,1,1,1,2,2,1,1,1,2,2,2,1,2,1,1,2,1,2,2,2,1,2,2,1,1,2,1,1,1,1,1,1,1,2,1,1,2,2,1,2,2,1,1,2,1,2,1,2,1,2,1,2,2,1,1,2,2,1,2,2,2,1,1,1,1,2,1,1,1,1,1,1,2,2,1,1,2,1,2,1,2,1,2,1,1,2,1,2,1,1,2,2,2,1,1,2,2,2,1,1,2,2,2,2,2,1,1,2,1,1,2,2,2,1,1,1,1,1,1,1,1,2,2,2,2,2,1,2,1,2,2,2,1,1,2,1,2,1,1,2,2,1,2,1,1,2,1,1,1"
+    200     99      5     2000     0        10        false      false        false      0.515    -0.98189    -0.98189       164.85          0            2           10               0                   0                    0             0.002931     3.9263     11-Sep-2024 13:19:42     "45,884"           "1,2,2,2,1,2,2,2,1,2,1,2,1,2,1,1,1,1,2,2,1,2,2,2,2,2,1,2,1,1,1,1,2,1,1,1,2,2,2,2,1,1,2,1,2,1,2,2,2,1,1,1,2,1,1,1,1,2,1,1,2,1,2,1,2,1,1,2,1,1,2,2,1,2,1,2,2,1,1,1,1,1,2,2,1,1,2,1,2,1,2,1,1,2,1,2,1,2,2,1,2,2,1,2,2,2,2,1,2,2,2,1,1,2,1,2,2,1,1,1,1,1,1,2,2,1,1,2,2,2,2,1,2,2,2,2,2,1,1,1,2,1,1,2,1,1,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,2,1,1,1,2,2,1,2,1,1,1,2,2,2,2,2,1,1,1,1,1,1,1,1,2,2,1,1,2,1,2,2,2,2,1,1,2,2"
+    200    100      5     2000     0        10        false      false        false      0.505    -0.75104    -0.75104       134.69          0            2           10               0                   0                    0             0.001773     10.818     11-Sep-2024 13:19:42     "45,884"           "2,2,2,2,1,2,2,1,2,2,1,2,1,1,2,2,2,2,1,1,2,1,1,1,1,1,1,2,2,1,1,1,2,2,2,1,1,1,1,2,1,1,2,2,2,2,2,1,2,2,1,1,1,1,2,2,1,1,1,2,2,2,1,2,1,1,2,1,2,2,2,1,2,2,1,1,2,1,1,1,1,1,1,1,2,1,1,2,2,1,2,2,1,1,2,1,2,1,2,1,2,1,2,2,1,1,2,2,1,2,2,2,1,1,1,1,2,1,1,1,1,1,1,2,2,1,1,2,1,2,1,2,1,2,1,1,2,1,2,1,1,2,2,2,1,1,2,2,2,1,1,2,2,2,2,2,1,1,2,1,1,2,2,2,1,1,1,1,1,1,1,1,2,2,2,2,2,1,2,1,2,2,2,1,1,2,1,2,1,1,2,2,1,2,1,1,2,1,1,1"
+
