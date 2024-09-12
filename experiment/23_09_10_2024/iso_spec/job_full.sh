@@ -19,9 +19,9 @@ sample_size=200
 
 for rho in 0
     do
-    for separation in  5
+    for separation in  4 5 
         do
-        for dimension in  50
+        for dimension in  6000 7000 8000 9000 10000
             do
             for ii in {1..50}
                 do

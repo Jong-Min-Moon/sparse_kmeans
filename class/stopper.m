@@ -7,14 +7,15 @@ classdef stopper < handle
         is_stop
         final_iter_calculation
         final_iter_return
+        loop_detect_start
     end
     methods
-        function sp = stopper(max_iter, window_size_half, percent_change)
+        function sp = stopper(max_iter, window_size_half, percent_change, loop_detect_start)
             sp.window_size = 1 + window_size_half*2;
             sp.percent_change = percent_change;
             sp.max_iter = max_iter;
             sp.is_stop = false;
-
+            sp.loop_detect_start = loop_detect_start;
             original = repelem(false, max_iter, 1);
             sdp = repelem(false, max_iter, 1);
             loop = repelem(false, max_iter, 1);
@@ -79,7 +80,7 @@ classdef stopper < handle
         end
 
         function is_loop = detect_loop(sp, obj_val_original, obj_val_sdp, iter)
-            if (sp.check_early(iter, sp.window_size) | sp.check_already(iter, "loop"))
+            if (sp.check_early(iter, sp.loop_detect_start) | sp.check_already(iter, "loop"))
                 is_loop = false;
             else
                 window_vec_original = obj_val_original(iter-(sp.window_size-1):iter );
