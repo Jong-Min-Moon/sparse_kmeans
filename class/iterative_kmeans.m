@@ -54,8 +54,8 @@ methods
         ik.insert_cluster_est(cluster_est_vec, iter);
     end
     
-    function [cluster_est_final, iter_stop] = run_iterative_algorithm(ik, max_n_iter, window_size_half, percent_change, run_full)
-        ik.stop_decider = stopper(max_n_iter, window_size_half, percent_change);
+    function [cluster_est_final, iter_stop] = run_iterative_algorithm(ik, max_n_iter, window_size_half, percent_change, run_full, loop_detect_start)
+        ik.stop_decider = stopper(max_n_iter, window_size_half, percent_change, loop_detect_start);
         ik.initialize_saving_matrix(max_n_iter)
   
         %initialization

@@ -8,7 +8,7 @@ meeting_date="23_09_10_2024"
 experiment_name="noniso_oracle"
 extension_code="m"
 extension_result="csv"
-table_name="test"
+table_name="noniso_oracle"
 project_dir="${cluster_home}/${project_name}"
 code_dir="${project_dir}/experiment/${meeting_date}/${experiment_name}"
 data_setting_dir="${project_dir}/code_data_setting"
@@ -17,13 +17,13 @@ db_dir="/home1/jongminm/sparse_kmeans/sparse_kmeans.db"
 s=10
 sample_size=200
 
-for rho in  80 #50 20 
+for rho in  50 20 80
     do
-    for separation in  4 #5
+    for separation in  3
         do
-        for dimension in  4500 #5000 50 500 1000 1500 2000 2500 3000 3500 4000
+        for dimension in   10000 9000 8000 7000 6000 5000 4000 3000 2000 1000 10
             do
-            for ii in 1 #{1..50}
+            for ii in {1..50}
                 do
                     #filename of code
                     filename_code="rho${rho}_Delta${separation}_p${dimension}_rep_${ii}"
@@ -61,14 +61,14 @@ for rho in  80 #50 20
                     cat ${code_dir}/skeleton_job.job >> ${code_dir}/temp_job
                     
                     echo "cd ${code_dir}" >> ${code_dir}/temp_job
-                    sleep 4
+                    sleep 2
                     echo "matlab -batch ${filename_code}" >> ${code_dir}/temp_job
 
 
                     mv ${code_dir}/temp_job ${code_dir}/${filename_code}.job
 
                     sbatch ${code_dir}/${filename_code}.job
-                    sleep 3
+                    sleep 2
                     rm ${code_dir}/${filename_code}.job
                 done
             done

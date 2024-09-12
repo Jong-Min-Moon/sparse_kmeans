@@ -2,7 +2,7 @@ function [Omega_best, idx, score_vec] = glasso_bicluster(dg, n_lambda)
     x_noisy = dg.data;
     p = dg.dimension;
     n = dg.sample_size;
-    cluster_est_now = dg.cluster_assign;
+    cluster_est_now = dg.cluster_info_vec;
 
     X_g1_now = x_noisy(:, (cluster_est_now ==  1)); 
     X_g2_now = x_noisy(:, (cluster_est_now ==  2));

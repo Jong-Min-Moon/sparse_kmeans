@@ -6,6 +6,7 @@ classdef block_replication_for_server < handle
         number_cluster
         n_iter_max
         window_size_half
+        loop_detect_start
         sample_size
         init_method
         cluster_true
@@ -16,11 +17,12 @@ classdef block_replication_for_server < handle
     end % end of properties
 
     methods
-        function blfs = block_replication_for_server(table_name, db_dir, support, separation, dimension, correlation, sample_size, n_iter_max, run_full, init_method, omega_sparsity, data_obj)
+        function blfs = block_replication_for_server(table_name, db_dir, support, separation, dimension, correlation, sample_size, n_iter_max, run_full, init_method, omega_sparsity, data_obj, flip, window_size_half, loop_detect_start)
             %save variables
             blfs.number_cluster = 2;
             blfs.n_iter_max = n_iter_max;
-            blfs.window_size_half = 2;
+            blfs.window_size_half = window_size_half;
+            blfs.loop_detect_start = loop_detect_start;
             blfs.run_full = run_full;
             blfs.table_name     = table_name;
             blfs.db_dir         = db_dir;
@@ -30,7 +32,7 @@ classdef block_replication_for_server < handle
             blfs.data_obj = data_obj;
             
             %model setting
-            blfs.data_generator = sparse_symmetric_data_generator(support, separation, dimension, omega_sparsity, correlation)
+            blfs.data_generator = sparse_symmetric_data_generator(support, separation, dimension, omega_sparsity, correlation, flip)
             blfs.cluster_true = [repelem(1,sample_size/2), repelem(2,sample_size/2)];    
         end % end of the constructer
         
@@ -52,7 +54,7 @@ classdef block_replication_for_server < handle
                     data_obj_now = blfs.data_obj(x_noisy, blfs.omega_sparsity);
                 end
                 blfs.learner = iterative_kmeans(data_obj_now, blfs.number_cluster, blfs.data_generator.conditional_correlation, blfs.init_method);
-                blfs.learner.run_iterative_algorithm(blfs.n_iter_max, blfs.window_size_half, 0.01, blfs.run_full);
+                blfs.learner.run_iterative_algorithm(blfs.n_iter_max, blfs.window_size_half, 0.01, blfs.run_full, blfs.loop_detect_start);
     
                 database_subtable = blfs.learner.get_database_subtable(rep, blfs.data_generator.separation, blfs.data_generator.conditional_correlation, blfs.data_generator.support, blfs.cluster_true, blfs.data_generator.sparse_precision_matrix);
         end%end of run_one_replication
