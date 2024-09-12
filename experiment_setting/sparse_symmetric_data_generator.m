@@ -12,7 +12,7 @@ classdef sparse_symmetric_data_generator < handle
     end
 
     methods
-        function sdg = sparse_symmetric_data_generator(support, separation, dimension, precision_sparsity, conditional_correlation)
+        function sdg = sparse_symmetric_data_generator(support, separation, dimension, precision_sparsity, conditional_correlation, flip)
             % intialize properties
             sdg.support = support;
             sdg.sparsity = length(support);
@@ -23,7 +23,12 @@ classdef sparse_symmetric_data_generator < handle
 
             % set up the covariance structure
             sdg.get_sparse_precision_matrix();
-            sdg.covariance_matrix = inv(sdg.sparse_precision_matrix);
+            if flip
+                sdg.covariance_matrix = sdg.sparse_precision_matrix;
+                sdg.sparse_precision_matrix = inv(sdg.covariance_matrix);
+            else
+                sdg.covariance_matrix = inv(sdg.sparse_precision_matrix);
+            end
             sdg.get_magnitude();
 
         end
