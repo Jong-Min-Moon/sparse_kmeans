@@ -240,8 +240,8 @@ methods
         for i = 1:ik.data_object.number_cluster
             cluster_size = sum(cluster_est==i);
             affinity_cluster = ik.data_object.sparse_affinity(cluster_est==i, cluster_est==i);
-            within_cluster_variation = ((-2*sum(affinity_cluster, "all") + 2*cluster_size*trace(affinity_cluster))/cluster_size;
-            objective_value_original = objective_value_original + within_cluster_variation;
+            
+            objective_value_original = objective_value_original + sum(affinity_cluster, "all")/cluster_size;
         end
 
     end
