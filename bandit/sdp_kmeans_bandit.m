@@ -83,6 +83,7 @@ classdef sdp_kmeans_bandit < handle
         function update(obj, variable_subset, reward_vec)
             obj.alpha(variable_subset) = obj.alpha(variable_subset) + reward_vec(variable_subset);
             obj.beta(variable_subset) = obj.beta(variable_subset) + (1 - reward_vec(variable_subset));
-            obj.pi = obj.alpha ./ (obj.alpha + obj.beta);            
+            obj.pi = obj.alpha ./ (obj.alpha + obj.beta); 
+        end % end of method update
     end
 end
