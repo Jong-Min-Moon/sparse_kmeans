@@ -11,6 +11,7 @@ classdef sdp_kmeans_bandit < handle
         pi
         cluster_est
         signal_entry_est
+        n_iter
     end
 
     methods
@@ -37,10 +38,12 @@ classdef sdp_kmeans_bandit < handle
             obj.alpha = ones(1, obj.p);
             obj.beta = repmat(1, 1, obj.p);
             obj.pi = obj.alpha ./ (obj.alpha + obj.beta);
+            obj.n_iter = NaN;
         end
         
    
         function fit_predict(obj, n_iter)
+            obj.n_iter = n_iter
             for i = 1:n_iter
                 variable_subset_now = obj.choose();
                 disp(['Iteration ', num2str(i), ' - arms pulled: ', mat2str(find(variable_subset_now))]);
@@ -93,5 +96,14 @@ classdef sdp_kmeans_bandit < handle
             signal_entry_est = signal_entry_est(obj.pi>0.5);
             obj.signal_entry_est = signal_entry_est;
         end % end of method update
+
+        function acc_vec = get_acc(cluster_true)
+            cluster_est_mat, 
+            n_iter = obj.
+    acc_vec = zeros(n_iter, 1);
+    for i = 1:n_iter
+        cluster_est_now = cluster_est_mat(i,:);
+        acc_vec(i) = max( mean(cluster_true == cluster_est_now), mean(cluster_true == (-cluster_est_now + 3)));
+    end
     end
 end
