@@ -9,6 +9,7 @@ classdef sdp_kmeans_bandit < handle
         alpha       % Alpha parameters of Beta prior
         beta        % Beta parameters of Beta prior
         pi
+        cluster_est
     end
 
     methods
@@ -41,7 +42,8 @@ classdef sdp_kmeans_bandit < handle
         function fit_predict(obj, n_iter)
             for i = 1:n_iter
                 variable_subset_now = obj.choose();
-                disp(['Iteration ', num2str(i), ' - Chosen variables: ', mat2str(find(variable_subset_now))]);
+                disp(['Iteration ', num2str(i), ' - arms pulled: ', mat2str(find(variable_subset_now))]);
+                disp(['number of arms pulled: ', mat2str(sum(variable_subset_now))]);
                 reward_now = obj.reward(variable_subset_now);
                 obj.update(variable_subset_now, reward_now)
             end
@@ -75,9 +77,10 @@ classdef sdp_kmeans_bandit < handle
                     sample_cluster_2(j, :), ...
                     100 ...
                 ); % 
-                reward_vec(i) = p_val <0.1;
+                reward_vec(i) = p_val <0.01;
             end
-            reward_vec(11)           
+            reward_vec(11)
+            obj.cluster_est = cluster_est;
         end % end of method reward
 
         function update(obj, variable_subset, reward_vec)
