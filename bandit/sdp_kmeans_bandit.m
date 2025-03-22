@@ -41,13 +41,9 @@ classdef sdp_kmeans_bandit < handle
         function fit_predict(obj, n_iter)
             for i = 1:n_iter
                 variable_subset_now = obj.choose();
-                %disp(['Iteration ', num2str(i), ' - Chosen variables: ', mat2str(find(variable_subset_now))]);
-
+                disp(['Iteration ', num2str(i), ' - Chosen variables: ', mat2str(find(variable_subset_now))]);
                 reward_now = obj.reward(variable_subset_now);
-                obj.alpha = obj.alpha + reward_now;
-                obj.beta = obj.beta + (1 - reward_now);
-                obj.pi = obj.alpha ./ (obj.alpha + obj.beta);
-                obj.pi(11)
+                obj.update(variable_subset_now, reward_now)
             end
         end
 
@@ -79,9 +75,14 @@ classdef sdp_kmeans_bandit < handle
                     sample_cluster_2(j, :), ...
                     100 ...
                 ); % 
-                reward_vec(i) = p_val <(0.05/obj.p);
+                reward_vec(i) = p_val <0.1;
             end
             reward_vec(11)           
-        end
+        end % end of method reward
+
+        function update(obj, variable_subset, reward_vec)
+            obj.alpha(variable_subset) = obj.alpha(variable_subset) + reward_vec(variable_subset);
+            obj.beta(variable_subset) = obj.beta(variable_subset) + (1 - reward_vec(variable_subset));
+            obj.pi = obj.alpha ./ (obj.alpha + obj.beta);            
     end
 end
