@@ -8,6 +8,7 @@ classdef sdp_kmeans_bandit < handle
         cutoff      % Threshold for variable inclusion
         alpha       % Alpha parameters of Beta prior
         beta        % Beta parameters of Beta prior
+        pi
     end
 
     methods
@@ -32,25 +33,29 @@ classdef sdp_kmeans_bandit < handle
             obj.cutoff = log(1 / C) / log((1 + C) / C);
 
             obj.alpha = ones(1, obj.p);
-            obj.beta = ones(1, obj.p);
+            obj.beta = repmat(1, 1, obj.p);
+            obj.pi = obj.alpha ./ (obj.alpha + obj.beta);
         end
-
+        
+   
         function fit_predict(obj, n_iter)
             for i = 1:n_iter
                 variable_subset_now = obj.choose();
-                disp(['Iteration ', num2str(i), ' - Chosen variables: ', mat2str(find(variable_subset_now))]);
+                %disp(['Iteration ', num2str(i), ' - Chosen variables: ', mat2str(find(variable_subset_now))]);
 
                 reward_now = obj.reward(variable_subset_now);
                 obj.alpha = obj.alpha + reward_now;
                 obj.beta = obj.beta + (1 - reward_now);
+                obj.pi = obj.alpha ./ (obj.alpha + obj.beta);
+                obj.pi(11)
             end
         end
 
         function variable_subset = choose(obj)
-            theta = betarnd(obj.alpha, obj.beta)
+            theta = betarnd(obj.alpha, obj.beta);
             variable_subset = theta > obj.cutoff;
         end
-
+        
         function reward_vec = reward(obj, variable_subset)
             % Use only selected variables
             X_sub = obj.X(variable_subset, :);
@@ -60,18 +65,23 @@ classdef sdp_kmeans_bandit < handle
             % Assume K = 2
             sample_cluster_1 = X_sub(:, cluster_est == 1);
             sample_cluster_2 = X_sub(:, cluster_est == 2);
+            %size(sample_cluster_1, 2)
+            %size(sample_cluster_2, 2)
 
             reward_vec = zeros(1, obj.p);
             idx = find(variable_subset);
 
+            % only calculate the p-values for selected variables
             for j = 1:length(idx)
                 i = idx(j);
-                reward_vec(i) = 1 - permutationTest( ...
+                p_val =  permutationTest( ...
                     sample_cluster_1(j, :), ...
                     sample_cluster_2(j, :), ...
                     100 ...
-                ); % reward = 1 - p-value
+                ); % 
+                reward_vec(i) = p_val <(0.05/obj.p);
             end
+            reward_vec(11)           
         end
     end
 end
