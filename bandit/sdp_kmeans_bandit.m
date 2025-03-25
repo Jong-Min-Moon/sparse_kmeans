@@ -98,12 +98,11 @@ classdef sdp_kmeans_bandit < handle
         end % end of method update
 
         function acc_vec = get_acc(cluster_true)
-            cluster_est_mat, 
-            n_iter = obj.
-    acc_vec = zeros(n_iter, 1);
-    for i = 1:n_iter
-        cluster_est_now = cluster_est_mat(i,:);
-        acc_vec(i) = max( mean(cluster_true == cluster_est_now), mean(cluster_true == (-cluster_est_now + 3)));
-    end
-    end
+            cluster_est_mat = 
+            acc_vec = repmat(NaN, 1, obj.n_iter);
+            for i = 1:obj.n_iter
+                cluster_est_now = cluster_est_mat(i,:);
+                acc_vec(i) = max( mean(cluster_true == cluster_est_now), mean(cluster_true == (-cluster_est_now + 3)));
+            end % end of for loop
+        end
 end
