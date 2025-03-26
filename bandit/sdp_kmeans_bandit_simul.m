@@ -142,7 +142,16 @@ classdef sdp_kmeans_bandit_simul  < sdp_kmeans_bandit
                 false_neg_vec(i) = sum(negative_vec(support));
                 survived_indices(i) = get_num2str_with_mark( find(positive_vec), ',');
             end
-        end
+        end % end of evaluate_discovery
+
+        function cluster_string_vec = get_cluster_string_dict(obj)
+            cluster_string_vec = containers.Map(0:obj.n_iter, repelem("", obj.n_iter+1));     
+            for iter = 1:(obj.n_iter+1)
+                cluster_est_now = obj.fetch_cluster_est(iter);
+                cluster_string_vec(iter) = cluster_est_now.cluster_info_string;
+            end % end of for loop
+        end% end of cluster_string_vec   
+     
     
     end % end of method
 end % end of class
