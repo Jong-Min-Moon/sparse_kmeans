@@ -9,9 +9,18 @@ classdef sdp_kmeans_bandit < handle
         alpha       % Alpha parameters of Beta prior
         beta        % Beta parameters of Beta prior
         pi
-        cluster_est
+        acc_dict
+        cluster_est_dict
         signal_entry_est
         n_iter
+
+        x_tilde_est       
+        omega_est_time    
+        sdp_solve_time    
+        entries_survived  
+        obj_val_prim     
+        obj_val_dual      
+        obj_val_original  
     end
 
     methods
@@ -29,28 +38,50 @@ classdef sdp_kmeans_bandit < handle
 
             obj.X = X;
             obj.K = K;
-            obj.n = size(X, 2)
-            obj.p = size(X, 1)
+            obj.n = size(X, 2);
+            obj.p = size(X, 1);
 
             C = 0.5;
             obj.cutoff = log(1 / C) / log((1 + C) / C);
 
+
+            obj.n_iter = NaN;
+            obj.set_bayesian_parameters();
+            
+            
+        end
+        
+        function set_bayesian_parameters(obj)            
             obj.alpha = ones(1, obj.p);
             obj.beta = repmat(1, 1, obj.p);
             obj.pi = obj.alpha ./ (obj.alpha + obj.beta);
-            obj.n_iter = NaN;
         end
-        
-   
+
         function fit_predict(obj, n_iter)
-            obj.n_iter = n_iter
+            obj.n_iter = n_iter;
+            obj.initialize_cluster_est();
+            fprintf("initialization done")
             for i = 1:n_iter
                 variable_subset_now = obj.choose();
                 disp(['Iteration ', num2str(i), ' - arms pulled: ', mat2str(find(variable_subset_now))]);
                 disp(['number of arms pulled: ', mat2str(sum(variable_subset_now))]);
-                reward_now = obj.reward(variable_subset_now);
-                obj.update(variable_subset_now, reward_now)
+                reward_now = obj.reward(variable_subset_now, i);
+                obj.update(variable_subset_now, reward_now);
             end
+
+            %final clustering
+            final_selection = obj.signal_entry_est;
+            X_sub_final = obj.X(final_selection, :);
+            kmeans_learner = sdp_kmeans(X_sub_final, obj.K);
+            obj.cluster_est_dict(obj.n_iter + 1) = cluster_est(kmeans_learner.fit_predict());
+            
+
+        end
+        
+        function initialize_cluster_est(obj)
+            cluster_est_dummy   = cluster_est( repelem(1,obj.n) );
+            obj.cluster_est_dict = repelem(cluster_est_dummy, obj.n_iter+1); %dummy
+            obj.acc_dict = containers.Map(1:(obj.n_iter+1), repelem(0, obj.n_iter+1)); 
         end
 
         function variable_subset = choose(obj)
@@ -58,15 +89,14 @@ classdef sdp_kmeans_bandit < handle
             variable_subset = theta > obj.cutoff;
         end
         
-        function reward_vec = reward(obj, variable_subset)
+        function reward_vec = reward(obj, variable_subset, iter)
             % Use only selected variables
             X_sub = obj.X(variable_subset, :);
             kmeans_learner = sdp_kmeans(X_sub, obj.K);
-            cluster_est = kmeans_learner.fit_predict();
-
+            obj.cluster_est_dict(iter) = cluster_est(kmeans_learner.fit_predict()); 
             % Assume K = 2
-            sample_cluster_1 = X_sub(:, cluster_est == 1);
-            sample_cluster_2 = X_sub(:, cluster_est == 2);
+            sample_cluster_1 = X_sub(:, obj.cluster_est_dict(iter).cluster_info_vec == 1);
+            sample_cluster_2 = X_sub(:, obj.cluster_est_dict(iter).cluster_info_vec == 2);
             %size(sample_cluster_1, 2)
             %size(sample_cluster_2, 2)
 
@@ -83,8 +113,8 @@ classdef sdp_kmeans_bandit < handle
                 ); % 
                 reward_vec(i) = p_val < 0.01;
             end
-            reward_vec(11)
-            obj.cluster_est = cluster_est;
+            
+     
         end % end of method reward
 
         function update(obj, variable_subset, reward_vec)
@@ -95,14 +125,8 @@ classdef sdp_kmeans_bandit < handle
             signal_entry_est = 1:obj.p;
             signal_entry_est = signal_entry_est(obj.pi>0.5);
             obj.signal_entry_est = signal_entry_est;
-        end % end of method update
+        end % end of method update    
 
-        function acc_vec = get_acc(cluster_true)
-            cluster_est_mat = 
-            acc_vec = repmat(NaN, 1, obj.n_iter);
-            for i = 1:obj.n_iter
-                cluster_est_now = cluster_est_mat(i,:);
-                acc_vec(i) = max( mean(cluster_true == cluster_est_now), mean(cluster_true == (-cluster_est_now + 3)));
-            end % end of for loop
-        end
+
+    end % end of methods
 end
