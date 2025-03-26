@@ -46,7 +46,7 @@ classdef sdp_kmeans_bandit < handle
 
 
             obj.n_iter = NaN;
-            obj.set_bayesian_parameters();
+            
             
             
         end
@@ -59,6 +59,7 @@ classdef sdp_kmeans_bandit < handle
 
         function fit_predict(obj, n_iter)
             obj.n_iter = n_iter;
+            obj.set_bayesian_parameters();
             obj.initialize_cluster_est();
             fprintf("initialization done")
             for i = 1:n_iter

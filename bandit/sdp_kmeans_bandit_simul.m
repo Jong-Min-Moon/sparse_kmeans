@@ -16,11 +16,12 @@ classdef sdp_kmeans_bandit_simul  < sdp_kmeans_bandit
 
 
             obj.n_iter = NaN;
-            obj.set_bayesian_parameters();
+            
         end
 
         function fit_predict(obj, n_iter, cluster_true)
             obj.n_iter = n_iter;
+            obj.set_bayesian_parameters();
             obj.initialize_cluster_est();
             obj.initialize_saving_matrix()
 
@@ -69,44 +70,43 @@ classdef sdp_kmeans_bandit_simul  < sdp_kmeans_bandit
             current_time = get_current_time();
             [true_pos_vec, false_pos_vec, false_neg_vec, survived_indices] = obj.evaluate_discovery(support);
             %[diff_x_tilde_fro, diff_x_tilde_op, diff_x_tilde_ellone] = obj.evaluate_innovation_est(Omega);
-            diff_x_tilde_fro = 0;
-            diff_x_tilde_op = 0;
-            diff_x_tilde_ellone = 0;
+
             %fprintf( strcat( "acc =", join(repelem("%f ", length(acc_vec))), "\n"),  acc_vec );
             
             
             cluster_string_dict = obj.get_cluster_string_dict();
             
-            values(acc_dict)
-            values(cluster_string_dict)
-    
+            %values(obj.acc_dict);
+            %values(cluster_string_dict);
+             
             n_row = int32(obj.n_iter);
+
             database_subtable = table(...
                 repelem(rep, n_row+1)',...                      % 01 replication number
-                (0:n_row)',...                                  % 02 step iteration number
+                (1:(n_row+1))',...                                  % 02 step iteration number
                 repelem(Delta, n_row+1)',...                    % 03 separation
-                repelem(obj.data_object.dimension, n_row+1)',... % 04 data dimension
+                repelem(obj.p, n_row+1)',... % 04 data dimension
                 repelem(rho, n_row+1)',...                      % 05 conditional correlation
                 repelem(s, n_row+1)',...                        % 06 sparsity
                 ...
-                [false; obj.stop_decider.stop_history{1:n_row, "original"}],... %07
-                [false; obj.stop_decider.stop_history{1:n_row, "sdp"}],...      %08
-                [false; obj.stop_decider.stop_history{1:n_row, "loop"}],...     %09
-                cell2mat(values(acc_dict))',...                                     % 10 accuracy
+                repelem(false, n_row+1)',... %07
+                repelem(false, n_row+1)',...      %08
+                repelem(false, n_row+1)',...     %09
+                cell2mat(values(obj.acc_dict))',...                                     % 10 accuracy
                 ...
-                [0; obj.obj_val_prim(1:n_row)],...               % 11 objective function value (relaxed, primal)
-                [0; obj.obj_val_dual(1:n_row)],...               % 12 objective function value (relaxed, dual)
-                [0; obj.obj_val_original(1:n_row)],...           % 13 objective function value (original)
+                repelem(0, n_row+1)',...               % 11 objective function value (relaxed, primal)
+                repelem(0, n_row+1)',...               % 12 objective function value (relaxed, dual)
+                repelem(0, n_row+1)',...           % 13 objective function value (original)
                 ...
                 [0; true_pos_vec],...                           % 14 true positive
                 [0; false_pos_vec],...                          % 15 false positive
                 [0; false_neg_vec],...                          % 16 false negative
                 ...
-                [0; diff_x_tilde_fro],...                       % 13 estimation error of the innovated data, in Frobenius norm
-                [0; diff_x_tilde_op],...                        % 14 estimation error of the innovated data, in operator norm
-                [0; diff_x_tilde_ellone],...                    % 15 estimation error of the innovated data, in \ell_1 norm
-                [0; obj.omega_est_time(1:n_row)],...             % 16 timing for estimating the precision matrix
-                [0; obj.sdp_solve_time(1:n_row)], ...            % 17 timing elapsed for solving the SDP
+                repelem(0, n_row+1)',...                       % 13 estimation error of the innovated data, in Frobenius norm
+                repelem(0, n_row+1)',...                        % 14 estimation error of the innovated data, in operator norm
+                repelem(0, n_row+1)',...                    % 15 estimation error of the innovated data, in \ell_1 norm
+                repelem(0, n_row+1)',...             % 16 timing for estimating the precision matrix
+                repelem(0, n_row+1)', ...            % 17 timing elapsed for solving the SDP
                 repelem(current_time, n_row+1)', ...            % 18 timestamp
                 [""; survived_indices],...                      % 19 indices of survived entry
                 string(values(cluster_string_dict))',...                          % 20 clustering information
@@ -145,7 +145,7 @@ classdef sdp_kmeans_bandit_simul  < sdp_kmeans_bandit
         end % end of evaluate_discovery
 
         function cluster_string_vec = get_cluster_string_dict(obj)
-            cluster_string_vec = containers.Map(0:obj.n_iter, repelem("", obj.n_iter+1));     
+            cluster_string_vec = containers.Map(1:(obj.n_iter+1), repelem("", obj.n_iter+1));     
             for iter = 1:(obj.n_iter+1)
                 cluster_est_now = obj.fetch_cluster_est(iter);
                 cluster_string_vec(iter) = cluster_est_now.cluster_info_string;
