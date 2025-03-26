@@ -68,7 +68,10 @@ classdef sdp_kmeans_bandit_simul  < sdp_kmeans_bandit
             s = length(support);
             current_time = get_current_time();
             [true_pos_vec, false_pos_vec, false_neg_vec, survived_indices] = obj.evaluate_discovery(support);
-            [diff_x_tilde_fro, diff_x_tilde_op, diff_x_tilde_ellone] = obj.evaluate_innovation_est(Omega);
+            %[diff_x_tilde_fro, diff_x_tilde_op, diff_x_tilde_ellone] = obj.evaluate_innovation_est(Omega);
+            diff_x_tilde_fro = 0;
+            diff_x_tilde_op = 0;
+            diff_x_tilde_ellone = 0;
             %fprintf( strcat( "acc =", join(repelem("%f ", length(acc_vec))), "\n"),  acc_vec );
             
             
