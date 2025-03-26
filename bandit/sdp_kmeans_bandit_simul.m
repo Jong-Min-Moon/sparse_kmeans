@@ -85,38 +85,37 @@ classdef sdp_kmeans_bandit_simul  < sdp_kmeans_bandit
         function cluster_est_obj = fetch_cluster_est(obj,iter)
             cluster_est_obj = obj.cluster_est_dict(iter);
         end
-        
-        function database_subtable = get_database_subtable(ik, rep, Delta, rho, support, cluster_true, Omega)
+
+        function database_subtable = get_database_subtable(obj, rep, Delta, rho, support, cluster_true, Omega)
             s = length(support);
             current_time = get_current_time();
-            acc_dict = ik.evaluate_accuracy(cluster_true)
-            [true_pos_vec, false_pos_vec, false_neg_vec, survived_indices] = ik.evaluate_discovery(support);
-            [diff_x_tilde_fro, diff_x_tilde_op, diff_x_tilde_ellone] = ik.evaluate_innovation_est(Omega);
+            [true_pos_vec, false_pos_vec, false_neg_vec, survived_indices] = obj.evaluate_discovery(support);
+            [diff_x_tilde_fro, diff_x_tilde_op, diff_x_tilde_ellone] = obj.evaluate_innovation_est(Omega);
             %fprintf( strcat( "acc =", join(repelem("%f ", length(acc_vec))), "\n"),  acc_vec );
             
             
-            cluster_string_dict = ik.get_cluster_string_dict();
+            cluster_string_dict = obj.get_cluster_string_dict();
             
             values(acc_dict)
             values(cluster_string_dict)
     
-            n_row = int32(ik.iter_stop);
+            n_row = int32(obj.iter_stop);
             database_subtable = table(...
                 repelem(rep, n_row+1)',...                      % 01 replication number
                 (0:n_row)',...                                  % 02 step iteration number
                 repelem(Delta, n_row+1)',...                    % 03 separation
-                repelem(ik.data_object.dimension, n_row+1)',... % 04 data dimension
+                repelem(obj.data_object.dimension, n_row+1)',... % 04 data dimension
                 repelem(rho, n_row+1)',...                      % 05 conditional correlation
                 repelem(s, n_row+1)',...                        % 06 sparsity
                 ...
-                [false; ik.stop_decider.stop_history{1:n_row, "original"}],... %07
-                [false; ik.stop_decider.stop_history{1:n_row, "sdp"}],...      %08
-                [false; ik.stop_decider.stop_history{1:n_row, "loop"}],...     %09
+                [false; obj.stop_decider.stop_history{1:n_row, "original"}],... %07
+                [false; obj.stop_decider.stop_history{1:n_row, "sdp"}],...      %08
+                [false; obj.stop_decider.stop_history{1:n_row, "loop"}],...     %09
                 cell2mat(values(acc_dict))',...                                     % 10 accuracy
                 ...
-                [0; ik.obj_val_prim(1:n_row)],...               % 11 objective function value (relaxed, primal)
-                [0; ik.obj_val_dual(1:n_row)],...               % 12 objective function value (relaxed, dual)
-                [0; ik.obj_val_original(1:n_row)],...           % 13 objective function value (original)
+                [0; obj.obj_val_prim(1:n_row)],...               % 11 objective function value (relaxed, primal)
+                [0; obj.obj_val_dual(1:n_row)],...               % 12 objective function value (relaxed, dual)
+                [0; obj.obj_val_original(1:n_row)],...           % 13 objective function value (original)
                 ...
                 [0; true_pos_vec],...                           % 14 true positive
                 [0; false_pos_vec],...                          % 15 false positive
@@ -125,8 +124,8 @@ classdef sdp_kmeans_bandit_simul  < sdp_kmeans_bandit
                 [0; diff_x_tilde_fro],...                       % 13 estimation error of the innovated data, in Frobenius norm
                 [0; diff_x_tilde_op],...                        % 14 estimation error of the innovated data, in operator norm
                 [0; diff_x_tilde_ellone],...                    % 15 estimation error of the innovated data, in \ell_1 norm
-                [0; ik.omega_est_time(1:n_row)],...             % 16 timing for estimating the precision matrix
-                [0; ik.sdp_solve_time(1:n_row)], ...            % 17 timing elapsed for solving the SDP
+                [0; obj.omega_est_time(1:n_row)],...             % 16 timing for estimating the precision matrix
+                [0; obj.sdp_solve_time(1:n_row)], ...            % 17 timing elapsed for solving the SDP
                 repelem(current_time, n_row+1)', ...            % 18 timestamp
                 [""; survived_indices],...                      % 19 indices of survived entry
                 string(values(cluster_string_dict))',...                          % 20 clustering information
@@ -146,6 +145,22 @@ classdef sdp_kmeans_bandit_simul  < sdp_kmeans_bandit
                 ...      19              20            
                 "survived_indices", "cluster_est"
                 ]);
+        end % end of get_database_subtable
+
+        function [true_pos_vec, false_pos_vec, false_neg_vec , survived_indices] = evaluate_discovery(ik, support)
+            true_pos_vec  = zeros(ik.iter_stop, 1);
+            false_pos_vec = zeros(ik.iter_stop, 1);
+            false_neg_vec = zeros(ik.iter_stop, 1);
+            survived_indices = strings(ik.iter_stop, 1);
+            for i = 1:ik.iter_stop
+                positive_vec = ik.entries_survived(i,:);
+                true_pos_vec(i)  = sum(positive_vec(support));
+                false_pos_vec(i) = sum(positive_vec) - true_pos_vec(i);
+    
+                negative_vec = ~positive_vec;
+                false_neg_vec(i) = sum(negative_vec(support));
+                survived_indices(i) = get_num2str_with_mark( find(positive_vec), ',');
+            end
         end
     
     end % end of method
