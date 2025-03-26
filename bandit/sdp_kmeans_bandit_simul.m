@@ -1,29 +1,5 @@
 classdef sdp_kmeans_bandit_simul  < sdp_kmeans_bandit 
-    properties
-        X           % Data matrix (d x n)
-        K           % Number of clusters
-        n           % Number of data points
-        p           % Data dimension
-        cutoff      % Threshold for variable inclusion
-        alpha       % Alpha parameters of Beta prior
-        beta        % Beta parameters of Beta prior
-        pi
-        acc_dict
-        cluster_est_dict
-        signal_entry_est
-        n_iter
 
-        data_object
-        init_method
-        omega_sparsity
-        x_tilde_est       
-        omega_est_time    
-        sdp_solve_time    
-        entries_survived  
-        obj_val_prim     
-        obj_val_dual      
-        obj_val_original  
-    end
 
     methods
         function obj = iterative_kmeans(data_object, number_cluster, omega_sparsity)
@@ -50,6 +26,7 @@ classdef sdp_kmeans_bandit_simul  < sdp_kmeans_bandit
 
             for i = 1:n_iter
                 variable_subset_now = obj.choose();
+                obj.entries_survived)_
                 disp(['Iteration ', num2str(i), ' - arms pulled: ', mat2str(find(variable_subset_now))]);
                 disp(['number of arms pulled: ', mat2str(sum(variable_subset_now))]);
                 reward_now = obj.reward(variable_subset_now, i);
@@ -76,7 +53,7 @@ classdef sdp_kmeans_bandit_simul  < sdp_kmeans_bandit
             obj.x_tilde_est       = zeros(obj.p, obj.n, obj.n_iter);
             obj.omega_est_time    = zeros(obj.n_iter, 1);
             obj.sdp_solve_time    = zeros(obj.n_iter, 1);
-            obj.entries_survived  = zeros(obj.n_iter, obj.p);
+            obj.entries_survived  = zeros(obj.n_iter+1, obj.p);
             obj.obj_val_prim      = zeros(obj.n_iter, 1);
             obj.obj_val_dual      = zeros(obj.n_iter, 1);
             obj.obj_val_original  = zeros(obj.n_iter, 1);
@@ -99,7 +76,7 @@ classdef sdp_kmeans_bandit_simul  < sdp_kmeans_bandit
             values(acc_dict)
             values(cluster_string_dict)
     
-            n_row = int32(obj.iter_stop);
+            n_row = int32(obj.n_iter);
             database_subtable = table(...
                 repelem(rep, n_row+1)',...                      % 01 replication number
                 (0:n_row)',...                                  % 02 step iteration number
@@ -147,13 +124,13 @@ classdef sdp_kmeans_bandit_simul  < sdp_kmeans_bandit
                 ]);
         end % end of get_database_subtable
 
-        function [true_pos_vec, false_pos_vec, false_neg_vec , survived_indices] = evaluate_discovery(ik, support)
-            true_pos_vec  = zeros(ik.iter_stop, 1);
-            false_pos_vec = zeros(ik.iter_stop, 1);
-            false_neg_vec = zeros(ik.iter_stop, 1);
-            survived_indices = strings(ik.iter_stop, 1);
-            for i = 1:ik.iter_stop
-                positive_vec = ik.entries_survived(i,:);
+        function [true_pos_vec, false_pos_vec, false_neg_vec , survived_indices] = evaluate_discovery(obj, support)
+            true_pos_vec  = zeros(obj.n_iter, 1);
+            false_pos_vec = zeros(obj.n_iter, 1);
+            false_neg_vec = zeros(obj.n_iter, 1);
+            survived_indices = strings(obj.n_iter, 1);
+            for i = 1:obj.n_iter
+                positive_vec = obj.entries_survived(i,:);
                 true_pos_vec(i)  = sum(positive_vec(support));
                 false_pos_vec(i) = sum(positive_vec) - true_pos_vec(i);
     
