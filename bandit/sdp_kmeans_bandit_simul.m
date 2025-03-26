@@ -1,7 +1,47 @@
 classdef sdp_kmeans_bandit_simul  < sdp_kmeans_bandit 
+    properties
+        X           % Data matrix (d x n)
+        K           % Number of clusters
+        n           % Number of data points
+        p           % Data dimension
+        cutoff      % Threshold for variable inclusion
+        alpha       % Alpha parameters of Beta prior
+        beta        % Beta parameters of Beta prior
+        pi
+        acc_dict
+        cluster_est_dict
+        signal_entry_est
+        n_iter
+
+        data_object
+        init_method
+        omega_sparsity
+        x_tilde_est       
+        omega_est_time    
+        sdp_solve_time    
+        entries_survived  
+        obj_val_prim     
+        obj_val_dual      
+        obj_val_original  
+    end
 
     methods
+        function obj = iterative_kmeans(data_object, number_cluster, omega_sparsity)
+            obj.X = data_object.data;
+            obj.K = number_cluster;
+            obj.omega_sparsity = omega_sparsity;
+            obj.init_method = "none";
 
+            obj.n = size(obj.X, 2);
+            obj.p = size(obj.X, 1);
+
+            C = 0.5;
+            obj.cutoff = log(1 / C) / log((1 + C) / C);
+
+
+            obj.n_iter = NaN;
+            obj.set_bayesian_parameters();
+        end
 
         function fit_predict(obj, n_iter, cluster_true)
             obj.n_iter = n_iter;
@@ -40,6 +80,10 @@ classdef sdp_kmeans_bandit_simul  < sdp_kmeans_bandit
             obj.obj_val_prim      = zeros(obj.n_iter, 1);
             obj.obj_val_dual      = zeros(obj.n_iter, 1);
             obj.obj_val_original  = zeros(obj.n_iter, 1);
+        end
+
+        function cluster_est_obj = fetch_cluster_est(obj,iter)
+            cluster_est_obj = obj.cluster_est_dict(iter);
         end
 
     end
