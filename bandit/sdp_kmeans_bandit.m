@@ -122,9 +122,7 @@ classdef sdp_kmeans_bandit < handle
             obj.beta(variable_subset) = obj.beta(variable_subset) + (1 - reward_vec(variable_subset));
             obj.pi = obj.alpha ./ (obj.alpha + obj.beta); 
 
-            signal_entry_est = 1:obj.p;
-            signal_entry_est = signal_entry_est(obj.pi>0.5);
-            obj.signal_entry_est = signal_entry_est;
+            obj.signal_entry_est = obj.pi>0.5;
         end % end of method update    
 
 

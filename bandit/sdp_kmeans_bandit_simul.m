@@ -26,7 +26,7 @@ classdef sdp_kmeans_bandit_simul  < sdp_kmeans_bandit
 
             for i = 1:n_iter
                 variable_subset_now = obj.choose();
-                obj.entries_survived(i, :) = variable_subset_now
+                obj.entries_survived(i, :) = variable_subset_now;
                 disp(['Iteration ', num2str(i), ' - arms pulled: ', mat2str(find(variable_subset_now))]);
                 disp(['number of arms pulled: ', mat2str(sum(variable_subset_now))]);
                 reward_now = obj.reward(variable_subset_now, i);
@@ -37,7 +37,7 @@ classdef sdp_kmeans_bandit_simul  < sdp_kmeans_bandit
             
             %final clustering
             final_selection = obj.signal_entry_est;
-            obj.entries_survived(obj.n_iter + 1, :) = final_selection
+            obj.entries_survived(obj.n_iter + 1, :) = final_selection;
             X_sub_final = obj.X(final_selection, :);
             kmeans_learner = sdp_kmeans(X_sub_final, obj.K);
             obj.cluster_est_dict(obj.n_iter + 1) = cluster_est(kmeans_learner.fit_predict());
