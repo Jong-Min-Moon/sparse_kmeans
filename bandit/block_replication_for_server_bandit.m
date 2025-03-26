@@ -1,7 +1,6 @@
 classdef block_replication_for_server_bandit < handle
     methods
         function database_subtable = run_one_replication(blfs, block_num, iter_num)
-            % @data_gaussian_ISEE_clean
                 rep = (block_num-1)*4+iter_num;
                 fprintf("replication: (%i)th \n\n", rep)
 
