@@ -1,4 +1,3 @@
-install.packages("phyclust")
 library(sparcl)
 library(RSQLite)
 source("/home1/jongminm/sparse_kmeans/experiment/25_04_03_2025/competitor.R")

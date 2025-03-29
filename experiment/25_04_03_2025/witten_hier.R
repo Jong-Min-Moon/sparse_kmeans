@@ -1,5 +1,7 @@
 library(sparcl)
 library(RSQLite)
+source("/home1/jongminm/sparse_kmeans/experiment/25_04_03_2025/competitor.R")
+source("/home1/jongminm/sparse_kmeans/experiment/25_04_03_2025/data_generation.R")
 
 # Params
 sep <- 4
