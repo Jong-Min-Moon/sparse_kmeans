@@ -1,4 +1,4 @@
-
+install.packages("phyclust")
 library(sparcl)
 library(RSQLite)
 source("/home1/jongminm/sparse_kmeans/experiment/25_04_03_2025/competitor.R")
@@ -13,6 +13,7 @@ n_rep <- 200
 
 # SQLite setup
 db_dir <- "/home1/jongminm/sparse_kmeans/sparse_kmeans.db"
+db <- dbConnect(SQLite(), db_dir)
 
 
 
