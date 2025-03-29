@@ -1,45 +1,18 @@
-install.packages("sparcl")
 library(sparcl)
 library(RSQLite)
 
 # Params
 sep <- 4
-p_seq <- seq(50, 5000, by = 450)  # or use seq(50, 5000, by = 450) to match your list
+p_seq <- c(50, seq(500, 5000, by = 500) )  # or use seq(50, 5000, by = 450) to match your list
 n <- 200
 s <- 10
 n_rep <- 200
 
 # SQLite setup
-db <- dbConnect(SQLite(), "iso_bandit_results.db")
+db_dir <- "/home1/jongminm/sparse_kmeans/sparse_kmeans.db"
+db <- dbConnect(SQLite(), db_dir)
 
-# Create table if not exists
-dbExecute(db, "
-CREATE TABLE IF NOT EXISTS iso_bandit_perm (
-  rep INTEGER,
-  iter INTEGER,
-  sep REAL,
-  dim INTEGER,
-  rho REAL,
-  sparsity INTEGER,
-  stop_og INTEGER,
-  stop_sdp INTEGER,
-  stop_loop INTEGER,
-  acc REAL,
-  obj_prim REAL,
-  obj_dual REAL,
-  obj_original REAL,
-  true_pos INTEGER,
-  false_pos INTEGER,
-  false_neg INTEGER,
-  diff_x_tilde_fro REAL,
-  diff_x_tilde_op REAL,
-  diff_x_tilde_ellone REAL,
-  time_est REAL,
-  time_sdp REAL,
-  jobdate TIMESTAMP,
-  survived_indices TEXT,
-  cluster_est TEXT
-)")
+
 
 # Functions
 generate_isotropic_Gaussian <- function(sep, s, p, n, seed) {
@@ -86,7 +59,7 @@ for (p in p_seq) {
     acc <- if (all(is.na(cluster_est))) 0 else evaluate_clustering(cluster_est, cluster_true)
     
     dbExecute(db, "
-      INSERT INTO iso_bandit_perm (
+      INSERT INTO iso_witten (
         rep, iter, sep, dim, rho, sparsity, stop_og, stop_sdp, stop_loop, acc,
         obj_prim, obj_dual, obj_original, true_pos, false_pos, false_neg,
         diff_x_tilde_fro, diff_x_tilde_op, diff_x_tilde_ellone,
