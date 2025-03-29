@@ -10,6 +10,13 @@ sparse_kmeans_ell1_ell2 <- function(x) {
   return(km.out[[1]]$Cs)
 }
 
+sparse_hier_ell1_ell2 <- function(x) {
+  x_scaled <- scale(x, TRUE, TRUE)
+  perm.out <- HierarchicalSparseCluster.permute(x_scaled, wbounds=c(1.5,2:6),nperms=5)
+  sparsehc <- HierarchicalSparseCluster(dists=perm.out$dists,
+                                        wbound=perm.out$bestw, method="complete")
+  return(cutree(sparsehc$hc, k = 2))
+}
 
 evaluate_clustering <- function(predicted, truth) {
   acc1 <- mean(predicted == truth)
