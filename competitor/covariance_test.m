@@ -1,4 +1,4 @@
-classdef sdp_kmeans_bandit < handle
+classdef variance_test_spectral < handle
 
     properties
         X           % Data matrix (d x n)
@@ -6,8 +6,8 @@ classdef sdp_kmeans_bandit < handle
         n           % Number of data points
         p           % Data dimension
         cutoff      % Threshold for variable inclusion
-        alpha       % Alpha parameters of Beta prior
-        beta        % Beta parameters of Beta prior
+        alpha       % variance scaling
+
         pi
         acc_dict
         cluster_est_dict
@@ -24,7 +24,7 @@ classdef sdp_kmeans_bandit < handle
     end
 
     methods
-        function obj = sdp_kmeans_bandit(X, K)
+        function obj = variance_test_spectral(X)
             % Constructor
             if nargin < 2
                 error('Two input arguments required: data matrix X and number of clusters K.');
@@ -37,19 +37,19 @@ classdef sdp_kmeans_bandit < handle
             end
 
             obj.X = X;
-            obj.K = K;
+            obj.K = 2;
             obj.n = size(X, 2);
             obj.p = size(X, 1);
-
-            C = 0.5;
-            obj.cutoff = log(1 / C) / log((1 + C) / C);
+            obj.alpha = obj.get_alpha(obj.n , obj.p)
 
 
-            obj.n_iter = NaN;
-            
-            
-            
+        end % end of initialization
+
+        function alpha = get_alpha(n, p)
+            log_np = log( n * p);
+            alpha = sqrt(6 ( log_np / n)) + 2 * log_np / n;
         end
+
         
         function set_bayesian_parameters(obj)            
             obj.alpha = ones(1, obj.p);
