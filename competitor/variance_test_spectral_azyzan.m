@@ -1,4 +1,4 @@
-classdef variance_test_spectral < handle
+classdef variance_test_spectral_azyzan < handle
 
     properties
         X           % Data matrix (d x n)
@@ -24,7 +24,7 @@ classdef variance_test_spectral < handle
     end
 
     methods
-        function obj = variance_test_spectral(X)
+        function obj = variance_test_spectral_azyzan(X)
 
             if ~ismatrix(X) || ~isnumeric(X)
                 error('Input X must be a numeric matrix.');
@@ -45,14 +45,18 @@ classdef variance_test_spectral < handle
         function signal_entry_est = get_signal_entry_est(obj)
             %If A is a matrix whose columns are random variables and whose rows are observations, then V is a row vector containing the variance corresponding to each column.
             obj.var_coordinatewise  = var(obj.X');
-            obj.var_min = min(obj.var_coordinatewise);
-            log_np = log( obj.n * obj.p);
-            alpha = sqrt(6 * ( log_np / obj.n)) + (2 * log_np / obj.n);
-            min_var_scaled = obj.var_min * (1+alpha)/(1-alpha);
-            signal_entry_est =  obj.var_coordinatewise > min_var_scaled;
+            thres = obj.get_threshold();
+            signal_entry_est =  obj.var_coordinatewise > thres;
             obj.signal_entry_est = signal_entry_est;
         end % end of method get_signal_entry_est
 
+
+        function threshold = get_threshold (obj)
+            obj.var_min = min(obj.var_coordinatewise);
+            log_np = log( obj.n * obj.p);
+            alpha = sqrt(6 * ( log_np / obj.n)) + (2 * log_np / obj.n);
+            threshold = obj.var_min * (1+alpha)/(1-alpha);
+        end
 
 
         function fit_predict(obj)
