@@ -2,8 +2,8 @@ classdef sdp_kmeans_bandit_simul  < sdp_kmeans_bandit
 
 
     methods
-        function obj = iterative_kmeans(data_object, number_cluster, omega_sparsity)
-            obj.X = data_object.data;
+        function obj = iterative_kmeans(X, number_cluster, omega_sparsity)
+            obj.X =X;
             obj.K = number_cluster;
             obj.omega_sparsity = omega_sparsity;
             obj.init_method = "none";
