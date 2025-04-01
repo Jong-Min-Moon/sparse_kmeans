@@ -1,4 +1,4 @@
-function [label, stats, numselect] = ifpca(Data, K, KSvalue, pvalcut, rep, kmeansrep, per)
+function [label, stats, numselect] = ifpca_original(Data, K, KSvalue, pvalcut, rep, kmeansrep, per)
 %The function IFPCA gives an estimation of cluster labels with IF-PCA
 %method according to Jin and Wang (2014).
 %
