@@ -1,5 +1,5 @@
 function [mean_now, noise_now, Omega_diag_hat] = ISEE_bicluster(dg)
-    p = dg.dimension;
+    p = dg.dimension
     n = dg.sample_size;
     n_regression = floor(p/2);
     cluster_est_now = dg.cluster_info_vec;
@@ -29,7 +29,6 @@ function [mean_now, noise_now, Omega_diag_hat] = ISEE_bicluster(dg)
             for j = 1:2
                 boolean_now = (1:p) == (2*(i-1)+j);
                 response_now = x_noisy_g_now(boolean_now,:)';
-                
                 model_lasso = glm_gaussian(response_now, predictor_now); 
                 fit = penalized(model_lasso, @p_lasso, "standardize", true);
                 AIC = goodness_of_fit('aic', fit);
