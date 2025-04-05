@@ -234,18 +234,18 @@ methods
     end
     %
 
-    methods (Access = protected)
-        function objective_value_original = get_objective_value_original(ik, cluster_est)
-        objective_value_original = 0;
-        for i = 1:ik.data_object.number_cluster
-            cluster_size = sum(cluster_est==i);
-            affinity_cluster = ik.data_object.sparse_affinity(cluster_est==i, cluster_est==i);
-            within_cluster_variation = ((-2*sum(affinity_cluster, "all") + 2*cluster_size*trace(affinity_cluster))/cluster_size;
-            objective_value_original = objective_value_original + within_cluster_variation;
-        end
+  %  methods (Access = protected)
+  %      function objective_value_original = get_objective_value_original(ik, cluster_est)
+   %     objective_value_original = 0;
+  %      for i = 1:ik.data_object.number_cluster
+  %          cluster_size = sum(cluster_est==i);
+ %          affinity_cluster = ik.data_object.sparse_affinity(cluster_est==i, cluster_est==i);
+ %           within_cluster_variation = ((-2*sum(affinity_cluster, "all") + 2*cluster_size*trace(affinity_cluster))/cluster_size;
+ %           objective_value_original = objective_value_original + within_cluster_variation;
+ %       end
 
-    end
-    end
+   % end
+    %end
 
 end %end of methods
 end %end of classdef

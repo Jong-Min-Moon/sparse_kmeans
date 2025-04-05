@@ -24,11 +24,14 @@ matrix_sparsity =2 ;
 init_method = "spec";
 full_run = false
 flip=false
-for jj = 1:4
-    experimenter = block_replication_for_server(table_name, db_dir, 1:10, separation, dimension, rho, sample_size, n_iter_max, full_run, init_method, matrix_sparsity, data_obj, flip);
-    database_subtable = experimenter.run_one_replication(ii, jj)
-    experimenter.save_into_database(database_subtable)
-end
+T = readtable('/home1/jongminm/sparse_kmeans/experiment/25_04_03_2025/real/my_data.csv');
 
+% If you want to convert to a matrix (numeric only)
+M = table2array(T);
+label_true = [2 2 2 1 2 2 2 2 2 1 1 2 2 2 1 1 1 1 2 2 2 1 2 2 2 1 2 1 1 2 2 2 2 2 2 2 1 2 2 2 2 2 2 2 1 2 2 2 2 2 1 2 2 2 1 1 1 2 2 2 2 2 2 2 2 1 2 2 2 1 2 2 1 1 2 2 2 1 2 2]
+
+data_obj_now = data_gaussian_ISEE_clean(M, rho);
+learner = iterative_kmeans(data_obj_now, 2, rho, 'spec');
+learner.run_iterative_algorithm(100, 10, 0.01, true, 10);
 
 
