@@ -23,7 +23,7 @@ for rho in 0
         do
         for dimension in  50 500 1000 1500 2000 2500 3000 3500 4000 4500 5000
             do
-            for ii in {1..50}
+            for ii in {2..10}
                 do
                     #filename of code
                     filename_code="rho${rho}_Delta${separation}_p${dimension}_rep_${ii}"

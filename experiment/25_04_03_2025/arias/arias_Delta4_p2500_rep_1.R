@@ -1,5 +1,5 @@
 rep_start = 1
-rep_end = 1
+rep_end = 200
 dimension  = 2500
 separation = 4
 library(sparcl)

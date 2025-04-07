@@ -17,9 +17,9 @@ sample_size=200
 
     for separation in  4 5 
         do
-        for dimension in  50 500 1000 1500 2000 2500 3000 3500 4000 4500
+        for dimension in  5000
             do
-            for ii in {2..10}
+            for ii in {1..10}
                 do
                     #filename of code
                     filename_code="witten_Delta${separation}_p${dimension}_rep_${ii}"
@@ -47,7 +47,7 @@ sample_size=200
                     touch ${code_dir}/temp_job
                     echo "#!/bin/bash" >> ${code_dir}/temp_job
                     echo "#SBATCH --output=${code_dir}/${filename_code}.out" >> ${code_dir}/temp_job
-                    cat ${code_dir}/arias.job >> ${code_dir}/temp_job
+                    cat ${code_dir}/witten.job >> ${code_dir}/temp_job
                     
                     echo "Rscript  ${code_dir}/${filename_code}.R" >> ${code_dir}/temp_job
                     sleep 4

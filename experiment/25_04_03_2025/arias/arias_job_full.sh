@@ -17,9 +17,9 @@ sample_size=200
 
     for separation in  4 5 
         do
-        for dimension in  2500 3000 3500 4000 4500
+        for dimension in  50  500 1000 1500 2000 2500 3000 3500 4000 4500 5000
             do
-            for ii in {2..10}
+            for ii in {1..10}
                 do
                     #filename of code
                     filename_code="arias_Delta${separation}_p${dimension}_rep_${ii}"

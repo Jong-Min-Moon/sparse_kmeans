@@ -35,7 +35,7 @@ classdef block_replication_for_server_ifpca < handle
             blfs.cluster_true = [repelem(1,sample_size/2), repelem(2,sample_size/2)];    
         end % end of the constructer
         function database_subtable = run_one_replication(blfs, block_num, iter_num)
-                rep = (block_num-1)*4+iter_num;
+                rep = (block_num-1)*200+iter_num;
                 fprintf("replication: (%i)th \n\n", rep)
 
                 zero_mean = zeros(blfs.data_generator.dimension,1);
@@ -43,6 +43,7 @@ classdef block_replication_for_server_ifpca < handle
 
                 rng(rep)
                 x_noisy = x_noiseless +  mvnrnd(zero_mean, blfs.data_generator.covariance_matrix, blfs.sample_size)';%data generation. each column is one observation
+                %disp(blfs.data_generator.sparse_precision_matrix)
                 if isstring(blfs.data_obj)
                     if strcmp(blfs.data_obj, "oracle")
                         data_obj_now = data_gaussian_oracle(x_noisy, blfs.omega_sparsity, blfs.data_generator.covariance_matrix, blfs.data_generator.sparse_precision_matrix);
