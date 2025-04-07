@@ -1,0 +1,84 @@
+library(sparcl)
+library(RSQLite)
+source("/home1/jongminm/sparse_kmeans/experiment/25_04_03_2025/competitor.R")
+source("/home1/jongminm/sparse_kmeans/experiment/25_04_03_2025/data_generation.R")
+
+# Params
+sep <- 4
+#p_seq <- c(50, seq(500, 5000, by = 500))
+p_seq <- c(2000)
+n <- 200
+s <- 10
+n_rep <- 200
+
+# SQLite setup
+db_dir <- "/home1/jongminm/sparse_kmeans/sparse_kmeans.db"
+db <- dbConnect(SQLite(), db_dir)
+
+# Safe insert with retry logic
+safe_db_insert <- function(db, query, params) {
+  repeat {
+    result <- tryCatch({
+      dbExecute(db, query, params = params)
+      TRUE
+    }, error = function(e) {
+      if (grepl("database is locked", conditionMessage(e))) {
+        cat("Database is locked. Retrying in 5 seconds...\n")
+        Sys.sleep(5)
+        FALSE
+      } else {
+        stop(e)
+      }
+    })
+    if (result) break
+  }
+}
+
+# SQL query (same for all inserts)
+insert_query <- "
+  INSERT INTO iso_arias (
+    rep, iter, sep, dim, rho, sparsity, stop_og, stop_sdp, stop_loop, acc,
+    obj_prim, obj_dual, obj_original, true_pos, false_pos, false_neg,
+    diff_x_tilde_fro, diff_x_tilde_op, diff_x_tilde_ellone,
+    time_est, time_sdp, jobdate, survived_indices, cluster_est
+  ) VALUES (
+    :rep, 0, :sep, :dim, 0, 0, 0, 0, 0, :acc,
+    0, 0, 0, 0, 0, 0,
+    0, 0, 0,
+    0, 0, CURRENT_TIMESTAMP, '', ''
+  )
+"
+
+# Simulation loop
+for (p in p_seq) {
+  results_list <- list()
+
+  for (rep in 216:220) {
+    seed <- 10000 + p + rep
+    data <- generate_isotropic_Gaussian(sep, s, p, n, seed)
+    x <- data$x
+    cluster_true <- data$cluster_true
+
+    cluster_est <- tryCatch({
+      sparse_kmeans_hillclimb(x)
+    }, error = function(e) {
+      rep(NA, n)
+    })
+
+    acc <- if (all(is.na(cluster_est))) 0 else evaluate_clustering(cluster_est, cluster_true)
+
+    results_list[[rep]] <- list(
+      rep = rep, sep = sep, dim = p, acc = acc
+    )
+
+    cat(sprintf("Finished: p = %d, rep = %d, acc = %.3f\n", p, rep, acc))
+  }
+
+  for (res in results_list) {
+    safe_db_insert(db, insert_query, res)
+  }
+
+  cat(sprintf("Saved to DB for p = %d after %d reps\n", p, n_rep))
+}
+
+dbDisconnect(db)
