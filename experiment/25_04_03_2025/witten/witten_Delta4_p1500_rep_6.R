@@ -39,7 +39,7 @@ safe_db_insert <- function(db, query, params) {
 
 # SQL query (same for all inserts)
 insert_query <- "
-  INSERT INTO iso_arias (
+  INSERT INTO iso_witten (
     rep, iter, sep, dim, rho, sparsity, stop_og, stop_sdp, stop_loop, acc,
     obj_prim, obj_dual, obj_original, true_pos, false_pos, false_neg,
     diff_x_tilde_fro, diff_x_tilde_op, diff_x_tilde_ellone,
