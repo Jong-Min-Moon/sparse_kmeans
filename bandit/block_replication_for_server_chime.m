@@ -51,10 +51,24 @@ classdef block_replication_for_server_ifpca < handle
                 else
                     data_obj_now = blfs.data_obj(x_noisy, blfs.omega_sparsity);
                 end
-                blfs.learner = ifpca_simul(data_obj_now.data, blfs.number_cluster);
+ 
+                n = blfs.sample_size;
+                p = blfs.data_generator.dimension;
+                s = blfs.data_generator.sparsity;               
+                initialization_noise_scale = sqrt(s*log(p)/(n^2 * p));
+
+                mu_1 = x_noiseless(:,1);
+                mu_2 = x_noiseless(:,end);
+                mu_mat = [mu_1, mu_2];
+                beta_0 = (mu_1-mu_2)';
+                beta_0 = beta_0 + randn(1, p)' * initialization_noise_scale;
+
+                
+
+                blfs.learner = chime_simul(data_obj_now.data, blfs.number_cluster);
                 % = iterative_kmeans(data_obj_now, blfs.number_cluster, blfs.data_generator.conditional_correlation, blfs.init_method);
-                blfs.learner.fit_predict( blfs.cluster_true);
-    
+                blfs.learner.fit_predict( blfs.cluster_true, mu_mat, beta_0);
+                
                 database_subtable = blfs.learner.get_database_subtable(rep, blfs.data_generator.separation, blfs.data_generator.conditional_correlation, blfs.data_generator.support, blfs.cluster_true, blfs.data_generator.sparse_precision_matrix);
         end%end of run_one_replication
 
