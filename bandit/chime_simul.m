@@ -1,8 +1,41 @@
-classdef chime_simul  < sdp_kmeans_bandit_simul
+classdef chime_simul  < handle
 
+    properties
+        X           % Data matrix (d x n)
+        K           % Number of clusters
+        n           % Number of data points
+        p           % Data dimension
+        cutoff      % Threshold for variable inclusion
+        alpha       % Alpha parameters of Beta prior
+        beta        % Beta parameters of Beta prior
+        pi
+        acc_dict
+        cluster_est_dict
+        signal_entry_est
+        n_iter
+
+        x_tilde_est       
+        omega_est_time    
+        sdp_solve_time    
+        entries_survived  
+        obj_val_prim     
+        obj_val_dual      
+        obj_val_original  
+    end
 
     methods
-        
+        function obj = chime_simul(X, number_cluster)
+            obj.X =X;
+            obj.K = number_cluster;
+            %obj.omega_sparsity = omega_sparsity;
+
+            obj.n = size(obj.X, 2);
+            obj.p = size(obj.X, 1);
+
+
+            
+        end
+
         function initialize_cluster_est(obj)
             cluster_est_dummy   = cluster_est( repelem(1,obj.n) );
             obj.cluster_est_dict = repelem(cluster_est_dummy, 1); %dummy
@@ -14,7 +47,6 @@ classdef chime_simul  < sdp_kmeans_bandit_simul
             [omega, mu, beta, RI, aRI, optRI, optaRI, group_member]= CHIME(obj.X', obj.X', cluster_true, 1/2, mu_mat, beta_0, 1, 0.1, 50, 1e-6);
             
             label = group_member';
-            numselect
             cluster_est_label = cluster_est(label);
             obj.cluster_est_dict = cluster_est_label
             obj.evaluate_accuracy(cluster_true);

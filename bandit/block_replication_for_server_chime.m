@@ -1,4 +1,4 @@
-classdef block_replication_for_server_ifpca < handle
+classdef block_replication_for_server_chime < handle
     properties
         table_name
         db_dir
@@ -16,7 +16,7 @@ classdef block_replication_for_server_ifpca < handle
         data_obj
     end % end of properties
     methods
-        function blfs = block_replication_for_server_ifpca(table_name, db_dir, support, separation, dimension, correlation, sample_size, n_iter_max, run_full, init_method, omega_sparsity, data_obj, flip, window_size_half, loop_detect_start)
+        function blfs = block_replication_for_server_chime(table_name, db_dir, support, separation, dimension, correlation, sample_size, n_iter_max, run_full, init_method, omega_sparsity, data_obj, flip, window_size_half, loop_detect_start)
             %save variables
             blfs.number_cluster = 2;
             blfs.n_iter_max = n_iter_max;
@@ -60,12 +60,12 @@ classdef block_replication_for_server_ifpca < handle
                 mu_1 = x_noiseless(:,1);
                 mu_2 = x_noiseless(:,end);
                 mu_mat = [mu_1, mu_2];
-                beta_0 = (mu_1-mu_2)';
+                beta_0 = (mu_1-mu_2);
                 beta_0 = beta_0 + randn(1, p)' * initialization_noise_scale;
 
                 
 
-                blfs.learner = chime_simul(data_obj_now.data, blfs.number_cluster);
+                blfs.learner = chime_simul(x_noisy, blfs.number_cluster);
                 % = iterative_kmeans(data_obj_now, blfs.number_cluster, blfs.data_generator.conditional_correlation, blfs.init_method);
                 blfs.learner.fit_predict( blfs.cluster_true, mu_mat, beta_0);
                 

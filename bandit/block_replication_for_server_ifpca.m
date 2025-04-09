@@ -51,7 +51,7 @@ classdef block_replication_for_server_ifpca < handle
                 else
                     data_obj_now = blfs.data_obj(x_noisy, blfs.omega_sparsity);
                 end
-                blfs.learner = ifpca_simul(data_obj_now.data, blfs.number_cluster);
+                blfs.learner = ifpca_simul(x_noisy, blfs.number_cluster);
                 % = iterative_kmeans(data_obj_now, blfs.number_cluster, blfs.data_generator.conditional_correlation, blfs.init_method);
                 blfs.learner.fit_predict( blfs.cluster_true);
     
