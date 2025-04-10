@@ -9,6 +9,9 @@ function cluster_est = cluster_spectral(x, k)
 % * k: positive integer. number of cluster.
 %% 
 % Outputs
+%% 
+% * cluster_est: n array of positive integers, where n is the sample size. ex. 
+% [1 2 1 2 3 4 2 ]
     n = size(x,2);
     H_hat = (x' * x)/n; %compute affinity matrix
     [V,D] = eig(H_hat);

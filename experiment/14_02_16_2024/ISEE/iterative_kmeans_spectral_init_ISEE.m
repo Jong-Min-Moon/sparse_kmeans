@@ -20,7 +20,9 @@ false_discov_top5 = repelem("0", n_iter);
 omega_est_time = zeros(1,n_iter);
 sdp_solve_time = zeros(1,n_iter);
 
-if strcmp(init_method, 'spec')
+
+%{
+ if strcmp(init_method, 'spec')
     H_hat = (x' * x)/n;
     [V,D] = eig(H_hat);
     [d,ind] = sort(diag(D), "descend");
@@ -40,7 +42,9 @@ elseif strcmp(init_method, "SDP")
     U_top_k = U_sdp(:,1:K);
     [cluster_est_now,C] = kmeans(U_top_k,K);  % label
 
-end
+end 
+%}
+
 cluster_est_now = cluster_est_now .* (cluster_est_now ~= 2) + (cluster_est_now == 2)* (-1);
 cluster_est_now = cluster_est_now';
 
