@@ -11,10 +11,12 @@ function [mean_now, noise_now, Omega_diag_hat] = ISEE_bicluster_parallel(x, clus
 %% 
 % Outputs
 %% 
-% * mean_now: $p\times n$ matrix of cluster center part of the data matrix, 
-% where $p$ is the data dimension and $n$ is the sample size
-% * noise_now: $p\times n$ matrix of Gaussian noise part of the data matrix, 
-% where $p$ is the data dimension and $n$ is the sample size
+% * mean_now: $p\times n$ matrix of  cluster center part of the innovated data 
+% matrix (pre-multiplied by precision matrix), where $p$ is the data dimension 
+% and $n$ is the sample size
+% * noise_now: $p\times n$ matrix of Gaussian noise part of the data matrix 
+% (pre-multiplied by precision matrix), where $p$ is the data dimension and $n$ 
+% is the sample size
 % * Omega_diag_hat: $p$ vector of diagonal entries of precision matrix 
 %% 
 % 

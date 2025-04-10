@@ -98,6 +98,7 @@ function cluster_est = cluster_spectral(x, k)
     Ds = D(ind,ind);
     Vs = V(:,ind);
     [cluster_est,C] = kmeans(Vs(:,1),k);
+    cluster_est= cluster_est'
 end
 %% 
 % 
@@ -112,13 +113,14 @@ end
 % # covariance structure estimation 
 %% 
 % 
-% 
-% ISEE runs many lasso regressions. We provide two versions: one plain ersion 
-% that can be run on local machine, and parallel version that can be run fast 
-% on clusters.
 %% ISEE_bicluster
 % @export
 % 
+% ISEE performs numerous Lasso regressions. We provide two versions: a plain 
+% version (this function) suitable for running on a local machine, and a parallel 
+% version (|ISEE_bicluster_parallel|) optimized for faster execution on computing 
+% clusters.
+%% 
 % Inputs
 %% 
 % * x: $p\times n$ data matrix, where $p$ is the data dimension and $n$ is the 
@@ -128,10 +130,12 @@ end
 %% 
 % Outputs
 %% 
-% * mean_now: $p\times n$ matrix of cluster center part of the data matrix, 
-% where $p$ is the data dimension and $n$ is the sample size
-% * noise_now: $p\times n$ matrix of Gaussian noise part of the data matrix, 
-% where $p$ is the data dimension and $n$ is the sample size
+% * mean_now: $p\times n$ matrix of  cluster center part of the innovated data 
+% matrix (pre-multiplied by precision matrix), where $p$ is the data dimension 
+% and $n$ is the sample size
+% * noise_now: $p\times n$ matrix of Gaussian noise part of the data matrix 
+% (pre-multiplied by precision matrix), where $p$ is the data dimension and $n$ 
+% is the sample size
 % * Omega_diag_hat: $p$ vector of diagonal entries of precision matrix 
 %% 
 % 
@@ -213,10 +217,12 @@ end
 %% 
 % Outputs
 %% 
-% * mean_now: $p\times n$ matrix of cluster center part of the data matrix, 
-% where $p$ is the data dimension and $n$ is the sample size
-% * noise_now: $p\times n$ matrix of Gaussian noise part of the data matrix, 
-% where $p$ is the data dimension and $n$ is the sample size
+% * mean_now: $p\times n$ matrix of  cluster center part of the innovated data 
+% matrix (pre-multiplied by precision matrix), where $p$ is the data dimension 
+% and $n$ is the sample size
+% * noise_now: $p\times n$ matrix of Gaussian noise part of the data matrix 
+% (pre-multiplied by precision matrix), where $p$ is the data dimension and $n$ 
+% is the sample size
 % * Omega_diag_hat: $p$ vector of diagonal entries of precision matrix 
 %% 
 % 
@@ -284,8 +290,137 @@ function [mean_now, noise_now, Omega_diag_hat] = ISEE_bicluster_parallel(x, clus
     noise_now(even_idx,:) = noise_now_even;
     Omega_diag_hat = Omega_diag_hat';
 end
-%% dfdfdfdfd
+%% select_variable_ISEE_noisy
+% @export
+% 
 % Inputs:
 %% 
-% * cluster_now: n array of positive integers, where n is the sample size. ex. 
-% [1 2 1 2 3 4 2 ]
+% * mean_now: $p\times n$ matrix of  cluster center part of the innovated data 
+% matrix (pre-multiplied by precision matrix), where $p$ is the data dimension 
+% and $n$ is the sample size
+% * noise_now: $p\times n$ matrix of Gaussian noise part of the data matrix 
+% (pre-multiplied by precision matrix), where $p$ is the data dimension and $n$ 
+% is the sample size
+% * Omega_diag_hat: $p$ vector of diagonal entries of precision matrix
+% * cluster_est_prev: $n$ array of positive integers, where n is the sample 
+% size. ex. [1 2 1 2 3 4 2 ]
+%% 
+% Outputs:
+%% 
+% * s_hat: $p$ boolean vector, where true indicates that variable is selected
+function s_hat = select_variable_ISEE_noisy(mean_now, noise_now, Omega_diag_hat, cluster_est_prev)
+    x_tilde_now = mean_now + noise_now;
+    p = size(mean_now,1);
+    thres = sqrt(2 * log(p) );
+    signal_est_now = mean( x_tilde_now(:, cluster_est_prev==1), 2) - mean( x_tilde_now(:, cluster_est_prev==2), 2);
+    n_g1_now = sum(cluster_est_prev == 1);
+    n_g2_now = sum(cluster_est_prev == 2);
+    abs_diff = abs(signal_est_now')./sqrt(Omega_diag_hat) * sqrt( n_g1_now*n_g2_now/n );
+    s_hat = abs_diff > thres;
+end
+%% SDP clustering
+% 
+%% get_cov_small
+% @export
+% 
+% Inputs:
+%% 
+% * x: $p\times n$ data matrix, where $p$ is the data dimension and $n$ is the 
+% sample size
+% * cluster_est_now: $n$ array of positive integers, where n is the sample size. 
+% ex. [1 2 1 2 3 4 2 ]
+% * s_hat: $p$ boolean vector, where true indicates that variable is selected
+%% 
+% Outputs:
+%% 
+% * Sigma_hat_s_hat_now: 
+function Sigma_hat_s_hat_now = get_cov_small(x, cluster_est, s_hat)
+    X_g1_now = x(:, (cluster_est ==  1)); 
+    X_g2_now = x(:, (cluster_est ==  2)); 
+    X_mean_g1_now = mean(X_g1_now, 2);
+    X_mean_g2_now = mean(X_g2_now, 2);
+    data_py = [(X_g1_now - X_mean_g1_now) (X_g2_now - X_mean_g2_now)]';
+    data_filtered = data_py(:,s_hat);
+    Sigma_hat_s_hat_now = data_filtered' * data_filtered/(n-1);
+end
+%% cluster_SDP_noniso
+% @export
+% 
+% inputs:
+%% 
+% * x: $p\times n$ data matrix, where $p$ is the data dimension and $n$ is the 
+% sample size
+% * K: positive integer. number of clusters.
+% * mean_now: $p\times n$ matrix of  cluster center part of the innovated data 
+% matrix (pre-multiplied by precision matrix), where $p$ is the data dimension 
+% and $n$ is the sample size
+% * noise_now: $p\times n$ matrix of Gaussian noise part of the data matrix 
+% (pre-multiplied by precision matrix), where $p$ is the data dimension and $n$ 
+% is the sample size
+%% 
+% * cluster_est_prev: $n$ array of positive integers, where n is the sample 
+% size. Cluster estimate from the prevous step. ex. [1 2 1 2 3 4 2 ]
+%% 
+% outputs:
+function cluster_est_new = cluster_SDP_noniso(x, K, mean_now, noise_now, cluster_est_prev, s_hat)
+    %estimate sigma hat s
+    n = size(x,2);
+    Sigma_hat_s_hat_now = get_cov_small(x, cluster_est_prev, s_hat);
+    x_tilde_now = mean_now + noise_now;
+    x_tilde_now_s  = x_tilde_now(s_hat,:);  
+    Z_now = kmeans_sdp( x_tilde_now_s' * Sigma_hat_s_hat_now * x_tilde_now_s/ n, K);
+    % final thresholding
+    [U_sdp,~,~] = svd(Z_now);
+    U_top_k = U_sdp(:,1:K);
+    [cluster_est_new,C] = kmeans(U_top_k,K);  % label
+    cluster_est_now = cluster_est_now';   
+end
+%% ISEE_kmeans_noisy_onestep
+% @export
+% 
+% inputs
+%% 
+% * x: $p\times n$ data matrix, where $p$ is the data dimension and $n$ is the 
+% sample size
+% * K: positive integer. number of clusters.
+% * cluster_est_prev: $n$ array of positive integers, where n is the sample 
+% size. Cluster estimate from the prevous step. ex. [1 2 1 2 3 4 2 ]
+% * is_parallel : boolean. true if using parallel computing in matlab.
+%% 
+% outputs
+%% 
+% * cluster_est_new: $n$ array of positive integers, where n is the sample size. 
+% News cluster estimate. ex. [1 2 1 2 3 4 2 ]
+function ISEE_kmeans_noisy_onestep(x, K, cluster_est_prev, is_parallel)
+%estimation
+    if is_parallel
+        [mean_now, noise_now, Omega_diag_hat] = ISEE_bicluster_parallel(x, cluster_est_prev);
+    else
+        [mean_now, noise_now, Omega_diag_hat] = ISEE_bicluster_parallel(x, cluster_est_prev);
+    end
+%variable selection
+    s_hat = select_variable_ISEE_noisy(mean_now, noise_now, Omega_diag_hat, cluster_est_prev);
+%clustering
+    cluster_est_new = cluster_SDP_noniso(x, K, mean_now, noise_now, cluster_est_prev, s_hat);
+end
+%% ISEE_kmeans_noisy
+% @export
+% 
+% inputs
+%% 
+% * x: $p\times n$ data matrix, where $p$ is the data dimension and $n$ is the 
+% sample size
+% * K: positive integer. number of clusters.
+% * is_parallel : boolean. true if using parallel computing in matlab.
+%% 
+% outputs
+%% 
+% * cluster_est: $n$ array of positive integers, where n is the sample size. 
+% estimated cluster size. ex. [1 2 1 2 1 2 2 ]
+function cluster_est = ISEE_kmeans_noisy(x, K, n_iter, is_parallel)
+%initialization
+    cluster_est = cluster_spectral(x, k);
+    for iter = 1:n_iter
+        cluster_est = ISEE_kmeans_noisy_onestep(x, K, cluster_est, is_parallel);
+    end
+end
