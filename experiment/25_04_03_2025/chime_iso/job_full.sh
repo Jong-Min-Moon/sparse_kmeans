@@ -19,11 +19,11 @@ sample_size=200
 
 for rho in 0
     do
-    for separation in 5 4
+    for separation in 5
         do
-        for dimension in  50 500 1000 1500 2000 2500 3000 3500 4000 4500 5000
+        for dimension in  3000 3500 4000 4500 5000
             do
-            for ii in {1..10}
+            for ii in {1..100}
                 do
                     #filename of code
                     filename_code="rho${rho}_Delta${separation}_p${dimension}_rep_${ii}"

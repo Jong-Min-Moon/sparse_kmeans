@@ -35,7 +35,7 @@ classdef block_replication_for_server_chime < handle
             blfs.cluster_true = [repelem(1,sample_size/2), repelem(2,sample_size/2)];    
         end % end of the constructer
         function database_subtable = run_one_replication(blfs, block_num, iter_num)
-                rep = (block_num-1)*200+iter_num;
+                rep = (block_num-1)*20+iter_num;
                 fprintf("replication: (%i)th \n\n", rep)
 
                 zero_mean = zeros(blfs.data_generator.dimension,1);

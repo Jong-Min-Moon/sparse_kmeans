@@ -13,7 +13,7 @@ pool = parpool(pc,ncores)
 n_iter_max = 100;
 ii = 1;
 rho = 45;
-dimension = 500
+dimension = 400
 separation = 4
 sample_size = 500
 table_name = 'noniso_est_isee_dirty'
@@ -24,11 +24,14 @@ matrix_sparsity =2 ;
 init_method = "spec";
 full_run = false
 flip=false
-for jj = 1:4
-    experimenter = block_replication_for_server(table_name, db_dir, 1:10, separation, dimension, rho, sample_size, n_iter_max, full_run, init_method, matrix_sparsity, data_obj, flip);
-    database_subtable = experimenter.run_one_replication(ii, jj)
-    experimenter.save_into_database(database_subtable)
-end
 
+data_generator = sparse_symmetric_data_generator(1:10, separation, dimension, 2, rho, flip)
+cluster_true = [repelem(1,sample_size/2), repelem(2,sample_size/2)];    
+zero_mean = zeros(dimension,1);
+x_noiseless = data_generator.get_noiseless_data(sample_size);
+rng(2)
+x_noisy = x_noiseless +  mvnrnd(zero_mean, data_generator.covariance_matrix, sample_size)';%data generation. each column is one observation
+cluster_estimte = ISEE_kmeans_noisy(x_noisy, 2, 100, true)
+acc = get_bicluster_acc(cluster_estimte, cluster_true)
 
 

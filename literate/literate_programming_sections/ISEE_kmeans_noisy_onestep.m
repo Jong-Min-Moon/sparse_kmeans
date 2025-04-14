@@ -1,4 +1,4 @@
-function ISEE_kmeans_noisy_onestep(x, K, cluster_est_prev, is_parallel)
+function cluster_est_new =  ISEE_kmeans_noisy_onestep(x, K, cluster_est_prev, is_parallel)
 %% ISEE_kmeans_noisy_onestep
 % @export
 % 
@@ -19,10 +19,10 @@ function ISEE_kmeans_noisy_onestep(x, K, cluster_est_prev, is_parallel)
     if is_parallel
         [mean_now, noise_now, Omega_diag_hat] = ISEE_bicluster_parallel(x, cluster_est_prev);
     else
-        [mean_now, noise_now, Omega_diag_hat] = ISEE_bicluster_parallel(x, cluster_est_prev);
+        [mean_now, noise_now, Omega_diag_hat] = ISEE_bicluster(x, cluster_est_prev);
     end
 %variable selection
-    s_hat = select_variable_ISEE_noisy(mean_now, noise_now, Omega_diag_hat, cluster_est_prev);
+    s_hat = select_variable_ISEE_noisy(mean_now, noise_now, Omega_diag_hat, cluster_est_prev)
 %clustering
     cluster_est_new = cluster_SDP_noniso(x, K, mean_now, noise_now, cluster_est_prev, s_hat);
 end

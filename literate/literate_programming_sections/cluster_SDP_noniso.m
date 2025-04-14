@@ -28,5 +28,5 @@ function cluster_est_new = cluster_SDP_noniso(x, K, mean_now, noise_now, cluster
     [U_sdp,~,~] = svd(Z_now);
     U_top_k = U_sdp(:,1:K);
     [cluster_est_new,C] = kmeans(U_top_k,K);  % label
-    cluster_est_now = cluster_est_now';   
+    cluster_est_new = cluster_est_new';   
 end

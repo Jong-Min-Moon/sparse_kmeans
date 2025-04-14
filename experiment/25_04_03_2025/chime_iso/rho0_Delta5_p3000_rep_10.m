@@ -14,7 +14,7 @@ matrix_sparsity =0 ;
 full_run = false
 experimenter = block_replication_for_server_chime(table_name, db_dir, 1:10, separation, dimension, rho, sample_size, n_iter_max, full_run, init_method, matrix_sparsity, data_obj, false, 100, 100);
 database_subtable = experimenter.run_one_replication(ii, 1)
-for jj = 2:200
+for jj = 2:20
     experimenter = block_replication_for_server_chime(table_name, db_dir, 1:10, separation, dimension, rho, sample_size, n_iter_max, full_run, init_method, matrix_sparsity, data_obj, false, 100, 100);
     database_subtable = [database_subtable; experimenter.run_one_replication(ii, jj)]
 end

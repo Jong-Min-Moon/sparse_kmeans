@@ -13,11 +13,12 @@ function Sigma_hat_s_hat_now = get_cov_small(x, cluster_est, s_hat)
 % Outputs:
 %% 
 % * Sigma_hat_s_hat_now: 
+n= size(x,2);
     X_g1_now = x(:, (cluster_est ==  1)); 
     X_g2_now = x(:, (cluster_est ==  2)); 
     X_mean_g1_now = mean(X_g1_now, 2);
     X_mean_g2_now = mean(X_g2_now, 2);
-    data_py = [(X_g1_now - X_mean_g1_now) (X_g2_now - X_mean_g2_now)]';
-    data_filtered = data_py(:,s_hat);
-    Sigma_hat_s_hat_now = data_filtered' * data_filtered/(n-1);
+    data_py = [(X_g1_now - X_mean_g1_now) (X_g2_now - X_mean_g2_now)]; % p x n
+    data_filtered = data_py(s_hat,:); % p x n
+    Sigma_hat_s_hat_now = cov(data_filtered');% input: n x p 
 end
