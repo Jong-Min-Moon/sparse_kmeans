@@ -3,7 +3,7 @@ function test_ISEE_bicluster_parallel()
 % @export
 %TEST_ISEE_VARIABLE_SELECTION_VS_FLIP
 %   Evaluates variable selection robustness to clustering error at flip ratios 0.1, 0.2, 0.3
-    rng(123);
+    rng(1);
     % Parameters
     p = 1000;
     n = 200;
