@@ -1,5 +1,5 @@
-function s_hat = select_variable_ISEE_noisy(mean_now, noise_now, Omega_diag_hat, cluster_est_prev)
-%% select_variable_ISEE_noisy
+function s_hat = select_variable_ISEE_clean(mean_now, noise_now, cluster_est_prev)
+%% select_variable_ISEE_clean
 % @export
 % 
 % Inputs:
@@ -20,7 +20,9 @@ function s_hat = select_variable_ISEE_noisy(mean_now, noise_now, Omega_diag_hat,
     x_tilde_now = mean_now + noise_now;
     p = size(mean_now,1);
     n = size(mean_now,2);
-    thres = sqrt(2 * log(p) );
+    rate = sqrt(log(p)/n);
+    diverging_quantity = sqrt(log(p));
+    thres = diverging_quantity*rate;
     signal_est_now = mean( x_tilde_now(:, cluster_est_prev==1), 2) - mean( x_tilde_now(:, cluster_est_prev==2), 2);
     n_g1_now = sum(cluster_est_prev == 1);
     n_g2_now = sum(cluster_est_prev == 2);
@@ -31,3 +33,5 @@ function s_hat = select_variable_ISEE_noisy(mean_now, noise_now, Omega_diag_hat,
     total_vars = length(s_hat);       % total number of variables
     fprintf('%d out of %d variables selected.\n', num_selected, total_vars);
 end
+%% 
+%% 

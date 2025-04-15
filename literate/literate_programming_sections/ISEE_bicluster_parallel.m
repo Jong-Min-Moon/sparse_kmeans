@@ -1,4 +1,4 @@
-function [mean_now, noise_now, Omega_diag_hat] = ISEE_bicluster_parallel(x, cluster_est_now)
+function [mean_vec, noise_mat, Omega_diag_hat, mean_mat] = ISEE_bicluster_parallel(x, cluster_est_now)
 %% ISEE_bicluster_parallel
 % @export
 % 
@@ -20,66 +20,69 @@ function [mean_now, noise_now, Omega_diag_hat] = ISEE_bicluster_parallel(x, clus
 % * Omega_diag_hat: $p$ vector of diagonal entries of precision matrix 
 %% 
 % 
-    p = size(x,1);
-    n = size(x,2);
-    n_regression = floor(p/2);
-    Omega_diag_hat_even = repelem(0,p/2);
-    Omega_diag_hat_odd = repelem(0,p/2);
-    Omega_diag_hat = repelem(0,p);
-    mean_now_even = zeros(p/2,n);
-    mean_now_odd = zeros(p/2,n);
-    mean_now = zeros(p,n);
-    noise_now_even =zeros(p/2,n);
-    noise_now_odd = zeros(p/2,n);
-    noise_now = zeros(p,n);
-    parfor i = 1 : n_regression
-        alpha_Al = zeros([2,2]);
-        E_Al = zeros([2,n]);
-        for cluster = 1:2 %for now, the function only works for two clusters
-            g_now = (cluster_est_now == cluster);
-            x_noisy_g_now = x(:,g_now);
-            predictor_boolean = ((1:p) == (2*(i-1)+1)) | ((1:p) == (2*(i-1)+2));
-            predictor_now = x_noisy_g_now(~predictor_boolean, :)';
+%ISEE_BICLUSTER_PARALLEL Estimates means and noise using blockwise Lasso regressions.
+% 
+% INPUT:
+%   x               - p × n data matrix
+%   cluster_est_now - 1 × n vector of cluster labels (must be 1 or 2)
+%
+% OUTPUT:
+%   mean_vec        - p × 2 matrix; each column is the estimated mean vector for one cluster
+%   noise_mat       - p × n matrix of estimated noise values
+%   Omega_diag_hat  - p × 1 vector of estimated diagonals of precision matrix
+%   mean_mat        - p × n matrix of cluster-wise sample means
+    [p, n] = size(x);
+    n_regression = floor(p / 2);
+    mean_vec = zeros(p, 2);
+    noise_mat = zeros(p, n);
+    Omega_diag_hat = zeros(p, 1);
+    % Preallocate output pieces for parfor
+    mean_vec_parts = cell(n_regression, 1);
+    noise_mat_parts = cell(n_regression, 1);
+    Omega_diag_parts = cell(n_regression, 1);
+    parfor i = 1:n_regression
+        rows_idx = [2*i - 1, 2*i];
+        predictors_idx = true(1, p);
+        predictors_idx(rows_idx) = false;
+        E_Al = zeros(2, n);
+        alpha_Al = zeros(2, 2);
+        for c = 1:2
+            cluster_mask = (cluster_est_now == c);
+            x_cluster = x(:, cluster_mask);
+            predictor_now = x_cluster(predictors_idx, :)';
             for j = 1:2
-                boolean_now = (1:p) == (2*(i-1)+j);
-                response_now = x_noisy_g_now(boolean_now,:)';
-                model_lasso = glm_gaussian(response_now, predictor_now); 
-                fit = penalized(model_lasso, @p_lasso, "standardize", true);
-                AIC = goodness_of_fit('aic', fit);
-                [min_aic, min_aic_idx] = min(AIC);
-                beta = fit.beta(:,min_aic_idx);
-                slope = beta(2:end);
-                intercept = beta(1);
-                E_Al(j,g_now) = response_now - intercept- predictor_now * slope;
-                alpha_Al(j, cluster) = intercept;
+                row_idx = rows_idx(j);
+                response_now = x_cluster(row_idx, :)';
+                [intercept, residual] = get_intercept_residual_lasso(response_now, predictor_now);
+                E_Al(j, cluster_mask) = residual;
+                alpha_Al(j, c) = intercept;
             end
         end
-        %estimation
-        Omega_hat_Al = inv(E_Al*E_Al')*n;% 2 x 2
-        diag_Omega_hat_Al = diag(Omega_hat_Al);
-        noise_Al = Omega_hat_Al*E_Al; % 2 * n
-        mean_Al = zeros([2,n]);
-        for cluster = 1:2
-            g_now = cluster_est_now == cluster;
-            n_now = sum(g_now);
-            mean_Al(:,g_now) = repmat(Omega_hat_Al*alpha_Al(:,cluster), [1,n_now]);
-        end
-        %Omega_diag_hat( output_index ) = diag(Omega_hat_Al);
-        k = i+1;
-        Omega_diag_hat_odd( i ) = diag_Omega_hat_Al(1);
-        Omega_diag_hat_even( i) = diag_Omega_hat_Al(2);
-        mean_now_odd( i,:) = mean_Al(1,:);
-        mean_now_even( i,:) = mean_Al(2,:);
-        noise_now_odd( i,:) = noise_Al(1,:);
-        noise_now_even( i,:) = noise_Al(2,:);
+        Omega_hat_Al = inv(E_Al * E_Al') * n;
+        % Store only the 2-row results
+        mean_local = Omega_hat_Al * alpha_Al;  % 2 × 2
+        noise_local = Omega_hat_Al * E_Al;     % 2 × n
+        diag_local = diag(Omega_hat_Al);       % 2 × 1
+        % Store using structs
+        mean_vec_parts{i} = struct('idx', rows_idx, 'val', mean_local);
+        noise_mat_parts{i} = struct('idx', rows_idx, 'val', noise_local);
+        Omega_diag_parts{i} = struct('idx', rows_idx, 'val', diag_local);
     end
-    even_idx =mod((1:p),2)==0;
-    odd_idx = mod((1:p),2)==1;
-    Omega_diag_hat(odd_idx) = Omega_diag_hat_odd;
-    Omega_diag_hat(even_idx) = Omega_diag_hat_even;
-    mean_now(odd_idx,:) = mean_now_odd;
-    mean_now(even_idx,:) = mean_now_even;
-    noise_now(odd_idx,:) = noise_now_odd;
-    noise_now(even_idx,:) = noise_now_even;
-    Omega_diag_hat = Omega_diag_hat';
+    % Aggregate results after parfor
+    for i = 1:n_regression
+        idx = mean_vec_parts{i}.idx;
+        mean_vec(idx, :) = mean_vec_parts{i}.val;
+        noise_mat(idx, :) = noise_mat_parts{i}.val;
+        Omega_diag_hat(idx) = Omega_diag_parts{i}.val;
+    end
+    % Construct sample-wise mean matrix
+    mean_mat = zeros(p, n);
+    for c = 1:2
+        cluster_mask = (cluster_est_now == c);
+        mean_mat(:, cluster_mask) = repmat(mean_vec(:, c), 1, sum(cluster_mask));
+    end
 end
+%% 
+% 
+% 
+% 

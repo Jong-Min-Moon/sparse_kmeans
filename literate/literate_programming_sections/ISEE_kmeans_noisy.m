@@ -16,6 +16,6 @@ function cluster_est = ISEE_kmeans_noisy(x, k, n_iter, is_parallel)
 %initialization
     cluster_est = cluster_spectral(x, k);
     for iter = 1:n_iter
-        cluster_est = ISEE_kmeans_noisy_onestep(x, k, cluster_est, is_parallel)
+        cluster_est = ISEE_kmeans_noisy_onestep(x, k, cluster_est, is_parallel);
     end
 end
