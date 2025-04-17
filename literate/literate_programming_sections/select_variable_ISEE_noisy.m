@@ -25,6 +25,7 @@ function s_hat = select_variable_ISEE_noisy(mean_now, noise_now, Omega_diag_hat,
     n_g1_now = sum(cluster_est_prev == 1);
     n_g2_now = sum(cluster_est_prev == 2);
     abs_diff = abs(signal_est_now)./sqrt(Omega_diag_hat) * sqrt( n_g1_now*n_g2_now/n );
+    size(abs_diff);
     s_hat = abs_diff > thres; % s_hat is a p-dimensional boolean array
     
     num_selected = sum(s_hat);        % number of selected variables (true values)

@@ -13,12 +13,23 @@ function Sigma_hat_s_hat_now = get_cov_small(x, cluster_est, s_hat)
 % Outputs:
 %% 
 % * Sigma_hat_s_hat_now: 
-n= size(x,2);
-    X_g1_now = x(:, (cluster_est ==  1)); 
-    X_g2_now = x(:, (cluster_est ==  2)); 
+    % Inputs:
+    %   x           - p × n data matrix
+    %   cluster_est - n × 1 vector of cluster labels (1 or 2)
+    %   s_hat       - p × 1 logical vector selecting variables (features)
+    % Ensure s_hat is a column vector
+    s_hat = s_hat(:);  
+    
+    % Split by cluster
+    X_g1_now = x(:, cluster_est == 1); 
+    X_g2_now = x(:, cluster_est == 2); 
+    % Mean center each group
     X_mean_g1_now = mean(X_g1_now, 2);
     X_mean_g2_now = mean(X_g2_now, 2);
-    data_py = [(X_g1_now - X_mean_g1_now) (X_g2_now - X_mean_g2_now)]; % p x n
-    data_filtered = data_py(s_hat,:); % p x n
-    Sigma_hat_s_hat_now = cov(data_filtered');% input: n x p 
+    % Residuals (centered data from both clusters)
+    data_py = [(X_g1_now - X_mean_g1_now), (X_g2_now - X_mean_g2_now)];  % p × n
+    % Select variables using s_hat
+    data_filtered = data_py(s_hat, :);  % s × n
+    % Compute covariance matrix (transpose to n × s)
+    Sigma_hat_s_hat_now = cov(data_filtered');
 end

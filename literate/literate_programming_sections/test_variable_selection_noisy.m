@@ -1,5 +1,5 @@
-function test_ISEE_bicluster_parallel()
-%% test_ISEE_bicluster_parallel
+function test_variable_selection_noisy()
+%% test_variable_selection_noisy
 % @export
 %TEST_ISEE_VARIABLE_SELECTION_VS_FLIP
 %   Evaluates variable selection robustness to clustering error at flip ratios 0.1, 0.2, 0.3
@@ -26,12 +26,12 @@ function test_ISEE_bicluster_parallel()
         FPs = zeros(n_trials, 1);
         for t = 1:n_trials
             % Perturb cluster labels
-            cluster_est = label_true';
+            cluster_estimate = label_true';
             flip_idx = randperm(n, round(flip_ratio * n));
-            cluster_est(flip_idx) = 3 - cluster_est(flip_idx);
+            cluster_estimate(flip_idx) = 3 - cluster_estimate(flip_idx);
             % Run estimator
-            [mean_vec, ~, ~, ~] = ISEE_bicluster_parallel(X', cluster_est);
-            selected = select_variable_ISEE_clean(mean_vec, n);
+            [mean_vec, noise_mat, Omega_diag_hat, mean_mat] = ISEE_bicluster_parallel(X', cluster_estimate);
+            selected = select_variable_ISEE_noisy(mean_mat, noise_mat, Omega_diag_hat, cluster_estimate);
             TP = sum(selected(1:s));
             FN = s - TP;
             FP = sum(selected(s+1:end));

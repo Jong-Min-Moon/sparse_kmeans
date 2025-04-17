@@ -1,51 +1,40 @@
+%% Parameter estimation and clustering for a two-class Gaussian mixture via the EM
+% It is based on the EM algorithm, and iteratively estimates the mixing
+% ratio omega, component means mu_1, mu_2 and beta=inv(Sigma)*(mu_1 - mu_2).
+
+%% Outputs:
+% omega, mu, beta: estimated parameters for the Gaussian mixtures
+% RI, aRI: rand index and adjusted rand index when comparing the estimated
+%    class index with the true index as vectors. 
+% optRI, optaRI: when RI and aRI are vectors, the optimal values for RI and
+%    aRI are also returned. 
+% group_member: vector of class membership
+% Inputs: 
+% z: N by p data matrix
+% zt: Nt by p training tata
+% TRUE_INDEX: true labels of the test data, used for evaluating the
+%   clustering performance. If unknown, set a random index, but ignore the
+%   output aRI, RI. Note if TRUE_INDEX is not available, one can input a
+%   vector consisting of all ones, but the output RI, aRI should be ignored.
+% omega0: initialization for \omega
+% mu0: p x 2, initialization of [\mu_1, \mu_2]
+% beta0: p x 1, initialization of beta, 
+% rho: a vector used as constant multiplier for the penalty parameter
+% lambda: a scalar, the penalty parameter for estimating sparse beta. Default
+%    is 0.1
+% maxIter: maximum number of iterations, default is 50.
+% tol: tolerance level of stability of the final estimates, default is 1e-06.
+%
+
 function [omega, mu, beta, RI, aRI, optRI, optaRI, group_member] = CHIME(z, zt, TRUE_INDEX, omega0, mu0, beta0, rho, lambda, maxIter, tol)
-%% CHIME
-% @export
-% 
-% 
-% 
-% Parameter estimation and clustering for a *two-class* Gaussian mixture via 
-% the EM. It is based on the EM algorithm, and iteratively estimates the mixing 
-% ratio omega, component means mu_1, mu_2 and beta=inv(Sigma)*(mu_1 - mu_2). This 
-% code is taken directly from https://github.com/drjingma/gmm and has not been 
-% modified. The |CHIME| function calls two auxiliary functions, |Contingency| 
-% and |RandIndex|, which are defined immediately after it.
-% 
-% 
-% 
-% 
-% 
-% *Inputs*
-%% 
-% * z: N by p data matrix
-% * zt: Nt by p training tata
-% * TRUE_INDEX: true labels of the test data, used for evaluating the clustering 
-% performance. If unknown, set a random index, but ignore the output aRI, RI. 
-% Note if TRUE_INDEX is not available, one can input a vector consisting of all 
-% ones, but the output RI, aRI should be ignored.
-% * omega0: initialization for \omega
-% * mu0: p x 2, initialization of [\mu_1, \mu_2]
-% * beta0: p x 1, initialization of beta, 
-% * rho: a vector used as constant multiplier for the penalty parameter (for 
-% parameter tuning)
-% * lambda: a scalar, the penalty parameter for estimating sparse beta. Default 
-% is 0.1
-% * maxIter: maximum number of iterations, default is 50.
-% * tol: tolerance level of stability of the final estimates, default is 1e-06.
-%% 
-% *Outputs*
-%% 
-% * omega, mu, beta: estimated parameters for the Gaussian mixtures
-% * RI, aRI: rand index and adjusted rand index when comparing the estimated 
-% class index with the true index as vectors.  (for parameter tuning)
-% * optRI, optaRI: when RI and aRI are vectors, the optimal values for RI and 
-% aRI are also returned.  (for parameter tuning)
-% * group_member: vector of class membership (parameter tuning applied)
+
 if (nargin < 8), lambda = 0.1;  end
 if (nargin < 9), maxIter = 50;  end
 if (nargin < 10), tol = 1e-06;  end
+
 [N,p] = size(z);
 Nt = size(zt,1);
+
 nrho = length(rho);
 aRI = zeros(nrho,1);
 RI = zeros(nrho,1);
@@ -96,6 +85,7 @@ for loop_rho = 1:nrho
         old_omega = new_omega;
         old_mu = new_mu;
         old_beta = new_beta;        
+
         iter = iter + 1;
         done = (diff < tol) | (iter >= maxIter);       
     end
@@ -110,6 +100,7 @@ for loop_rho = 1:nrho
     aRI(loop_rho) = aRIl;
     RI(loop_rho) = RIl;
 end
+
 % optimal clustering is selected as the one that maximizes aRI
 target = aRI(1);
 target_index = 1;
@@ -125,6 +116,5 @@ optaRI = aRI(target_index);
 beta = beta(:,target_index);
 mu = mu(:,:,target_index);
 omega = omega(target_index);
+
 end
-%% 
-% 

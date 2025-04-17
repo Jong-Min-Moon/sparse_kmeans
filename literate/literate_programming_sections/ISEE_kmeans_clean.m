@@ -1,5 +1,5 @@
-function cluster_estimate = ISEE_kmeans_noisy(x, k, n_iter, is_parallel)
-%% ISEE_kmeans_noisy
+function cluster_estimate = ISEE_kmeans_clean(x, k, n_iter, is_parallel)
+%% ISEE_kmeans_clean
 % @export
 % 
 % inputs
@@ -16,7 +16,6 @@ function cluster_estimate = ISEE_kmeans_noisy(x, k, n_iter, is_parallel)
 %initialization
     cluster_estimate = cluster_spectral(x, k);
     for iter = 1:n_iter
-        cluster_estimate = ISEE_kmeans_noisy_onestep(x, k, cluster_estimate, is_parallel);
+        cluster_estimate = ISEE_kmeans_clean_onestep(x, k, cluster_estimate, is_parallel);
     end
 end
-%% 

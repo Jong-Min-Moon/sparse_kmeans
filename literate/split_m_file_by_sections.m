@@ -3,7 +3,7 @@ function split_m_file_by_sections(filename)
     if ~isfile(filename)
         error('File not found: %s', filename);
     end
-    
+
     % Read lines from the .m file
     fid = fopen(filename, 'r');
     lines = textscan(fid, '%s', 'Delimiter', '\n', 'Whitespace', '');
@@ -18,8 +18,8 @@ function split_m_file_by_sections(filename)
         line = lines{i};
         stripped = strtrim(line);
 
-        % New titled section starts
-        if startsWith(stripped, '%%') && length(stripped) > 2
+        % Start of a new titled section
+        if startsWith(stripped, '%% ')
             if inside_section && ~isempty(current_section)
                 sections{end+1} = current_section; %#ok<AGROW>
             end
@@ -53,8 +53,8 @@ function split_m_file_by_sections(filename)
             continue;
         end
 
-        % Find function line and extract function name
-        func_idx = find(contains(strtrim(section_lines), 'function'), 1, 'first');
+        % Skip comments when looking for the function line
+        func_idx = find(~startsWith(strtrim(section_lines), '%') & contains(strtrim(section_lines), 'function'), 1, 'first');
         if isempty(func_idx)
             warning('Skipping section without function definition.');
             continue;

@@ -23,7 +23,7 @@ function Omega_star = get_precision_ER(p)
     % Total number of upper triangle entries
     num_entries = sum(upper_idx(:));
     % Generate Bernoulli mask: 1 with probability 0.05
-    mask = rand(num_entries, 1) < 0.05;
+    mask = rand(num_entries, 1) < 0.01;
     % Generate random values from Unif([-1, -0.5] ∪ [0.5, 1])
     signs = 2 * (rand(num_entries, 1) < 0.5) - 1;   % ±1 with equal prob
     mags  = rand(num_entries, 1) * 0.5 + 0.5;       % ∈ [0.5, 1]
