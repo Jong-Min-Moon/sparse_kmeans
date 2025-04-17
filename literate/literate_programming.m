@@ -4,6 +4,8 @@ function z = dummy(x,y)
 end
 %% 
 % 
+%% 
+% 
 %% Basic functions
 %% get_bicluster_acc
 % @export
@@ -799,7 +801,7 @@ end
 % 
 % 
 % 
-function [X, y, Omega_star, beta_star] = generate_gaussian_data(n, p, model, seed, cluster_1_ratio)
+function [X, y, mu1, mu2, mahala_dist, Omega_star, beta_star] = generate_gaussian_data(n, p, model, seed, cluster_1_ratio)
     rng(seed);
     s = 10;  % number of nonzero entries in beta
     n1 = round(n * cluster_1_ratio);
@@ -863,4 +865,284 @@ function test_generate_gaussian_data()
         end
     end
 end
-%%
+%% 
+%% Simulation - auxiliary
+%% get_bicluster_accuracy
+% @export
+%% 
+% * Computes accuracy for a two-cluster assignment.
+% * acc = GET_CLUSTER_ACCURACY(cluster_est, cluster_true) returns the proportion 
+% of correctly assigned labels, accounting for label switching.
+%% 
+% *Inputs*
+%% 
+% * cluster_est: n array of 1 and 2
+% * cluster_true: n array of 1 and 2
+%% 
+% Outputs
+%% 
+% * acc: ratio of correctly clustered observations
+%% 
+% 
+function acc = get_bicluster_accuracy(cluster_est, cluster_true)
+    % Ensure both inputs are vectors
+    if ~isvector(cluster_est) || ~isvector(cluster_true)
+        error('Both inputs must be vectors.');
+    end
+    % If one is row and one is column, transpose the row vector
+    if size(cluster_est, 1) == 1 && size(cluster_true, 1) > 1
+        cluster_est = cluster_est';
+    elseif size(cluster_true, 1) == 1 && size(cluster_est, 1) > 1
+        cluster_true = cluster_true';
+    end
+    if length(cluster_est) ~= length(cluster_true)
+        error('Input vectors must be the same length.');
+    end
+    % Compute accuracy under both labelings
+    match1 = sum(cluster_est == cluster_true);
+    match2 = sum(cluster_est == (3 - cluster_true));  % flips 1<->2
+    acc = max(match1, match2) / length(cluster_true);
+end
+%% 
+% 
+% 
+% 
+% 
+% 
+% 
+% 
+%% Baseline methods
+% 
+% 
+% 
+%% CHIME
+% @export
+function [omega, mu, beta, RI, aRI, optRI, optaRI, group_member] = CHIME(z, zt, TRUE_INDEX, omega0, mu0, beta0, rho, lambda, maxIter, tol)
+if (nargin < 8), lambda = 0.1;  end
+if (nargin < 9), maxIter = 50;  end
+if (nargin < 10), tol = 1e-06;  end
+[N,p] = size(z);
+Nt = size(zt,1);
+nrho = length(rho);
+aRI = zeros(nrho,1);
+RI = zeros(nrho,1);
+omega = zeros(nrho,1);
+mu = zeros(p,2,nrho);
+beta = zeros(p,nrho);
+IDX = zeros(Nt, nrho);
+for loop_rho = 1:nrho
+    lam_c = lambda + rho(loop_rho) * sqrt(log(p)/N);
+    
+    old_omega = omega0;
+    old_mu = mu0;
+    old_beta = beta0; 
+    
+    iter = 1;
+    diff = 100;
+    
+    done = (diff < tol) | (iter >= maxIter);
+    while (~done)
+        % E-step: calculate gamma
+        gamma = old_omega./((1-old_omega)*exp((z - ones(N,1)*mean(old_mu, 2)')*old_beta) + old_omega);
+         
+        % M-step: update omega,mu
+        new_omega = mean(gamma);
+        tmp1 = mean(diag(1-gamma) * z)'/(1-new_omega); 
+        tmp2 = mean(diag(gamma) * z)'/new_omega;
+        new_mu = [tmp1, tmp2];
+        
+        % Update the empirical covariance matrix Vn
+        x = bsxfun(@times, sqrt(1-gamma), z-(tmp1*ones(1,N))');
+        y = bsxfun(@times, sqrt(gamma), z-(tmp2*ones(1,N))');
+        Vn = 1/N* (x')* x + 1/N*(y')*y;
+        while cond(Vn) > 1e+6
+            Vn = Vn + sqrt(log(p)/N)*diag(ones(1,p)); 
+        end
+        
+        % M-step: update beta
+        delta = tmp1 - tmp2;
+        beta_init = Vn \ delta;
+        % The tuning parameter in clime is updated for every iteration.
+        new_beta = clime(beta_init, Vn, delta, lam_c);
+        
+        lam_c = 0.7 * lam_c + rho(loop_rho) * sqrt(log(p)/N);
+        
+        % Calculate the difference between the new value and the old value
+        diff = norm(new_beta - old_beta) + norm(new_mu - old_mu) + abs(new_omega - old_omega);
+             
+        old_omega = new_omega;
+        old_mu = new_mu;
+        old_beta = new_beta;        
+        iter = iter + 1;
+        done = (diff < tol) | (iter >= maxIter);       
+    end
+    % Save the estimate
+    omega(loop_rho) = new_omega;
+    mu(:,:,loop_rho) = new_mu;
+    beta(:,loop_rho) = new_beta;
+    
+    % Clustering on the test data
+    IDX(:,loop_rho) = ((zt - ones( Nt,1)*mean(mu(:,:,loop_rho), 2)')*beta(:,loop_rho)>=log( omega(loop_rho)/(1-omega(loop_rho) + 1e-06) ) ) + 1;
+    [aRIl,RIl,~,~] = RandIndex(IDX(:,loop_rho),TRUE_INDEX);
+    aRI(loop_rho) = aRIl;
+    RI(loop_rho) = RIl;
+end
+% optimal clustering is selected as the one that maximizes aRI
+target = aRI(1);
+target_index = 1;
+for loop_rho = 1:nrho
+    if target < aRI(loop_rho)
+        target = aRI(loop_rho);
+        target_index = loop_rho;
+    end
+end
+group_member = IDX(:,target_index);
+optRI = RI(target_index);
+optaRI = aRI(target_index);
+beta = beta(:,target_index);
+mu = mu(:,:,target_index);
+omega = omega(target_index);
+end
+%% 
+% 
+%% CHIME_simul_example
+% @export
+% 
+% 
+n = 200;
+p = 800;
+rep = 1;
+addpath(genpath('/home1/jongminm/sparse_kmeans'));
+% Set database and table
+table_name = 'chime';
+db_dir = '/home1/jongminm/sparse_kmeans/sparse_kmeans.db';
+% Model setup
+model = 'ER';
+cluster_1_ratio = 0.5;
+% Generate data
+[data, label_true, mu1, mu2, ~, beta_star] = generate_gaussian_data(n, p, model, rep, cluster_1_ratio);
+data = data';  % for CHIME, data should be n x p
+true_cluster_mean = [mu1 mu2];
+lambda_multiplier = [0.1 0.5 1 2 4 8 16];
+% Run CHIME
+[~, ~, ~, ~, ~, ~, ~, cluster_est] = CHIME(data, data, label_true, cluster_1_ratio, true_cluster_mean, beta_star, 0.1, lambda_multiplier, 100);
+% Evaluate clustering accuracy
+acc = get_bicluster_accuracy(cluster_est, label_true);
+% Current timestamp for database
+jobdate = datetime('now','Format','yyyy-MM-dd HH:mm:ss');
+% Retry logic for database insertion
+max_attempts = 10;
+attempt = 1;
+pause_time = 5;
+while attempt <= max_attempts
+    try
+        % Open DB connection
+        conn = sqlite(db_dir, 'connect');
+        % Insert query
+        insert_query = sprintf(['INSERT INTO %s (rep, sep, p, n, model, acc, jobdate) ' ...
+                                'VALUES (%d, %.4f, %d, %d, "%s", %.6f, "%s")'], ...
+                                table_name, rep, sep, p, n, model, acc, char(jobdate));
+        % Execute insertion
+        exec(conn, insert_query);
+        close(conn);
+        fprintf('Inserted result successfully on attempt %d.\n', attempt);
+        break;
+    catch ME
+        if contains(ME.message, 'database is locked')
+            fprintf('Database locked. Attempt %d/%d. Retrying in %d seconds...\n', ...
+                    attempt, max_attempts, pause_time);
+            pause(pause_time);
+            attempt = attempt + 1;
+        else
+            rethrow(ME);
+        end
+    end
+end
+if attempt > max_attempts
+    error('Failed to insert after %d attempts due to persistent database lock.', max_attempts);
+end
+%% 
+% 
+% 
+% 
+% 
+% 
+%% Simulation -  auxilary
+% 
+%% sqlite3 table schema for baseline method
+CREATE TABLE chime(
+"rep"INTEGER,
+"sep"REAL,
+"p"INTEGER,
+"n" INTEGER
+"model"TEXT,
+"acc"REAL,
+"jobdate"TIMESTAMP
+);
+%% 
+% 
+% 
+% 
+%% Contingency
+% @export
+% 
+% Form contigency matrix for two vectors
+% 
+% C=Contingency(Mem1,Mem2) returns contingency matrix for two column vectors 
+% Mem1, Mem2. These define which cluster each entity has been assigned to.
+% 
+% See also RANDINDEX.
+% 
+% (C) David Corney (2000)   		D.Corney@cs.ucl.ac.uk
+% 
+% This code is taken directly from https://github.com/drjingma/gmm and has not 
+% been modified. 
+% 
+% 
+function Cont=Contingency(Mem1,Mem2)
+if nargin < 2 || min(size(Mem1)) > 1 || min(size(Mem2)) > 1
+   error('Contingency: Requires two vector arguments')
+end
+Cont=zeros(max(Mem1),max(Mem2));
+for i = 1:length(Mem1);
+   Cont(Mem1(i),Mem2(i))=Cont(Mem1(i),Mem2(i))+1;
+end
+%% 
+% 
+%% RandIndex
+% @export
+% 
+% Calculates Rand Indices to compare two partitions. ARI=RANDINDEX(c1,c2), where 
+% c1,c2 are vectors listing the class membership, returns the "Hubert & Arabie 
+% adjusted Rand index". [AR,RI,MI,HI]=RANDINDEX(c1,c2) returns the adjusted Rand 
+% index, the unadjusted Rand index, "Mirkin's" index and "Hubert's" index.
+% 
+% See L. Hubert and P. Arabie (1985) "Comparing Partitions" Journal of Classification 
+% 2:193-218
+% 
+% C) David Corney (2000)   		D.Corney@cs.ucl.ac.uk
+% 
+% 
+function [AR,RI,MI,HI]=RandIndex(c1,c2)
+if nargin < 2 || min(size(c1)) > 1 || min(size(c2)) > 1
+   error('RandIndex: Requires two vector arguments');
+end
+C=Contingency(c1,c2);	%form contingency matrix
+n=sum(sum(C));
+nis=sum(sum(C,2).^2);		%sum of squares of sums of rows
+njs=sum(sum(C,1).^2);		%sum of squares of sums of columns
+t1=nchoosek(n,2);		%total number of pairs of entities
+t2=sum(sum(C.^2));	%sum over rows & columnns of nij^2
+t3=.5*(nis+njs);
+%Expected index (for adjustment)
+nc=(n*(n^2+1)-(n+1)*nis-(n+1)*njs+2*(nis*njs)/n)/(2*(n-1));
+A=t1+t2-t3;		%no. agreements
+D=  -t2+t3;		%no. disagreements
+if t1==nc
+   AR=0;			%avoid division by zero; if k=1, define Rand = 0
+else
+   AR=(A-nc)/(t1-nc);		%adjusted Rand - Hubert & Arabie 1985
+end
+RI=A/t1;			%Rand 1971		%Probability of agreement
+MI=D/t1;			%Mirkin 1970	%p(disagreement)
+HI=(A-D)/t1;	%Hubert 1977	%p(agree)-p(disagree)

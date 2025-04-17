@@ -1,4 +1,4 @@
-function [X, y, Omega_star, beta_star] = generate_gaussian_data(n, p, model, seed, cluster_1_ratio)
+function [X, y, mu1, mu2, mahala_dist, Omega_star, beta_star] = generate_gaussian_data(n, p, model, seed, cluster_1_ratio)
 %% generate_gaussian_data
 % @export
 % 

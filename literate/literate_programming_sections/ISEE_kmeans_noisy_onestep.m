@@ -17,9 +17,9 @@ function cluster_est_new = ISEE_kmeans_noisy_onestep(x, K, cluster_est_prev, is_
 % News cluster estimate. ex. [1 2 1 2 3 4 2 ]
 %estimation
     if is_parallel
-        [~, noise_mat, Omega_diag_hat, mean_mat]  = ISEE_bicluster_parallel(x, cluster_est_prev);
+        [_, noise_mat, Omega_diag_hat, mean_mat]  = ISEE_bicluster_parallel(x, cluster_est_prev);
     else
-        [~, noise_mat, Omega_diag_hat, mean_mat]  = ISEE_bicluster(x, cluster_est_prev);
+        [_, noise_mat, Omega_diag_hat, mean_mat]  = ISEE_bicluster(x, cluster_est_prev);
     end
 %variable selection
     s_hat = select_variable_ISEE_noisy(mean_mat, noise_mat, Omega_diag_hat, cluster_est_prev);
