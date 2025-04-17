@@ -761,6 +761,90 @@ function cluster_estimate = ISEE_kmeans_clean(x, k, n_iter, is_parallel)
         cluster_estimate = ISEE_kmeans_clean_onestep(x, k, cluster_estimate, is_parallel);
     end
 end
+%% Algorithm - stopping criterion
+% 
+%% get_relative_change
+% @export
+% 
+% 
+% 
+% Computes the relative change in the objective value between the last two iterations.
+% 
+% 
+% 
+% *Syntax:*
+% 
+% |relative_change = get_relative_change(obj_val_vec)|
+% 
+% 
+% 
+% *Input:*
+%% 
+% * |obj_val_vec| - Numeric vector of objective values over iterations (length 
+% must be >= 2).
+%% 
+% *Output:*
+%% 
+% * |relative_change| - The relative change between the last two objective values
+%% 
+% *Description:*
+% 
+% This function is typically used in optimization algorithms to monitor convergence. 
+% It calculates the relative difference between the two most recent objective 
+% values. A small relative change suggests that the algorithm is approaching convergence.
+% 
+% 
+% 
+% 
+function relative_change = get_relative_change(obj_val_vec)
+    if numel(obj_val_vec) < 2
+        relative_change = Inf;
+        warning('get_relative_change:InsufficientLength', ...
+                'Input vector must contain at least two elements. Returning Inf.');
+        return;
+    end
+    prev_val = obj_val_vec(end - 1);
+    curr_val = obj_val_vec(end);
+    
+    % Use max with eps to ensure numerical stability
+    relative_change = abs(curr_val - prev_val) / max(abs(prev_val), eps);
+end
+%% 
+% 
+% *Example:*
+rel_change = get_relative_change([1.0, 0.8, 0.75]);
+rel_change = abs((0.75 - 0.8)/0.8) = 0.0625
+%% 
+% 
+%% Run_iterative_algorithm
+% @export
+    function [cluster_est_final, iter_stop] = run_iterative_algorithm(ik, max_n_iter, window_size_half, percent_change, run_full, loop_detect_start)
+        ik.stop_decider = stopper(max_n_iter, window_size_half, percent_change, loop_detect_start);
+        ik.initialize_saving_matrix(max_n_iter)
+  
+        %initialization
+        initial_cluster_assign = ik.get_initial_cluster_assign();
+        ik.insert_cluster_est(initial_cluster_assign, 0);
+        
+        for iter = 1:max_n_iter
+            ik.run_single_iter(iter)
+            
+            % stopping criterion
+            criteria_vec = ik.stop_decider.apply_criteria(ik.obj_val_original, ik.obj_val_prim, iter);
+            [is_stop, final_iter] = ik.stop_decider.is_stop_by_two(iter)
+            if is_stop
+                ik.iter_stop = final_iter;
+                fprintf("\n final iteration = %i ", ik.iter_stop)
+                if ~run_full
+                    break 
+                end
+            end %end of stopping criteria
+        end % end one iteration
+        cluster_est_final = ik.fetch_cluster_est(ik.iter_stop);
+        iter_stop = ik.iter_stop;
+    end
+%% 
+%% 
 %% Simulations - data generator
 % 
 %% get_precision_ER
@@ -1185,9 +1269,9 @@ noisy_beta = beta_star + randn(size(beta_star)) * noise_std;
 lambda_multiplier = 1;
 dummy_label = zeros(n,1)+1;
 % Run CHIME
-[~, ~, ~, ~, ~, ~, ~, cluster_est] = CHIME(data, data, dummy_label, cluster_1_ratio, noisy_cluster_mean, noisy_beta,  1, 0.1,100);
+[~, ~, ~, ~, ~, ~, ~, cluster_est_chime] = CHIME(data, data, dummy_label, cluster_1_ratio, noisy_cluster_mean, noisy_beta,  1, 0.1,100);
 % Evaluate clustering accuracy
-acc = get_bicluster_accuracy(cluster_est, label_true)
+acc = get_bicluster_accuracy(cluster_est_chime, label_true)
 % Current timestamp for database
 jobdate = datetime('now','Format','yyyy-MM-dd HH:mm:ss');
 % Retry logic for database insertion
@@ -1240,9 +1324,9 @@ cluster_1_ratio = 0.5;
 % Generate data
 [data, label_true, mu1, mu2, sep, ~, beta_star]  = generate_gaussian_data(n, p, 4, model, rep, cluster_1_ratio);
 % Run our method
-cluster_estimte = ISEE_kmeans_clean(data', 2, 3, true);
+cluster_estimte_isee = ISEE_kmeans_clean(data', 2, 2, true);
 % Evaluate clustering accuracy
-acc = get_bicluster_accuracy(cluster_estimte, label_true)
+acc = get_bicluster_accuracy(cluster_estimte_isee, label_true)
 % Current timestamp for database
 jobdate = datetime('now','Format','yyyy-MM-dd HH:mm:ss');
 % Retry logic for database insertion

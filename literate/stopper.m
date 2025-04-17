@@ -79,7 +79,8 @@ classdef stopper < handle
 
 
         function is_loop = detect_loop(sp, obj_val_original, obj_val_sdp, iter)
-            if (sp.check_early(iter, sp.loop_detect_start) | sp.check_already(iter, "loop"))
+            is_early = iter <= sp.loop_detect_start;
+            if (is_early | sp.check_already(iter, "loop"))
                 is_loop = false;
             else
                 window_vec_original = obj_val_original(iter-(sp.window_size-1):iter );
@@ -88,6 +89,16 @@ classdef stopper < handle
             end
         end
 
+        function is_loop = detect_loop(sp, obj_val_original, obj_val_sdp, iter)
+            is_early = iter <= sp.loop_detect_start;
+            if (is_early | sp.check_already(iter, "loop"))
+                is_loop = false;
+            else
+                window_vec_original = obj_val_original(iter-(sp.window_size-1):iter );
+                window_vec_sdp      = obj_val_sdp(     iter-(sp.window_size-1):iter );
+                is_loop = ( sp.compare_in_window(window_vec_sdp) | sp.compare_in_window(window_vec_original) );  
+            end
+        end
         function decision_loop = compare_in_window(sp, window_vec)
             if length(window_vec) == sp.window_size
                 index_center = (sp.window_size+1)/2;
@@ -108,13 +119,7 @@ classdef stopper < handle
             is_already =  sum(sp.stop_history{1:(iter-1), criteria}) > 0;
         end%end of is_already
 
-        function is_early = check_early(sp, iter, standard)
-             if iter <= standard
-                 is_early = true;
-             else
-                 is_early = false;
-             end
-        end%end of method check_early
+
 
     end%end of methods
 end%end of classdef

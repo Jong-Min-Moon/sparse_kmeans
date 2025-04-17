@@ -19,9 +19,9 @@ noisy_beta = beta_star + randn(size(beta_star)) * noise_std;
 lambda_multiplier = 1;
 dummy_label = zeros(n,1)+1;
 % Run CHIME
-[~, ~, ~, ~, ~, ~, ~, cluster_est] = CHIME(data, data, dummy_label, cluster_1_ratio, noisy_cluster_mean, noisy_beta,  1, 0.1,100);
+[~, ~, ~, ~, ~, ~, ~, cluster_est_chime] = CHIME(data, data, dummy_label, cluster_1_ratio, noisy_cluster_mean, noisy_beta,  1, 0.1,100);
 % Evaluate clustering accuracy
-acc = get_bicluster_accuracy(cluster_est, label_true)
+acc = get_bicluster_accuracy(cluster_est_chime, label_true)
 % Current timestamp for database
 jobdate = datetime('now','Format','yyyy-MM-dd HH:mm:ss');
 % Retry logic for database insertion

@@ -14,9 +14,9 @@ cluster_1_ratio = 0.5;
 % Generate data
 [data, label_true, mu1, mu2, sep, ~, beta_star]  = generate_gaussian_data(n, p, 4, model, rep, cluster_1_ratio);
 % Run our method
-cluster_estimte = ISEE_kmeans_clean(data', 2, 3, true);
+cluster_estimte_isee = ISEE_kmeans_clean(data', 2, 2, true);
 % Evaluate clustering accuracy
-acc = get_bicluster_accuracy(cluster_estimte, label_true)
+acc = get_bicluster_accuracy(cluster_estimte_isee, label_true)
 % Current timestamp for database
 jobdate = datetime('now','Format','yyyy-MM-dd HH:mm:ss');
 % Retry logic for database insertion
