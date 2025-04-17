@@ -89,31 +89,8 @@ classdef stopper < handle
             end
         end
 
-        function is_loop = detect_loop(sp, obj_val_original, obj_val_sdp, iter)
-            is_early = iter <= sp.loop_detect_start;
-            if (is_early | sp.check_already(iter, "loop"))
-                is_loop = false;
-            else
-                window_vec_original = obj_val_original(iter-(sp.window_size-1):iter );
-                window_vec_sdp      = obj_val_sdp(     iter-(sp.window_size-1):iter );
-                is_loop = ( sp.compare_in_window(window_vec_sdp) | sp.compare_in_window(window_vec_original) );  
-            end
-        end
-        function decision_loop = compare_in_window(sp, window_vec)
-            if length(window_vec) == sp.window_size
-                index_center = (sp.window_size+1)/2;
-                value_center = window_vec(index_center);
-                value_window = window_vec;
-                change = abs(value_window - value_center)/value_center
-                if sum( change < sp.percent_change) >1
-                    decision_loop = true;
-                else
-                    decision_loop = false;
-                end
-            else
-                error("the window size does not match")
-            end
-        end %end of method loop_decision
+
+
         
         function is_already = check_already(sp, iter, criteria) 
             is_already =  sum(sp.stop_history{1:(iter-1), criteria}) > 0;
