@@ -27,7 +27,7 @@ function test_get_precision_ER()
     % Check approximate sparsity level (off-diagonal non-zeros)
     is_offdiag = ~eye(p);
     num_nonzeros_offdiag = nnz(Omega .* is_offdiag);
-    expected_nonzeros = round(0.05 * p^2);
+    expected_nonzeros = round(0.01 * p^2);
     
     if abs(num_nonzeros_offdiag - expected_nonzeros) / expected_nonzeros < 0.2
         disp(['✓ Sparsity test passed: ' num2str(num_nonzeros_offdiag) ...
@@ -45,11 +45,7 @@ function test_get_precision_ER()
 end
 %% 
 % 
-% 
-% 
-% 
-% 
-% 
+%% 
 % 
 % 
 % 

@@ -25,7 +25,34 @@ methods
         ik.init_method = init_method;
     end
     
+    function run_single_iter(ik, iter)
+        fprintf("\n%i th thresholding\n\n", iter)
+        cluster_now = ik.fetch_cluster_est(iter-1);
+        %estimation and thresholding
+        tic
+        [data_innovated_small, data_innovated_big, sample_covariance_small] = ik.data_object.threshold(cluster_now, ik.omega_sparsity);
 
+        ik.omega_est_time(iter) = toc;
+        ik.entries_survived(iter,:) = ik.data_object.support;
+        ik.x_tilde_est(:,:,iter) = data_innovated_big;
+        n_survived = sum(ik.data_object.support);
+        fprintf("\n%i entries survived \n",n_survived)
+        if n_survived > 0
+            fprintf('solving SDP...')
+            tic
+            [Z_now, obj_val] = kmeans_sdp( data_innovated_small' * sample_covariance_small * data_innovated_small/ ik.data_object.sample_size, ik.data_object.number_cluster);
+            cluster_est_vec = sdp_to_cluster(Z_now, ik.data_object.number_cluster);
+            ik.sdp_solve_time(iter) = toc;
+            ik.obj_val_prim(iter) = obj_val(1);
+            ik.obj_val_dual(iter) = obj_val(2);
+            ik.obj_val_original(iter) = ik.get_objective_value_original(cluster_est_vec);
+            fprintf('took %fs, relaxed dual: %f, original: %f \n', [ik.sdp_solve_time(iter), ik.obj_val_dual(iter), ik.obj_val_original(iter)])
+        else
+            fprintf('All entries dead. Re-initializing...')
+            cluster_est_vec = ik.get_initial_cluster_assign();
+        end
+        ik.insert_cluster_est(cluster_est_vec, iter);
+    end
     
     function [cluster_est_final, iter_stop] = run_iterative_algorithm(ik, max_n_iter, window_size_half, percent_change, run_full, loop_detect_start)
         ik.stop_decider = stopper(max_n_iter, window_size_half, percent_change, loop_detect_start);
@@ -207,7 +234,17 @@ methods
     end
     %
 
+  %  methods (Access = protected)
+  %      function objective_value_original = get_objective_value_original(ik, cluster_est)
+   %     objective_value_original = 0;
+  %      for i = 1:ik.data_object.number_cluster
+  %          cluster_size = sum(cluster_est==i);
+ %          affinity_cluster = ik.data_object.sparse_affinity(cluster_est==i, cluster_est==i);
+ %           within_cluster_variation = ((-2*sum(affinity_cluster, "all") + 2*cluster_size*trace(affinity_cluster))/cluster_size;
+ %           objective_value_original = objective_value_original + within_cluster_variation;
+ %       end
 
+   % end
     %end
 
 end %end of methods

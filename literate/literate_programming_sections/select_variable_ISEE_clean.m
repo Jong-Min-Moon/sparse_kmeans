@@ -1,4 +1,4 @@
-function s_hat = select_variable_ISEE_clean(mean_now, noise_now, cluster_est_prev)
+function s_hat = select_variable_ISEE_clean(mean_vec, n)
 %% select_variable_ISEE_clean
 % @export
 % 
@@ -17,21 +17,22 @@ function s_hat = select_variable_ISEE_clean(mean_now, noise_now, cluster_est_pre
 % Outputs:
 %% 
 % * s_hat: $p$ boolean vector, where true indicates that variable is selected
-    x_tilde_now = mean_now + noise_now;
-    p = size(mean_now,1);
-    n = size(mean_now,2);
-    rate = sqrt(log(p)/n);
-    diverging_quantity = sqrt(log(p));
-    thres = diverging_quantity*rate;
-    signal_est_now = mean( x_tilde_now(:, cluster_est_prev==1), 2) - mean( x_tilde_now(:, cluster_est_prev==2), 2);
-    n_g1_now = sum(cluster_est_prev == 1);
-    n_g2_now = sum(cluster_est_prev == 2);
-    abs_diff = abs(signal_est_now)./sqrt(Omega_diag_hat) * sqrt( n_g1_now*n_g2_now/n );
-    s_hat = abs_diff > thres; % s_hat is a p-dimensional boolean array
-    
-    num_selected = sum(s_hat);        % number of selected variables (true values)
-    total_vars = length(s_hat);       % total number of variables
-    fprintf('%d out of %d variables selected.\n', num_selected, total_vars);
+    % Validate input dimensions
+    [p, col_dim] = size(mean_vec);
+    if col_dim ~= 2
+        error('mean_vec must be a p-by-2 matrix representing class means.');
+    end
+    % Estimate sparse support
+    mu_diff_hat = mean_vec(:,1) - mean_vec(:,2);
+    threshold = 2*sqrt(log(p) * log(n) / n);
+    s_hat = abs(mu_diff_hat) > threshold;  % p-dimensional boolean array
+    % Print summary
+    num_selected = sum(s_hat);
+    sum(s_hat(1:10))
+    while num_selected == 0
+        threshold = threshold /2;
+        s_hat = abs(mu_diff_hat) > threshold;
+        num_selected = sum(s_hat);
+    end
+    fprintf('%d out of %d variables selected.\n', num_selected, p);
 end
-%% 
-%% 
