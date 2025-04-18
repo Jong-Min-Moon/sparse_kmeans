@@ -740,7 +740,7 @@ end
 %% 
 % * cluster_est_new: $n$ array of positive integers, where n is the sample size. 
 % News cluster estimate. ex. [1 2 1 2 3 4 2 ]
-function [cluster_est_new, obj_sdp, obj_lik]  = ISEE_kmeans_clean_onestep(x, K, cluster_est_prev, is_parallel)
+function [cluster_est_new, s_hat, obj_sdp, obj_lik]  = ISEE_kmeans_clean_onestep(x, K, cluster_est_prev, is_parallel)
 %estimation
     if is_parallel
         [mean_vec, noise_mat, Omega_diag_hat, mean_mat]  = ISEE_bicluster_parallel(x, cluster_est_prev);
@@ -795,27 +795,15 @@ function cluster_estimate = ISEE_kmeans_clean(x, k, n_iter, is_parallel, loop_de
     cluster_estimate = cluster_spectral(x, k);
     for iter = 1:n_iter
         % One step of ISEE-based k-means refinement
-        [cluster_estimate, obj_sdp(iter), obj_lik(iter)]  = ISEE_kmeans_clean_onestep(x, k, cluster_estimate, is_parallel);
+        [cluster_estimate, s_hat,  obj_sdp(iter), obj_lik(iter)]  = ISEE_kmeans_clean_onestep(x, k, cluster_estimate, is_parallel);
         fprintf('Iteration %d | SDP obj: %.4f | Likelihood obj: %.4f\n', iter, obj_sdp(iter), obj_lik(iter));
         % Compute objective values
+        
         % Early stopping condition
-        stop_sdp = detect_relative_change(obj_sdp, loop_detect_start, min_delta);
-        stop_lik = detect_relative_change(obj_lik, loop_detect_start, min_delta);
-        stagnate_sdp = detect_loop(obj_sdp, loop_detect_start, window_size, min_delta);
-        stagnate_lik = detect_loop(obj_lik, loop_detect_start, window_size, min_delta);
-% Collect all flags into a logical array
-flags = [stop_sdp, stop_lik, stagnate_sdp, stagnate_lik];
-flag_names = {'stop_sdp', 'stop_lik', 'stagnate_sdp', 'stagnate_lik'};
-% Check if at least two conditions are true
-if sum(flags) >= 2
-    disp('\n Stopping early. Activated conditions:');
-    for i = 1:length(flags)
-        if flags(i)
-            fprintf('  • %s\n', flag_names{i});
+        is_stop = decide_stop(obj_sdp, obj_lik, loop_detect_start, window_size, min_delta);
+        if is_stop
+            break;
         end
-    end
-    break;
-end
     end
 end
 %% Algorithm - stopping criterion
@@ -950,8 +938,27 @@ sequence_2 = [1 2 3 4 5 6 7 8 9 10 NaN NaN NaN];
  detect_loop(sequence_2, 3, 3, 0.05)
 %% 
 % 
-%% asd
- 
+%% decide_stop
+% @export
+ function is_stop = decide_stop(obj_sdp, obj_lik, loop_detect_start, window_size, min_delta)
+ is_stop = false;
+        % Early stopping logic
+        stop_sdp = detect_relative_change(obj_sdp, loop_detect_start, min_delta);
+        stop_lik = detect_relative_change(obj_lik, loop_detect_start, min_delta);
+        stagnate_sdp = detect_loop(obj_sdp, loop_detect_start, window_size, min_delta);
+        stagnate_lik = detect_loop(obj_lik, loop_detect_start, window_size, min_delta);
+        flags = [stop_sdp, stop_lik, stagnate_sdp, stagnate_lik];
+        flag_names = {'stop_sdp', 'stop_lik', 'stagnate_sdp', 'stagnate_lik'};
+        if sum(flags) >= 2
+            fprintf('\nStopping early. Activated conditions:\n');
+            for i = 1:length(flags)
+                if flags(i)
+                    fprintf('  • %s\n', flag_names{i});
+                end
+            end
+            is_stop = true;
+        end
+ end
 %% 
 %% 
 %% Simulations - data generator
@@ -1234,11 +1241,66 @@ function acc = get_bicluster_accuracy(cluster_est, cluster_true)
 end
 %% 
 % 
+%% Simulation - step-level evaluation
 % 
-% 
-% 
-% 
-% 
+%% ISEE_kmeans_clean_simul
+% @export
+function cluster_estimate = ISEE_kmeans_clean_simul(x, k, n_iter, is_parallel, loop_detect_start, window_size, min_delta, db_dir, table_name, rep, model, sep, cluster_true)
+% ISEE_kmeans_clean - Runs iterative clustering with early stopping and logs results to SQLite DB
+    [p, n] = size(x);  % Get dimensions
+    obj_sdp = nan(1, n_iter);
+    obj_lik = nan(1, n_iter);
+    % Initialize cluster assignment
+    cluster_estimate = cluster_spectral(x, k);
+    for iter = 1:n_iter
+        [cluster_estimate, s_hat, obj_sdp(iter), obj_lik(iter)] = ISEE_kmeans_clean_onestep(x, k, cluster_estimate, is_parallel);
+       %%%%%%%%%%%%%%%% simul part starts
+        TP = sum(s_hat(1:10));
+        FP = sum(s_hat) - TP;
+        FN = 10 - TP;
+acc = get_bicluster_accuracy(cluster_estimate, cluster_true);  % define this if needed
+fprintf('Iteration %d | SDP obj: %.4f | Likelihood obj: %.4f | TP: %d | FP: %d | FN: %d | Acc: %.4f\n', ...
+    iter, obj_sdp(iter), obj_lik(iter), TP, FP, FN, acc);
+    
+    % === Insert into SQLite database ===
+    jobdate = datetime('now', 'Format', 'yyyy-MM-dd HH:mm:ss');
+    max_attempts = 10;
+    pause_time = 5;
+    attempt = 1;
+    
+    while attempt <= max_attempts
+        try
+            conn = sqlite(db_dir, 'connect');
+            insert_query = sprintf([ ...
+                'INSERT INTO %s (rep, iter, sep, dim, n, model, acc, obj_sdp, obj_lik, true_pos, false_pos, false_neg, jobdate) ' ...
+                'VALUES (%d, %d, %d, %d, %d, "%s", %.6f, %.6f, %.6f, %d, %d, %d, "%s")'], ...
+                table_name, rep, iter, sep, p, n, model, acc, obj_sdp(iter), obj_lik(iter), TP, FP, FN, char(jobdate));
+            exec(conn, insert_query);
+            close(conn);
+            fprintf('Inserted result successfully on attempt %d.\n', attempt);
+            break;
+        catch ME
+            if contains(ME.message, 'database is locked')
+                fprintf('Database locked. Attempt %d/%d. Retrying in %d seconds...\n', ...
+                        attempt, max_attempts, pause_time);
+                pause(pause_time);
+                attempt = attempt + 1;
+            else
+                rethrow(ME);
+            end
+        end
+    end
+    if attempt > max_attempts
+        error('Failed to insert after %d attempts due to persistent database lock.', max_attempts);
+    end
+    %%%%%%%%%%%%% simul part ends
+       % Early stopping condition
+        is_stop = decide_stop(obj_sdp, obj_lik, loop_detect_start, window_size, min_delta);
+        if is_stop
+            break;
+        end
+end
+%% 
 % 
 %% Baseline methods
 % 
@@ -1467,7 +1529,7 @@ cluster_1_ratio = 0.5;
 % Generate data
 [data, label_true, mu1, mu2, sep, ~, beta_star]  = generate_gaussian_data(n, p, 4, model, rep, cluster_1_ratio);
 % Run our method
-cluster_estimte_isee = ISEE_kmeans_clean(data', 2, 20, true, 6, 4, 0.01);
+cluster_estimte_isee = ISEE_kmeans_clean(data', 2, 30, true, 6, 5, 0.03);
 % Evaluate clustering accuracy
 acc = get_bicluster_accuracy(cluster_estimte_isee, label_true)
 % Current timestamp for database
@@ -1509,14 +1571,20 @@ end
 %% Simulation -  auxilary
 % 
 %% sqlite3 table schema for baseline method
-CREATE TABLE chime(
+CREATE TABLE noniso_est_isee_dirty (
 "rep"INTEGER,
+"iter"INTEGER,
 "sep"REAL,
-"p"INTEGER,
-"n" INTEGER
+"dim"INTEGER,
+"n"INTEGER,
 "model"TEXT,
 "acc"REAL,
-"jobdate"TIMESTAMP
+"obj_sdp"REAL,
+"obj_lik"REAL,
+"true_pos"INTEGER,
+"false_pos"INTEGER,
+"false_neg"INTEGER,
+"jobdate"TIMESTAMP,
 );
 %% 
 % 

@@ -14,7 +14,7 @@ cluster_1_ratio = 0.5;
 % Generate data
 [data, label_true, mu1, mu2, sep, ~, beta_star]  = generate_gaussian_data(n, p, 4, model, rep, cluster_1_ratio);
 % Run our method
-cluster_estimte_isee = ISEE_kmeans_clean(data', 2, 20, true, 6, 4, 0.01);
+cluster_estimte_isee = ISEE_kmeans_clean(data', 2, 30, true, 6, 5, 0.03);
 % Evaluate clustering accuracy
 acc = get_bicluster_accuracy(cluster_estimte_isee, label_true)
 % Current timestamp for database

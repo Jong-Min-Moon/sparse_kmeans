@@ -36,9 +36,3 @@ function acc = get_bicluster_accuracy(cluster_est, cluster_true)
 end
 %% 
 % 
-% 
-% 
-% 
-% 
-% 
-% 

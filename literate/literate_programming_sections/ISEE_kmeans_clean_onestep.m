@@ -1,4 +1,4 @@
-function [cluster_est_new, obj_sdp, obj_lik]  = ISEE_kmeans_clean_onestep(x, K, cluster_est_prev, is_parallel)
+function [cluster_est_new, s_hat, obj_sdp, obj_lik]  = ISEE_kmeans_clean_onestep(x, K, cluster_est_prev, is_parallel)
 %% ISEE_kmeans_clean_onestep
 % @export
 % 
