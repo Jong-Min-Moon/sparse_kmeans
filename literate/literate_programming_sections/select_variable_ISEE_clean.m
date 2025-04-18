@@ -29,5 +29,10 @@ function s_hat = select_variable_ISEE_clean(mean_vec, n)
     % Print summary
     num_selected = sum(s_hat);
     sum(s_hat(1:10))
+    while num_selected == 0
+        threshold = threshold /2;
+        s_hat = abs(mu_diff_hat) > threshold;
+        num_selected = sum(s_hat);
+    end
     fprintf('%d out of %d variables selected.\n', num_selected, p);
 end

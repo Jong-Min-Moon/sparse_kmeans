@@ -45,6 +45,8 @@ function [X, y, mu1, mu2, mahala_dist, Omega_star, beta_star] = generate_gaussia
     switch model
         case 'ER'
             Omega_star = get_precision_ER(p);
+        case 'chain45'
+            Omega_star = get_precision_band(p, 2, 0.45);
         otherwise
             error('Model must be ''ER'' or ''AR''.');
     end

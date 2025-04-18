@@ -1,4 +1,4 @@
-function cluster_est_new = ISEE_kmeans_clean_onestep(x, K, cluster_est_prev, is_parallel)
+function [cluster_est_new, obj_sdp, obj_lik]  = ISEE_kmeans_clean_onestep(x, K, cluster_est_prev, is_parallel)
 %% ISEE_kmeans_clean_onestep
 % @export
 % 
@@ -25,6 +25,6 @@ function cluster_est_new = ISEE_kmeans_clean_onestep(x, K, cluster_est_prev, is_
     n= size(x,2);
     s_hat = select_variable_ISEE_clean(mean_vec, n);
 %clustering
-    cluster_est_new = cluster_SDP_noniso(x, K, mean_mat, noise_mat, cluster_est_prev, s_hat);
+    [cluster_est_new, obj_sdp, obj_lik]  = cluster_SDP_noniso(x, K, mean_mat, noise_mat, cluster_est_prev, s_hat);
 end
 %% 

@@ -1,20 +1,20 @@
 function test_ER_isee_clean()
 %% test_ER_isee_clean
 % @export
-n = 200;
-p = 1000;
-rep = 111;
+n = 500;
+p = 400;
+rep = 10;
 addpath(genpath('/home1/jongminm/sparse_kmeans'));
 % Set database and table
 table_name = 'chime';
 db_dir = '/home1/jongminm/sparse_kmeans/sparse_kmeans.db';
 % Model setup
-model = 'ER';
+model = 'chain45';
 cluster_1_ratio = 0.5;
 % Generate data
 [data, label_true, mu1, mu2, sep, ~, beta_star]  = generate_gaussian_data(n, p, 4, model, rep, cluster_1_ratio);
 % Run our method
-cluster_estimte_isee = ISEE_kmeans_clean(data', 2, 2, true);
+cluster_estimte_isee = ISEE_kmeans_clean(data', 2, 20, true, 6, 4, 0.01);
 % Evaluate clustering accuracy
 acc = get_bicluster_accuracy(cluster_estimte_isee, label_true)
 % Current timestamp for database

@@ -434,6 +434,11 @@ function s_hat = select_variable_ISEE_clean(mean_vec, n)
     % Print summary
     num_selected = sum(s_hat);
     sum(s_hat(1:10))
+    while num_selected == 0
+        threshold = threshold /2;
+        s_hat = abs(mu_diff_hat) > threshold;
+        num_selected = sum(s_hat);
+    end
     fprintf('%d out of %d variables selected.\n', num_selected, p);
 end
 %% test_variable_selection_noisy
@@ -499,9 +504,9 @@ function test_variable_selection_clean()
     p = 800;
     n = 200;
     s = 10;
-    n_trials = 10;
-    flip_ratios = [0.1, 0.2, 0.3, 0.4];
-    [X, label_true, mu1, mu2, sep, ~, beta_star]  = generate_gaussian_data(n, p, 4, 'ER', 1, 1/2);
+    n_trials = 20;
+    flip_ratios = [0.2, 0.3, 0.4];
+    [X, label_true, mu1, mu2, sep, ~, beta_star]  = generate_gaussian_data(n, p, 4, 'chain45', 1, 1/2);
     % Selection threshold
     % Header
     fprintf('%10s  %5s  %5s  %5s  %6s  %6s\n', 'FlipRatio', 'TP', 'FN', 'FP', 'TPR', 'FPR');
@@ -513,11 +518,12 @@ function test_variable_selection_clean()
         FPs = zeros(n_trials, 1);
         for t = 1:n_trials
             % Perturb cluster labels
-            cluster_est = label_true';
+            cluster_estimate = label_true';
             flip_idx = randperm(n, round(flip_ratio * n));
-            cluster_est(flip_idx) = 3 - cluster_est(flip_idx);
+            cluster_estimate(flip_idx) = 3 - cluster_estimate(flip_idx);
+            get_bicluster_accuracy(cluster_estimate,label_true')
             % Run estimator
-            [mean_vec, ~, ~, ~] = ISEE_bicluster_parallel(X', cluster_est);
+            [mean_vec, ~, ~, ~] = ISEE_bicluster_parallel(X', cluster_estimate);
             selected = select_variable_ISEE_clean(mean_vec, n);
             TP = sum(selected(1:s));
             FN = s - TP;
@@ -645,18 +651,26 @@ end
 % size. Cluster estimate from the prevous step. ex. [1 2 1 2 3 4 2 ]
 %% 
 % outputs:
-function cluster_est_new = cluster_SDP_noniso(x, K, mean_now, noise_now, cluster_est_prev, s_hat)
+function [cluster_est_new, obj_sdp, obj_lik] = cluster_SDP_noniso(x, K, mean_now, noise_now, cluster_est_prev, s_hat)
     %estimate sigma hat s
-    n = size(x,2);
+    n = size(x,2)
     Sigma_hat_s_hat_now = get_cov_small(x, cluster_est_prev, s_hat);
     x_tilde_now = mean_now + noise_now;
     x_tilde_now_s  = x_tilde_now(s_hat,:);  
-    Z_now = kmeans_sdp_pengwei( x_tilde_now_s' * Sigma_hat_s_hat_now * x_tilde_now_s/ n, K);
+    affinity_matrix = x_tilde_now_s' * Sigma_hat_s_hat_now * x_tilde_now_s;
+    Z = kmeans_sdp_pengwei( affinity_matrix/ n, K);
     % final thresholding
-    [U_sdp,~,~] = svd(Z_now);
+    [U_sdp,~,~] = svd(Z);
     U_top_k = U_sdp(:,1:K);
-    [cluster_est_new,C] = kmeans(U_top_k,K);  % label
+    [cluster_est_new,~] = kmeans(U_top_k,K);  % label
     cluster_est_new = cluster_est_new';    
+    %objective function
+    obj_sdp = 0;
+    for c = 1:2
+        sample_mask = cluster_est_new==c;
+        obj_sdp= obj_sdp + sum(affinity_matrix(sample_mask, sample_mask), "all")/sum(sample_mask);
+    end
+    obj_lik = obj_sdp - sum(diag(affinity_matrix));
 end
 %% 
 %% 
@@ -676,7 +690,7 @@ end
 %% 
 % * cluster_est_new: $n$ array of positive integers, where n is the sample size. 
 % News cluster estimate. ex. [1 2 1 2 3 4 2 ]
-function cluster_est_new = ISEE_kmeans_noisy_onestep(x, K, cluster_est_prev, is_parallel)
+function [cluster_est_new, obj_sdp, obj_lik]  = ISEE_kmeans_noisy_onestep(x, K, cluster_est_prev, is_parallel)
 %estimation
     if is_parallel
         [~, noise_mat, Omega_diag_hat, mean_mat]  = ISEE_bicluster_parallel(x, cluster_est_prev);
@@ -686,7 +700,7 @@ function cluster_est_new = ISEE_kmeans_noisy_onestep(x, K, cluster_est_prev, is_
 %variable selection
     s_hat = select_variable_ISEE_noisy(mean_mat, noise_mat, Omega_diag_hat, cluster_est_prev);
 %clustering
-    cluster_est_new = cluster_SDP_noniso(x, K, mean_mat, noise_mat, cluster_est_prev, s_hat);
+    [cluster_est_new, obj_sdp, obj_lik]  = cluster_SDP_noniso(x, K, mean_mat, noise_mat, cluster_est_prev, s_hat);
 end
 %% ISEE_kmeans_noisy
 % @export
@@ -726,7 +740,7 @@ end
 %% 
 % * cluster_est_new: $n$ array of positive integers, where n is the sample size. 
 % News cluster estimate. ex. [1 2 1 2 3 4 2 ]
-function cluster_est_new = ISEE_kmeans_clean_onestep(x, K, cluster_est_prev, is_parallel)
+function [cluster_est_new, obj_sdp, obj_lik]  = ISEE_kmeans_clean_onestep(x, K, cluster_est_prev, is_parallel)
 %estimation
     if is_parallel
         [mean_vec, noise_mat, Omega_diag_hat, mean_mat]  = ISEE_bicluster_parallel(x, cluster_est_prev);
@@ -737,33 +751,76 @@ function cluster_est_new = ISEE_kmeans_clean_onestep(x, K, cluster_est_prev, is_
     n= size(x,2);
     s_hat = select_variable_ISEE_clean(mean_vec, n);
 %clustering
-    cluster_est_new = cluster_SDP_noniso(x, K, mean_mat, noise_mat, cluster_est_prev, s_hat);
+    [cluster_est_new, obj_sdp, obj_lik]  = cluster_SDP_noniso(x, K, mean_mat, noise_mat, cluster_est_prev, s_hat);
 end
 %% 
 %% ISEE_kmeans_clean
 % @export
 % 
-% inputs
-%% 
-% * x: $p\times n$ data matrix, where $p$ is the data dimension and $n$ is the 
-% sample size
-% * K: positive integer. number of clusters.
-% * is_parallel : boolean. true if using parallel computing in matlab.
-%% 
-% outputs
-%% 
-% * cluster_est: $n$ array of positive integers, where n is the sample size. 
-% estimated cluster size. ex. [1 2 1 2 1 2 2 ]
-function cluster_estimate = ISEE_kmeans_clean(x, k, n_iter, is_parallel)
-%initialization
+% 
+% 
+% % ISEE_kmeans_clean - Iterative clustering using ISEE-based refinement and 
+% early stopping
+% 
+% %
+% 
+% % Inputs:
+% 
+% %   x                - Data matrix (p × n)
+% 
+% %   k                - Number of clusters
+% 
+% %   n_iter           - Maximum number of iterations
+% 
+% %   is_parallel      - Logical flag for parallel execution
+% 
+% %   loop_detect_start - Iteration to start loop detection
+% 
+% %   window_size      - Number of steps used for stagnation detection
+% 
+% %   min_delta        - Minimum improvement required to continue iterating
+% 
+% %
+% 
+% % Output:
+% 
+% %   cluster_estimate - Final cluster assignment (1 × n)
+% 
+% 
+function cluster_estimate = ISEE_kmeans_clean(x, k, n_iter, is_parallel, loop_detect_start, window_size, min_delta)
+    % Initialize tracking vectors
+    obj_sdp = nan(1, n_iter);
+    obj_lik = nan(1, n_iter);
+    % Initial cluster assignment using spectral clustering
     cluster_estimate = cluster_spectral(x, k);
     for iter = 1:n_iter
-        cluster_estimate = ISEE_kmeans_clean_onestep(x, k, cluster_estimate, is_parallel);
+        % One step of ISEE-based k-means refinement
+        [cluster_estimate, obj_sdp(iter), obj_lik(iter)]  = ISEE_kmeans_clean_onestep(x, k, cluster_estimate, is_parallel);
+        fprintf('Iteration %d | SDP obj: %.4f | Likelihood obj: %.4f\n', iter, obj_sdp(iter), obj_lik(iter));
+        % Compute objective values
+        % Early stopping condition
+        stop_sdp = detect_relative_change(obj_sdp, loop_detect_start, min_delta);
+        stop_lik = detect_relative_change(obj_lik, loop_detect_start, min_delta);
+        stagnate_sdp = detect_loop(obj_sdp, loop_detect_start, window_size, min_delta);
+        stagnate_lik = detect_loop(obj_lik, loop_detect_start, window_size, min_delta);
+% Collect all flags into a logical array
+flags = [stop_sdp, stop_lik, stagnate_sdp, stagnate_lik];
+flag_names = {'stop_sdp', 'stop_lik', 'stagnate_sdp', 'stagnate_lik'};
+% Check if at least two conditions are true
+if sum(flags) >= 2
+    disp('\n Stopping early. Activated conditions:');
+    for i = 1:length(flags)
+        if flags(i)
+            fprintf('  • %s\n', flag_names{i});
+        end
+    end
+    break;
+end
     end
 end
 %% Algorithm - stopping criterion
 % 
-%% get_relative_change
+%% detect_relative_change
 % @export
 % 
 % 
@@ -774,7 +831,7 @@ end
 % 
 % *Syntax:*
 % 
-% |relative_change = get_relative_change(obj_val_vec)|
+% |is_stuck = get_relative_change(obj_val_vec)|
 % 
 % 
 % 
@@ -788,65 +845,149 @@ end
 % * |relative_change| - The relative change between the last two objective values
 %% 
 % *Description:*
-% 
-% This function is typically used in optimization algorithms to monitor convergence. 
+%% 
+% * This function is typically used in optimization algorithms to monitor convergence. 
 % It calculates the relative difference between the two most recent objective 
-% values. A small relative change suggests that the algorithm is approaching convergence.
-% 
-% 
-% 
-% 
-function relative_change = get_relative_change(obj_val_vec)
-    if numel(obj_val_vec) < 2
-        relative_change = Inf;
-        warning('get_relative_change:InsufficientLength', ...
-                'Input vector must contain at least two elements. Returning Inf.');
+% values. A small relative change suggests that the algorithm is approaching convergence. 
+% * If the vector contains NaNs, the computation is based on the last two values 
+% before the first NaN.
+% * If fewer than two valid values exist, returns Inf.
+function is_stuck = detect_relative_change(obj_val_vec, detect_start, min_delta)
+% detect_relative_change - Checks whether the last two valid objective values
+% show insufficient relative improvement.
+%
+% Inputs:
+%   obj_val_vec - Vector of objective values (may contain NaNs)
+%   min_delta   - Minimum required relative change to count as progress
+%
+% Output:
+%   is_stuck    - Logical flag: true if relative change < min_delta
+    % Trim at first NaN, if any
+    nan_idx = find(isnan(obj_val_vec), 1, 'first');
+    if isempty(nan_idx)
+        valid_vals = obj_val_vec;
+    else
+        valid_vals = obj_val_vec(1:nan_idx - 1);
+    end
+    % Need at least two valid values to compute relative change
+    if numel(valid_vals) < max(2, detect_start)
+        is_stuck = false;
         return;
     end
-    prev_val = obj_val_vec(end - 1);
-    curr_val = obj_val_vec(end);
-    
-    % Use max with eps to ensure numerical stability
+    % Compute relative change
+    prev_val = valid_vals(end - 1);
+    curr_val = valid_vals(end);
     relative_change = abs(curr_val - prev_val) / max(abs(prev_val), eps);
+    % Determine if change is below threshold
+    is_stuck = relative_change < min_delta;
 end
 %% 
 % 
 % *Example:*
-rel_change = get_relative_change([1.0, 0.8, 0.75]);
-rel_change = abs((0.75 - 0.8)/0.8) = 0.0625
+get_relative_change([1.0, 0.8, 0.75]) - abs((0.75 - 0.8)/0.8) 
 %% 
 % 
-%% Run_iterative_algorithm
+%% 
+%% detect_loop
 % @export
-    function [cluster_est_final, iter_stop] = run_iterative_algorithm(ik, max_n_iter, window_size_half, percent_change, run_full, loop_detect_start)
-        ik.stop_decider = stopper(max_n_iter, window_size_half, percent_change, loop_detect_start);
-        ik.initialize_saving_matrix(max_n_iter)
-  
-        %initialization
-        initial_cluster_assign = ik.get_initial_cluster_assign();
-        ik.insert_cluster_est(initial_cluster_assign, 0);
-        
-        for iter = 1:max_n_iter
-            ik.run_single_iter(iter)
-            
-            % stopping criterion
-            criteria_vec = ik.stop_decider.apply_criteria(ik.obj_val_original, ik.obj_val_prim, iter);
-            [is_stop, final_iter] = ik.stop_decider.is_stop_by_two(iter)
-            if is_stop
-                ik.iter_stop = final_iter;
-                fprintf("\n final iteration = %i ", ik.iter_stop)
-                if ~run_full
-                    break 
-                end
-            end %end of stopping criteria
-        end % end one iteration
-        cluster_est_final = ik.fetch_cluster_est(ik.iter_stop);
-        iter_stop = ik.iter_stop;
+% 
+% Detects convergence plateau based on recent objective values.
+% 
+% *Inputs:*
+%% 
+% * |obj_val_vec|       - Vector of objective values over iterations (may contain 
+% NaN)
+% * |loop_detect_start| - Number of initial steps to skip before detecting loops
+% * |window_size|       - Number of recent steps to consider
+% * |min_delta|    - Minimum required relative improvement (in percent) to avoid 
+% detection
+%% 
+% *Output:*
+%% 
+% * |is_loop|          - Logical flag: true if no significant improvement is 
+% detected
+%% 
+% *Description:*
+%% 
+% * Resembles |keras.callbacks.EarlyStopping| (<https://keras.io/api/callbacks/early_stopping/ 
+% https://keras.io/api/callbacks/early_stopping/>), incorporating the |min_delta| 
+% parameter. In our setting, a window of iterations plays the role of epochs in 
+% deep learning.
+% * If the last |window_size| iterations show no improvement over the global 
+% optimum so far, return the flag |is_loop|.
+%% 
+% 
+function is_loop = detect_loop(obj_val_vec, loop_detect_start, window_size, min_delta)
+    is_loop = false; % Default output
+    % Trim input at first NaN, if any
+    nan_idx = find(isnan(obj_val_vec), 1, 'first');
+    if ~isempty(nan_idx)
+        obj_val_vec = obj_val_vec(1:nan_idx - 1);
     end
+    n = numel(obj_val_vec);
+    % Check if there's enough history
+    if n <= loop_detect_start + window_size
+        return;
+    end
+    % Define the best value before the recent window
+    global_best = max(obj_val_vec(1:end - window_size));
+    % Define the best value in the recent window
+    window_vec = obj_val_vec(end - window_size + 1:end);
+    window_best = max(window_vec);
+    % Compute relative change
+    relative_change = abs(global_best - window_best) / max(abs(global_best), eps);
+    % Determine if loop (stagnation) is happening
+    if relative_change < min_delta
+        is_loop = true;
+    end
+end
+% 
+% *Example:*
+ sequence_1 = [666.41, 1426.2, 1023.6, 1379.2,   1726, 1232.1, 1789.1, 1831.4, 1898.8, 1939.1, 1565.9, 1643.4, 1491.2, 1791.3, 1657.2, 1856.9, 1569.4, 1936.6, 1647.5, 1822.3, 1656.1, 1871.6], ...
+                [-6.6188, -5.4111,  -5.713, -6.4386, -5.2692, -5.9411, -6.0581,  -6.573, -5.8132,  -6.075,  -6.481, -6.3241, -6.6013, -6.3012, -6.3302,  -5.605, -6.4672,   -6.36, -6.9014, -6.1495, -6.3179, -6.2851, -6.5507]
+ detect_loop(sequence_1, 6, 5, 0.05)
+sequence_2 = [1 2 3 4 5 6 7 8 9 10 NaN NaN NaN];
+ detect_loop(sequence_2, 3, 3, 0.05)
+%% 
+% 
+%% asd
+ 
 %% 
 %% 
 %% Simulations - data generator
+%% get_precision_band
+% @export
 % 
+% 
+function precision_matrix = get_precision_band(p, precision_sparsity, conditional_correlation)
+% get_precision_band - Constructs a banded symmetric precision matrix with geometric decay
+%                      using spdiags, assuming identity base and symmetric off-diagonal decay.
+%
+% Inputs:
+%   p                    - Dimension of the matrix
+%   precision_sparsity   - Total number of nonzero diagonals (must be even, e.g., 2, 4, 6, ...)
+%   conditional_correlation - Decay factor for off-diagonals
+%
+% Output:
+%   precision_matrix     - p × p symmetric precision matrix
+    if precision_sparsity < 2
+        precision_matrix = eye(p);
+        return;
+    end
+    max_band = floor(precision_sparsity / 2);       % e.g., 2 → 1 band above/below
+    offsets = -max_band:max_band;                   % Diagonal offsets
+    num_diags = length(offsets);
+    % Create padded diagonal matrix: size p × num_diags
+    B = zeros(p, num_diags);
+    for k = 1:num_diags
+        offset = offsets(k);
+        len = p - abs(offset);
+        decay = conditional_correlation ^ abs(offset);
+        B((1:len) + max(0, offset), k) = decay;
+    end
+    % Build matrix from diagonals
+    precision_matrix = full(spdiags(B, offsets, p, p));
+end
 %% get_precision_ER
 % @export
 % 
@@ -994,6 +1135,8 @@ function [X, y, mu1, mu2, mahala_dist, Omega_star, beta_star] = generate_gaussia
     switch model
         case 'ER'
             Omega_star = get_precision_ER(p);
+        case 'chain45'
+            Omega_star = get_precision_band(p, 2, 0.45);
         otherwise
             error('Model must be ''ER'' or ''AR''.');
     end
@@ -1311,20 +1454,20 @@ end
 %% test_ER_isee_clean
 % @export
 function test_ER_isee_clean()
-n = 200;
-p = 1000;
-rep = 111;
+n = 500;
+p = 400;
+rep = 10;
 addpath(genpath('/home1/jongminm/sparse_kmeans'));
 % Set database and table
 table_name = 'chime';
 db_dir = '/home1/jongminm/sparse_kmeans/sparse_kmeans.db';
 % Model setup
-model = 'ER';
+model = 'chain45';
 cluster_1_ratio = 0.5;
 % Generate data
 [data, label_true, mu1, mu2, sep, ~, beta_star]  = generate_gaussian_data(n, p, 4, model, rep, cluster_1_ratio);
 % Run our method
-cluster_estimte_isee = ISEE_kmeans_clean(data', 2, 2, true);
+cluster_estimte_isee = ISEE_kmeans_clean(data', 2, 20, true, 6, 4, 0.01);
 % Evaluate clustering accuracy
 acc = get_bicluster_accuracy(cluster_estimte_isee, label_true)
 % Current timestamp for database

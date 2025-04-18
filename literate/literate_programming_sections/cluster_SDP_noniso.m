@@ -1,4 +1,4 @@
-function cluster_est_new = cluster_SDP_noniso(x, K, mean_now, noise_now, cluster_est_prev, s_hat)
+function [cluster_est_new, obj_sdp, obj_lik] = cluster_SDP_noniso(x, K, mean_now, noise_now, cluster_est_prev, s_hat)
 %% cluster_SDP_noniso
 % @export
 % 
@@ -31,16 +31,24 @@ function cluster_est_new = cluster_SDP_noniso(x, K, mean_now, noise_now, cluster
 %% 
 % outputs:
     %estimate sigma hat s
-    n = size(x,2);
+    n = size(x,2)
     Sigma_hat_s_hat_now = get_cov_small(x, cluster_est_prev, s_hat);
     x_tilde_now = mean_now + noise_now;
     x_tilde_now_s  = x_tilde_now(s_hat,:);  
-    Z_now = kmeans_sdp_pengwei( x_tilde_now_s' * Sigma_hat_s_hat_now * x_tilde_now_s/ n, K);
+    affinity_matrix = x_tilde_now_s' * Sigma_hat_s_hat_now * x_tilde_now_s;
+    Z = kmeans_sdp_pengwei( affinity_matrix/ n, K);
     % final thresholding
-    [U_sdp,~,~] = svd(Z_now);
+    [U_sdp,~,~] = svd(Z);
     U_top_k = U_sdp(:,1:K);
-    [cluster_est_new,C] = kmeans(U_top_k,K);  % label
+    [cluster_est_new,~] = kmeans(U_top_k,K);  % label
     cluster_est_new = cluster_est_new';    
+    %objective function
+    obj_sdp = 0;
+    for c = 1:2
+        sample_mask = cluster_est_new==c;
+        obj_sdp= obj_sdp + sum(affinity_matrix(sample_mask, sample_mask), "all")/sum(sample_mask);
+    end
+    obj_lik = obj_sdp - sum(diag(affinity_matrix));
 end
 %% 
 %% 
