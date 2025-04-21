@@ -1,5 +1,5 @@
-function obj = get_likelihood_objective(X, G)
-%% get_likelihood_objective
+function obj = get_penalized_objective(X, G)
+%% get_penalized_objective
 % @export
 % 
 % *Inputs:* 
@@ -10,9 +10,7 @@ function obj = get_likelihood_objective(X, G)
 % Computes the full profile likelihood objective
 % X: p x n data matrix
 % G: 1 x n vector of cluster labels
-sdp_obj = get_sdp_objective(X, G);      % reuse core SDP component
-frob_norm_sq = norm(X, 'fro')^2;
-obj = sdp_obj - 2 * frob_norm_sq;
+[p,n] = size(X);
+lik_obj = get_likelihood_objective(X, G);      % reuse core SDP component
+obj = lik_obj + n*p;
 end
-%% 
-% 

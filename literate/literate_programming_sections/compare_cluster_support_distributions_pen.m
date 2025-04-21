@@ -1,5 +1,5 @@
-function compare_cluster_support_distributions(n, p, s, sep, baseline, cluster_1_ratio, true_support, false_support, n_rep, beta_seed)
-%% compare_cluster_support_distributions
+function compare_cluster_support_distributions_pen(n, p, s, sep, baseline, cluster_1_ratio, true_support, false_support, n_rep, beta_seed)
+%% compare_cluster_support_distributions_pen
 % @export
 % Compare objective value distributions for likelihood and SDP
 % under 20%, 40%, and 50% label flips. Plot 8 histograms (2x4 layout).
@@ -41,10 +41,10 @@ for f = 1:length(flip_rates)
         obj_lik_ft(seed) = get_likelihood_objective(X_false', y_true);
         obj_lik_fr(seed) = get_likelihood_objective(X_false', y_flip);
         % SDP
-        obj_sdp_tt(seed) = get_sdp_objective(X_true', y_true);
-        obj_sdp_tr(seed) = get_sdp_objective(X_true', y_flip);
-        obj_sdp_ft(seed) = get_sdp_objective(X_false', y_true);
-        obj_sdp_fr(seed) = get_sdp_objective(X_false', y_flip);
+        obj_sdp_tt(seed) = get_penalized_objective(X_true', y_true);
+        obj_sdp_tr(seed) = get_penalized_objective(X_true', y_flip);
+        obj_sdp_ft(seed) = get_penalized_objective(X_false', y_true);
+        obj_sdp_fr(seed) = get_penalized_objective(X_false', y_flip);
      
     end
     % Store each mode separately
@@ -87,9 +87,9 @@ for i = 1:length(flip_rates)
     if flip_rates(i) == 1
         title('SDP | Random Guess');
     else
-        title(sprintf('SDP | %.0f%% Flip', 100 * flip_rates(i)));
+        title(sprintf('Penalized | %.0f%% Flip', 100 * flip_rates(i)));
     end
-    xlabel('SDP Objective');
+    xlabel('Penalized Objective');
     ylabel('Density');
     grid on;
     set(gca, 'FontSize', 14);
@@ -115,5 +115,3 @@ fname = strrep(fname, ']', '');
 exportgraphics(fig, fname, 'Resolution', 300);
 fprintf('Saved figure to: %s\n', fname);
 end
-%% 
-% 
