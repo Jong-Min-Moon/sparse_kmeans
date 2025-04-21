@@ -808,6 +808,174 @@ function cluster_estimate = ISEE_kmeans_clean(x, k, n_iter, is_parallel, loop_de
 end
 %% Algorithm - stopping criterion
 % 
+%% get_sdp_objective
+% @export
+% 
+% Computes the SDP objective 
+% 
+% *Inputs:* 
+%% 
+% * X: p x n data matrix (usually a truncated matrix, where p is |S| where S 
+% is selected variables) )
+% * G: 1 x n vector of cluster labels in {1,...,K}
+%% 
+% 
+% 
+% 
+function obj = get_sdp_objective(X, G)
+A = X' * X;        % n x n Gram matrix
+K = max(G);        % number of clusters
+obj_sum = 0;
+for k = 1:K
+    idx = find(G == k);
+    A_sub = A(idx, idx);
+    obj_sum = obj_sum + sum(A_sub, 'all') / numel(idx);
+end
+obj = 2 * obj_sum;
+end
+%% 
+% 
+%% get_likelihood_objective
+% @export
+% 
+% *Inputs:* 
+%% 
+% * X: p x n data matrix (usually a truncated matrix, where p is |S| where S 
+% is selected variables) )
+% * G: 1 x n vector of cluster labels in {1,...,K}
+function obj = get_likelihood_objective(X, G)
+% Computes the full profile likelihood objective
+% X: p x n data matrix
+% G: 1 x n vector of cluster labels
+sdp_obj = get_sdp_objective(X, G);      % reuse core SDP component
+frob_norm_sq = norm(X, 'fro')^2;
+obj = sdp_obj - 2 * frob_norm_sq;
+end
+%% 
+% 
+% 
+% 
+%% compare_cluster_support_distributions
+% @export
+function compare_cluster_support_distributions(n, p, s, sep, baseline, cluster_1_ratio, true_support, false_support, n_rep, beta_seed)
+% Compare objective value distributions for likelihood and SDP
+% under 20%, 40%, and 50% label flips. Plot 8 histograms (2x4 layout).
+flip_rates = [0.2, 0.4, 0.5, 1];
+% Generate a general random cluster estimate (1 or 2)
+cluster_rand = randi([1, 2], n, 1);
+[X_full, y_true, ~, ~, ~, ~, ~] = generate_gaussian_data(n, p, s, sep, 'iso', 'random_uniform', baseline, 1, cluster_1_ratio, 1);
+% Allocate results structure
+results_lik = struct();
+results_sdp = struct();
+for f = 1:length(flip_rates)
+    flip_rate = flip_rates(f);
+    % Allocate
+    obj_lik_tt = zeros(n_rep, 1);
+    obj_lik_tr = zeros(n_rep, 1);
+    obj_lik_ft = zeros(n_rep, 1);
+    obj_lik_fr = zeros(n_rep, 1);
+    
+    obj_sdp_tt = zeros(n_rep, 1);
+    obj_sdp_tr = zeros(n_rep, 1);
+    obj_sdp_ft = zeros(n_rep, 1);
+    obj_sdp_fr = zeros(n_rep, 1);
+    
+    % Flip cluster labels
+        y_flip = y_true;
+        n_flip = round(flip_rate * n);
+        flip_idx = randperm(n, n_flip);
+        y_flip(flip_idx) = 3 - y_flip(flip_idx);  % flip 1 <-> 2
+        if flip_rate ==1
+            y_flip = cluster_rand;
+        end
+    for seed = 1:n_rep
+        [X_full, y_true, ~, ~, ~, ~, ~] = generate_gaussian_data(n, p, s, sep, 'iso', 'random_uniform', seed, cluster_1_ratio, beta_seed);
+        X_true = X_full(:, true_support);
+        X_false = X_full(:, false_support);
+        % Likelihood
+        obj_lik_tt(seed) = get_likelihood_objective(X_true', y_true);
+        obj_lik_tr(seed) = get_likelihood_objective(X_true', y_flip);
+        obj_lik_ft(seed) = get_likelihood_objective(X_false', y_true);
+        obj_lik_fr(seed) = get_likelihood_objective(X_false', y_flip);
+        % SDP
+        obj_sdp_tt(seed) = get_sdp_objective(X_true', y_true);
+        obj_sdp_tr(seed) = get_sdp_objective(X_true', y_flip);
+        obj_sdp_ft(seed) = get_sdp_objective(X_false', y_true);
+        obj_sdp_fr(seed) = get_sdp_objective(X_false', y_flip);
+     
+    end
+    % Store each mode separately
+    results_lik(f).flip_rate = flip_rate;
+    results_lik(f).vals = {obj_lik_tt, obj_lik_tr, obj_lik_ft, obj_lik_fr};
+    results_sdp(f).flip_rate = flip_rate;
+    results_sdp(f).vals = {obj_sdp_tt, obj_sdp_tr, obj_sdp_ft, obj_sdp_fr};
+end
+fig = figure('Position', [100, 100, 1800, 900]);
+t = tiledlayout(fig, 2, 4, 'TileSpacing', 'compact', 'Padding', 'compact');
+labels = {'True+True', 'True+Flip', 'False+True', 'False+Flip'};
+hist_handles = gobjects(1, 4);  % Store handles for common legend
+for i = 1:length(flip_rates)
+    % --- Likelihood Subplot ---
+    nexttile(t, i);
+    hold on;
+    vals = results_lik(i).vals;
+    for j = 1:4
+        h = histogram(vals{j}, 'Normalization', 'pdf', 'FaceAlpha', 0.5, 'EdgeColor', 'none');
+        if i == 1  % store histogram handles from the first subplot
+            hist_handles(j) = h;
+        end
+    end
+    if flip_rates(i) == 1
+        title('Likelihood | Random Guess');
+    else
+        title(sprintf('Likelihood | %.0f%% Flip', 100 * flip_rates(i)));
+    end
+    xlabel('Likelihood Objective');
+    ylabel('Density');
+    grid on;
+    set(gca, 'FontSize', 14);
+    % --- SDP Subplot ---
+    nexttile(t, i + 4);
+    hold on;
+    vals = results_sdp(i).vals;
+    for j = 1:4
+        histogram(vals{j}, 'Normalization', 'pdf', 'FaceAlpha', 0.5, 'EdgeColor', 'none');
+    end
+    if flip_rates(i) == 1
+        title('SDP | Random Guess');
+    else
+        title(sprintf('SDP | %.0f%% Flip', 100 * flip_rates(i)));
+    end
+    xlabel('SDP Objective');
+    ylabel('Density');
+    grid on;
+    set(gca, 'FontSize', 14);
+end
+% Add external legend below all plots
+lgd = legend(hist_handles, labels, 'Orientation', 'horizontal', 'FontSize', 16);
+lgd.Layout.Tile = 'south';
+% Remove axes toolbar interactivity
+ax_list = findall(fig, 'Type', 'axes');
+for ax = ax_list'
+    disableDefaultInteractivity(ax);
+end
+% --- Verify figure validity before saving ---
+if ~isvalid(fig)
+    error('Figure handle is invalid before exporting.');
+end
+% --- Save figure ---
+fname = sprintf('objective_dists_s%d_ratio%.2f_false%d_%d.png', ...
+    s, cluster_1_ratio, false_support(1), false_support(end));
+fname = strrep(fname, ' ', '');
+fname = strrep(fname, '[', '');
+fname = strrep(fname, ']', '');
+exportgraphics(fig, fname, 'Resolution', 300);
+fprintf('Saved figure to: %s\n', fname);
+end
+%% 
+% 
+% 
+% 
 %% detect_relative_change
 % @export
 % 
@@ -1105,7 +1273,7 @@ end
 % 
 % % 
 % 
-% % INPUTS:
+% *Inputs:*
 % 
 % %   n               - total number of samples
 % 
@@ -1119,7 +1287,7 @@ end
 % 
 % %
 % 
-% % OUTPUTS:
+% *Outputs:*
 % 
 % %   X           - n x p data matrix
 % 
@@ -1132,34 +1300,57 @@ end
 % 
 % 
 % 
-function [X, y, mu1, mu2, mahala_dist, Omega_star, beta_star] = generate_gaussian_data(n, p, sep, model, seed, cluster_1_ratio)
-    
-    s = 10;  % number of nonzero entries in beta
+function [X, y, mu1, mu2, mahala_dist, Omega_star, beta_star] = generate_gaussian_data(n, p, s, sep, model_cov, model_energy, baseline, seed, cluster_1_ratio, beta_seed)
+  
     n1 = round(n * cluster_1_ratio);
     n2 = n - n1;
     y = [ones(n1, 1); 2 * ones(n2, 1)];
     % Generate Omega_star
-    switch model
+    switch model_cov
+        case 'iso'
+            Omega_star = eye(p);
+            Sigma = eye(p);
         case 'ER'
             Omega_star = get_precision_ER(p);
+            Sigma = inv(Omega_star);
         case 'chain45'
             Omega_star = get_precision_band(p, 2, 0.45);
+            Sigma = inv(Omega_star);
         otherwise
             error('Model must be ''ER'' or ''AR''.');
     end
     % Set beta_star
-    beta_star = zeros(p, 1);
+    switch model_energy
+        case 'equal_symmetric'
+                beta_star = zeros(p, 1);
+                beta_star(1:s) = 1;
+                M=sep/2/ sqrt( sum( Sigma(1:s,1:s),"all") );
+                beta_star = M * beta_star;
+                    % Set class means
+                mu1 = Omega_star \ beta_star;
+                mu2 = -mu1;
+    %        signal_beta_1 = zeros(10) + 0.5;
+    %        signal_beta_2 = -signal_beta_1;
+        case 'random_uniform'
+            rng(beta_seed)
+            signal_beta_1 = 10 * rand(1, s) - 5;
+            signal_beta_2 = 10 * rand(1, s) - 5;
+            omega_mu_1_unscaled = [signal_beta_1, repelem(baseline, 1,p-s)];
+            omega_mu_2_unscaled = [signal_beta_2, repelem(baseline, 1,p-s)];
+            beta_unscaled = (omega_mu_1_unscaled - omega_mu_2_unscaled);
+            sep_scale = sqrt(beta_unscaled * Sigma * beta_unscaled');            M = sep /sep_scale ;
+            omega_mu_1 = M*omega_mu_1_unscaled;
+            omega_mu_2 = M*omega_mu_2_unscaled;
+            mu1 = Omega_star \ omega_mu_1';
+            mu2 = Omega_star \ omega_mu_2';
+            beta_star = omega_mu_1 - omega_mu_2;
+    end
     
-    Sigma = inv(Omega_star);
-    M=sep/2/ sqrt( sum( Sigma(1:s,1:s),"all") );
-    beta_star(1:s) = M;
-    % Set class means
-    mu1 = Omega_star \ beta_star;
-    mu2 = -mu1;
+    
     % Mahalanobis distance
     mahala_dist_sq = (mu1 - mu2)' * Omega_star * (mu1 - mu2);
     mahala_dist = sqrt(mahala_dist_sq);
-    fprintf('Mahalanobis distance between mu1 and mu2: %.4f\n', mahala_dist);
+    %fprintf('Mahalanobis distance between mu1 and mu2: %.4f\n', mahala_dist);
     % Generate noise once
     rng(seed);
     Z = mvnrnd(zeros(p, 1), Sigma, n);  % n x p noise
@@ -1299,6 +1490,7 @@ fprintf('Iteration %d | SDP obj: %.4f | Likelihood obj: %.4f | TP: %d | FP: %d |
         if is_stop
             break;
         end
+    end
 end
 %% 
 % 
@@ -1571,7 +1763,7 @@ end
 %% Simulation -  auxilary
 % 
 %% sqlite3 table schema for baseline method
-CREATE TABLE noniso_est_isee_dirty (
+CREATE TABLE isee_new(
 "rep"INTEGER,
 "iter"INTEGER,
 "sep"REAL,
@@ -1584,7 +1776,7 @@ CREATE TABLE noniso_est_isee_dirty (
 "true_pos"INTEGER,
 "false_pos"INTEGER,
 "false_neg"INTEGER,
-"jobdate"TIMESTAMP,
+"jobdate"TIMESTAMP
 );
 %% 
 % 
