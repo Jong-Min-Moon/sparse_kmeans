@@ -69,7 +69,7 @@ for rho in 0
 
                     sbatch ${code_dir}/${filename_code}.job
                     sleep 3
-                    rm ${code_dir}/${filename_code}.job
+                    #rm ${code_dir}/${filename_code}.job
                 done
             done
         done

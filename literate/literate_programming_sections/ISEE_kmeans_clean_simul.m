@@ -55,5 +55,6 @@ fprintf('Iteration %d | SDP obj: %.4f | Likelihood obj: %.4f | TP: %d | FP: %d |
             break;
         end
 end
+end
 %% 
 % 
