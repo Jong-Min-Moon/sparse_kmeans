@@ -1,6 +1,6 @@
 #!/bin/bash
 
-sep=2
+sep=3
 n=200
 p=1000
 n_draw=10000
