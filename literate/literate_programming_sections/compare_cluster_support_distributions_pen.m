@@ -1,6 +1,6 @@
-function compare_cluster_support_distributions_pen(n, p, s, sep, baseline, cluster_1_ratio, true_support, false_support, n_rep, beta_seed)
 %% compare_cluster_support_distributions_pen
 % @export
+function compare_cluster_support_distributions_pen(n, p, s, sep, baseline, cluster_1_ratio, true_support, false_support, n_rep, beta_seed)
 % Compare objective value distributions for likelihood and SDP
 % under 20%, 40%, and 50% label flips. Plot 8 histograms (2x4 layout).
 flip_rates = [0.2, 0.4, 0.5, 1];

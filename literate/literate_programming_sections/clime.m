@@ -1,4 +1,3 @@
-function xp = clime(x0, A,  b, epsilon, pdtol, pdmaxiter, cgtol, cgmaxiter)
 %% clime
 % @export
 % l1dantzig_mod.m
@@ -44,6 +43,7 @@ function xp = clime(x0, A,  b, epsilon, pdtol, pdmaxiter, cgtol, cgmaxiter)
 %     Default = 200.
 %
 % Modified by Rossi Luo (xi.rossi.luo@gmail.com), Sept 2010
+function xp = clime(x0, A,  b, epsilon, pdtol, pdmaxiter, cgtol, cgmaxiter)
 largescale = isa(A,'function_handle');
 if (nargin < 5), pdtol = 1e-3;  end
 if (nargin < 6), pdmaxiter = 50;  end

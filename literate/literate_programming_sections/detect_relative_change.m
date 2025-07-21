@@ -1,4 +1,3 @@
-function is_stuck = detect_relative_change(obj_val_vec, detect_start, min_delta)
 %% detect_relative_change
 % @export
 % 
@@ -31,6 +30,7 @@ function is_stuck = detect_relative_change(obj_val_vec, detect_start, min_delta)
 % * If the vector contains NaNs, the computation is based on the last two values 
 % before the first NaN.
 % * If fewer than two valid values exist, returns Inf.
+function is_stuck = detect_relative_change(obj_val_vec, detect_start, min_delta)
 % detect_relative_change - Checks whether the last two valid objective values
 % show insufficient relative improvement.
 %

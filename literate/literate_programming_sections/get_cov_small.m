@@ -1,4 +1,3 @@
-function Sigma_hat_s_hat_now = get_cov_small(x, cluster_est, s_hat)
 %% get_cov_small
 % @export
 % 
@@ -13,6 +12,7 @@ function Sigma_hat_s_hat_now = get_cov_small(x, cluster_est, s_hat)
 % Outputs:
 %% 
 % * Sigma_hat_s_hat_now: 
+function Sigma_hat_s_hat_now = get_cov_small(x, cluster_est, s_hat)
     % Inputs:
     %   x           - p × n data matrix
     %   cluster_est - n × 1 vector of cluster labels (1 or 2)

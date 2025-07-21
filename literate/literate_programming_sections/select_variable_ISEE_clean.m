@@ -1,4 +1,3 @@
-function s_hat = select_variable_ISEE_clean(mean_vec, n)
 %% select_variable_ISEE_clean
 % @export
 % 
@@ -17,6 +16,7 @@ function s_hat = select_variable_ISEE_clean(mean_vec, n)
 % Outputs:
 %% 
 % * s_hat: $p$ boolean vector, where true indicates that variable is selected
+function s_hat = select_variable_ISEE_clean(mean_vec, n)
     % Validate input dimensions
     [p, col_dim] = size(mean_vec);
     if col_dim ~= 2

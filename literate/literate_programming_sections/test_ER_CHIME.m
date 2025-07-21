@@ -1,6 +1,6 @@
-function test_ER_CHIME()
 %% test_ER_CHIME
 % @export
+function test_ER_CHIME()
 n = 200;
 p = 1000;
 rep = 1;

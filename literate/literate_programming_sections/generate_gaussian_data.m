@@ -1,4 +1,3 @@
-function [X, y, mu1, mu2, mahala_dist, Omega_star, beta_star] = generate_gaussian_data(n, p, s, sep, model_cov, model_energy, baseline, seed, cluster_1_ratio, beta_seed)
 %% generate_gaussian_data
 % @export
 % 
@@ -36,6 +35,7 @@ function [X, y, mu1, mu2, mahala_dist, Omega_star, beta_star] = generate_gaussia
 % 
 % 
 % 
+function [X, y, mu1, mu2, mahala_dist, Omega_star, beta_star] = generate_gaussian_data(n, p, s, sep, model_cov, model_energy, baseline, seed, cluster_1_ratio, beta_seed)
   
     n1 = round(n * cluster_1_ratio);
     n2 = n - n1;

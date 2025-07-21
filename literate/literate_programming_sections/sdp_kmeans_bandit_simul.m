@@ -1,30 +1,18 @@
 classdef sdp_kmeans_bandit_simul  < sdp_kmeans_bandit 
-
-
+%% sdp_kmeans_bandit_simul
+% @export
     methods
         function obj = sdp_kmeans_bandit_simul(X, number_cluster)
-            obj.X =X;
-            obj.K = number_cluster;
-            %obj.omega_sparsity = omega_sparsity;
-            obj.init_method = "none";
-
-            obj.n = size(obj.X, 2);
-            obj.p = size(obj.X, 1);
-
-            C = 0.5;
-            obj.cutoff = log(1 / C) / log((1 + C) / C);
-
-
-            obj.n_iter = NaN;
+            % Call the superclass constructor first
+            % This initializes X, K, n, p, cutoff, and n_iter properties from the superclass
+            obj = obj@sdp_kmeans_bandit(X, number_cluster);
             
         end
-
         function fit_predict(obj, n_iter, cluster_true)
             obj.n_iter = n_iter;
             obj.set_bayesian_parameters();
             obj.initialize_cluster_est();
             obj.initialize_saving_matrix()
-
             for i = 1:n_iter
                 variable_subset_now = obj.choose();
                 obj.entries_survived(i, :) = variable_subset_now;
@@ -32,7 +20,6 @@ classdef sdp_kmeans_bandit_simul  < sdp_kmeans_bandit
                 disp(['number of arms pulled: ', mat2str(sum(variable_subset_now))]);
                 reward_now = obj.reward(variable_subset_now, i);
                 obj.update(variable_subset_now, reward_now);
-
                 obj.evaluate_accuracy(cluster_true, i);
             end
             
@@ -50,7 +37,6 @@ classdef sdp_kmeans_bandit_simul  < sdp_kmeans_bandit
             obj.acc_dict(iter) = cluster_est_now.evaluate_accuracy(cluster_true);
             obj.acc_dict(iter)
         end % end of method evaluate_accuracy
-
         function initialize_saving_matrix(obj)
             obj.x_tilde_est       = zeros(obj.p, obj.n, obj.n_iter);
             obj.omega_est_time    = zeros(obj.n_iter, 1);
@@ -60,74 +46,50 @@ classdef sdp_kmeans_bandit_simul  < sdp_kmeans_bandit
             obj.obj_val_dual      = zeros(obj.n_iter, 1);
             obj.obj_val_original  = zeros(obj.n_iter, 1);
         end
-
         function cluster_est_obj = fetch_cluster_est(obj,iter)
             cluster_est_obj = obj.cluster_est_dict(iter);
         end
-
-        function database_subtable = get_database_subtable(obj, rep, Delta, rho, support, cluster_true, Omega)
+        function database_subtable = get_database_subtable(obj, rep, Delta, support)
             s = length(support);
             current_time = get_current_time();
-            [true_pos_vec, false_pos_vec, false_neg_vec, survived_indices] = obj.evaluate_discovery(support);
-            %[diff_x_tilde_fro, diff_x_tilde_op, diff_x_tilde_ellone] = obj.evaluate_innovation_est(Omega);
-
+            [true_pos_vec, false_pos_vec, false_neg_vec, ~] = obj.evaluate_discovery(support);
             %fprintf( strcat( "acc =", join(repelem("%f ", length(acc_vec))), "\n"),  acc_vec );
             
             
-            cluster_string_dict = obj.get_cluster_string_dict();
-            
+             
             %values(obj.acc_dict);
             %values(cluster_string_dict);
              
             n_row = int32(obj.n_iter);
-
             database_subtable = table(...
                 repelem(rep, n_row+1)',...                      % 01 replication number
-                (1:(n_row+1))',...                                  % 02 step iteration number
+                (1:(n_row+1))',...                              % 02 step iteration number
                 repelem(Delta, n_row+1)',...                    % 03 separation
-                repelem(obj.p, n_row+1)',... % 04 data dimension
-                repelem(rho, n_row+1)',...                      % 05 conditional correlation
-                repelem(s, n_row+1)',...                        % 06 sparsity
+                repelem(obj.p, n_row+1)',...                    % 04 data dimension
+                repelem(obj.n, n_row+1)',...                      % 05 sample size
+                repelem(s, n_row+1)',...                        % 06 model
                 ...
-                repelem(false, n_row+1)',... %07
-                repelem(false, n_row+1)',...      %08
-                repelem(false, n_row+1)',...     %09
-                cell2mat(values(obj.acc_dict))',...                                     % 10 accuracy
+                cell2mat(values(obj.acc_dict))',...             % 07 accuracy
                 ...
-                repelem(0, n_row+1)',...               % 11 objective function value (relaxed, primal)
-                repelem(0, n_row+1)',...               % 12 objective function value (relaxed, dual)
-                repelem(0, n_row+1)',...           % 13 objective function value (original)
+                repelem(0, n_row+1)',...               % 8 sdp objective function value  
+                repelem(0, n_row+1)',...               % 9 likelihood value
                 ...
-                [0; true_pos_vec],...                           % 14 true positive
-                [0; false_pos_vec],...                          % 15 false positive
-                [0; false_neg_vec],...                          % 16 false negative
+                [0; true_pos_vec],...                           % 10 true positive
+                [0; false_pos_vec],...                          % 11 false positive
+                [0; false_neg_vec],...                          % 12 false negative
                 ...
-                repelem(0, n_row+1)',...                       % 13 estimation error of the innovated data, in Frobenius norm
-                repelem(0, n_row+1)',...                        % 14 estimation error of the innovated data, in operator norm
-                repelem(0, n_row+1)',...                    % 15 estimation error of the innovated data, in \ell_1 norm
-                repelem(0, n_row+1)',...             % 16 timing for estimating the precision matrix
-                repelem(0, n_row+1)', ...            % 17 timing elapsed for solving the SDP
-                repelem(current_time, n_row+1)', ...            % 18 timestamp
-                [""; survived_indices],...                      % 19 indices of survived entry
-                string(values(cluster_string_dict))',...                          % 20 clustering information
+                repelem(current_time, n_row+1)', ...            % 13 timestamp
                 'VariableNames', ...
-                ...  1      2       3      4      5        6         
-                ["rep", "iter", "sep", "dim", "rho", "sparsity", ...
-                ...
-                "stop_og", "stop_sdp", "stop_loop", ...
-                ...  7        8           9             10             
-                 "acc", "obj_prim", "obj_dual", "obj_original", ...
-                ...11               12
-                 "true_pos", "false_pos",  "false_neg"...
-                ...       13              14                    15
-                 "diff_x_tilde_fro", "diff_x_tilde_op", "diff_x_tilde_ellone", ...
-                ...  16          17           18
-                 "time_est", "time_SDP", "jobdate", ...
-                ...      19              20            
-                "survived_indices", "cluster_est"
-                ]);
+                ...  %1      2       3      4      5        6         
+                ["rep", "iter", "sep", "dim", "n", "model", ...
+                ...  %7        8           9                       
+                 "acc", "obj_sdp", "obj_lik",  ...
+                ... % 10          11            12
+                 "true_pos", "false_pos",  "false_neg",...
+                ...  13
+                     "jobdate"]);
         end % end of get_database_subtable
-
+ 
         function [true_pos_vec, false_pos_vec, false_neg_vec , survived_indices] = evaluate_discovery(obj, support)
             true_pos_vec  = zeros(obj.n_iter, 1);
             false_pos_vec = zeros(obj.n_iter, 1);
@@ -143,7 +105,6 @@ classdef sdp_kmeans_bandit_simul  < sdp_kmeans_bandit
                 survived_indices(i) = get_num2str_with_mark( find(positive_vec), ',');
             end
         end % end of evaluate_discovery
-
         function cluster_string_vec = get_cluster_string_dict(obj)
             cluster_string_vec = containers.Map(1:(obj.n_iter+1), repelem("", obj.n_iter+1));     
             for iter = 1:(obj.n_iter+1)

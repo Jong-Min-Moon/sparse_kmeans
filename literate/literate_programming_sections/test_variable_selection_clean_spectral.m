@@ -1,6 +1,6 @@
-function test_variable_selection_clean_spectral()
 %% test_variable_selection_clean_spectral
 % @export
+function test_variable_selection_clean_spectral()
 %TEST_ISEE_VARIABLE_SELECTION_VS_FLIP
 %   Evaluates variable selection robustness to clustering error at flip ratios 0.1, 0.2, 0.3
     rng(1);

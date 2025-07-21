@@ -1,4 +1,3 @@
-function obj = get_penalized_objective(X, G)
 %% get_penalized_objective
 % @export
 % 
@@ -7,6 +6,7 @@ function obj = get_penalized_objective(X, G)
 % * X: p x n data matrix (usually a truncated matrix, where p is |S| where S 
 % is selected variables) )
 % * G: 1 x n vector of cluster labels in {1,...,K}
+function obj = get_penalized_objective(X, G)
 % Computes the penalized objective combining the profile likelihood 
 % and squared Frobenius norm of the row-centered data matrix.
 %

@@ -1,4 +1,3 @@
-function s_hat = select_variable_ISEE_noisy(mean_now, noise_now, Omega_diag_hat, cluster_est_prev)
 %% select_variable_ISEE_noisy
 % @export
 % 
@@ -17,6 +16,7 @@ function s_hat = select_variable_ISEE_noisy(mean_now, noise_now, Omega_diag_hat,
 % Outputs:
 %% 
 % * s_hat: $p$ boolean vector, where true indicates that variable is selected
+function s_hat = select_variable_ISEE_noisy(mean_now, noise_now, Omega_diag_hat, cluster_est_prev)
     x_tilde_now = mean_now + noise_now;
     p = size(mean_now,1);
     n = size(mean_now,2);

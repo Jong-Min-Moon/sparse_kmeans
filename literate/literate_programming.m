@@ -585,6 +585,76 @@ function test_variable_selection_clean_spectral()
 end
 %% SDP clustering
 % 
+% 
+% 
+%% get_cluster_by_sdp
+% @export
+function cluster_est = get_cluster_by_sdp(X, K)
+%GET_CLUSTER_BY_SDP Clusters data using SDP relaxation of K-means and spectral clustering.
+%
+%   cluster_est = GET_CLUSTER_BY_SDP(X, K) performs clustering on the data
+%   matrix X using a Semi-Definite Programming (SDP) relaxation of the
+%   K-means problem, followed by K-means on the top K eigenvectors of the
+%   SDP solution.
+%
+%   Inputs:
+%       X - A numeric matrix where each column is a data point.
+%       K - The desired number of clusters (an integer greater than 1).
+%
+%   Outputs:
+%       cluster_est - A row vector containing the cluster assignments for
+%                     each data point.
+%
+%   Example:
+%       % Generate some sample data
+%       data = [randn(2, 50) + 2, randn(2, 50) - 2];
+%       num_clusters = 2;
+%       cluster_assignments = get_cluster_by_sdp(data, num_clusters);
+%       disp(cluster_assignments);
+% Input validation
+if nargin < 2
+    error('GET_CLUSTER_BY_SDP:NotEnoughInputs', 'Two input arguments required: data matrix X and number of clusters K.');
+end
+if ~ismatrix(X) || ~isnumeric(X)
+    error('GET_CLUSTER_BY_SDP:InvalidX', 'Input X must be a numeric matrix.');
+end
+if ~isscalar(K) || K <= 1 || K ~= floor(K)
+    error('GET_CLUSTER_BY_BY_SDP:InvalidK', 'Number of clusters K must be an integer greater than 1.');
+end
+[d, n] = size(X); % d is dimension, n is number of data points
+if K > n
+    error('GET_CLUSTER_BY_SDP:KExceedsN', 'Number of clusters K cannot exceed the number of data points (%d).', n);
+end
+D = X' * X;
+Z_opt = kmeans_sdp_pengwei(D, K);
+% Check if Z_opt is valid
+if isempty(Z_opt) || ~ismatrix(Z_opt) || ~isnumeric(Z_opt)
+    error('GET_CLUSTER_BY_SDP:InvalidZOpt', 'The SDP solver ''kmeans_sdp_pengwei'' returned an invalid or empty solution.');
+end
+% Perform eigendecomposition on the SDP solution
+% The SDP solution Z_opt is often a matrix (e.g., n x n) from which
+% eigenvectors are extracted for spectral clustering.
+% Assuming Z_opt is an n x n matrix where n is the number of data points.
+if size(Z_opt, 1) ~= n || size(Z_opt, 2) ~= n
+    warning('GET_CLUSTER_BY_SDP:ZOptDimensionMismatch', ...
+        'Expected Z_opt to be an %d x %d matrix, but got %d x %d. Proceeding with SVD, but results might be unexpected.', ...
+        n, n, size(Z_opt, 1), size(Z_opt, 2));
+end
+[U_sdp, S_sdp, V_sdp] = svd(Z_opt); % Using SVD which is robust
+% Extract the top K eigenvectors
+% These eigenvectors form a new feature space where K-means can be applied.
+U_top_K = U_sdp(:, 1:K);
+% Apply K-means to the projected data
+% The 'kmeans' function expects data points as rows. If U_top_K has
+% eigenvectors as columns, we need to transpose it.
+% 'kmeans' in MATLAB typically takes data points as rows.
+% If U_top_K is n x K (n data points, K eigenvectors), then no transpose
+% is needed for kmeans input.
+cluster_labels = kmeans(U_top_K, K, 'Replicates', 10, 'MaxIter', 500); % Added options for robustness
+% Return cluster assignments as a row vector
+cluster_est = cluster_labels';
+end
+ 
 %% get_cov_small
 % @export
 % 
@@ -1270,7 +1340,7 @@ sequence_2 = [1 2 3 4 5 6 7 8 9 10 NaN NaN NaN];
 %% Bandit algorithm
 %% sdp_kmeans_bandit
 % @export
- classdef sdp_kmeans_bandit < handle
+classdef sdp_kmeans_bandit < handle
     properties
         X           % Data matrix (d x n)
         K           % Number of clusters
@@ -1294,16 +1364,6 @@ sequence_2 = [1 2 3 4 5 6 7 8 9 10 NaN NaN NaN];
     end
     methods
         function obj = sdp_kmeans_bandit(X, K)
-            % Constructor
-            if nargin < 2
-                error('Two input arguments required: data matrix X and number of clusters K.');
-            end
-            if ~ismatrix(X) || ~isnumeric(X)
-                error('Input X must be a numeric matrix.');
-            end
-            if ~isscalar(K) || K <= 1 || K ~= floor(K)
-                error('Number of clusters K must be an integer greater than 1.');
-            end
             obj.X = X;
             obj.K = K;
             obj.n = size(X, 2);
@@ -1322,25 +1382,28 @@ sequence_2 = [1 2 3 4 5 6 7 8 9 10 NaN NaN NaN];
             obj.pi = obj.alpha ./ (obj.alpha + obj.beta);
         end
         function fit_predict(obj, n_iter)
+            tic; % Start timing for the entire fit_predict method
             obj.n_iter = n_iter;
             obj.set_bayesian_parameters();
             obj.initialize_cluster_est();
-            fprintf("initialization done")
+            fprintf("initialization done\n")
             for i = 1:n_iter
                 variable_subset_now = obj.choose();
-                disp(['Iteration ', num2str(i), ' - arms pulled: ', mat2str(find(variable_subset_now))]);
-                disp(['number of arms pulled: ', mat2str(sum(variable_subset_now))]);
+                disp(['Iteration ', num2str(i), ' - arms pulled: ', mat2str(find(variable_subset_now)), '\n']);
+                disp(['number of arms pulled: ', mat2str(sum(variable_subset_now)), '\n']);
                 reward_now = obj.reward(variable_subset_now, i);
                 obj.update(variable_subset_now, reward_now);
             end
             %final clustering
             final_selection = obj.signal_entry_est;
             X_sub_final = obj.X(final_selection, :);
-            kmeans_learner = sdp_kmeans(X_sub_final, obj.K);
-            obj.cluster_est_dict(obj.n_iter + 1) = cluster_est(kmeans_learner.fit_predict());
-            
+            obj.cluster_est_dict(obj.n_iter + 1) = get_cluster_by_sdp(X_sub_final, obj.K);
+            % ... all existing code ...
+        obj.total_fit_predict_time = toc; % End timing for the entire fit_predict method            
+        fprintf('Total fit_predict time: %.4f seconds\n', obj.total_fit_predict_time);
         end
-        
+  
+ 
         function initialize_cluster_est(obj)
             cluster_est_dummy   = cluster_est( repelem(1,obj.n) );
             obj.cluster_est_dict = repelem(cluster_est_dummy, obj.n_iter+1); %dummy
@@ -1354,8 +1417,7 @@ sequence_2 = [1 2 3 4 5 6 7 8 9 10 NaN NaN NaN];
         function reward_vec = reward(obj, variable_subset, iter)
             % Use only selected variables
             X_sub = obj.X(variable_subset, :);
-            kmeans_learner = sdp_kmeans(X_sub, obj.K);
-            obj.cluster_est_dict(iter) = cluster_est(kmeans_learner.fit_predict()); 
+            obj.cluster_est_dict(iter) = get_cluster_by_sdp(X_sub, obj.K);
             % Assume K = 2
             sample_cluster_1 = X_sub(:, obj.cluster_est_dict(iter).cluster_info_vec == 1);
             sample_cluster_2 = X_sub(:, obj.cluster_est_dict(iter).cluster_info_vec == 2);
@@ -1385,6 +1447,127 @@ sequence_2 = [1 2 3 4 5 6 7 8 9 10 NaN NaN NaN];
     end % end of methods
 end
 %% 
+% 
+% 
+% 
+%% sdp_kmeans_bandit_simul
+% @export
+classdef sdp_kmeans_bandit_simul  < sdp_kmeans_bandit 
+    methods
+        function obj = sdp_kmeans_bandit_simul(X, number_cluster)
+            % Call the superclass constructor first
+            % This initializes X, K, n, p, cutoff, and n_iter properties from the superclass
+            obj = obj@sdp_kmeans_bandit(X, number_cluster);
+            
+        end
+        function fit_predict(obj, n_iter, cluster_true)
+            obj.n_iter = n_iter;
+            obj.set_bayesian_parameters();
+            obj.initialize_cluster_est();
+            obj.initialize_saving_matrix()
+            for i = 1:n_iter
+                variable_subset_now = obj.choose();
+                obj.entries_survived(i, :) = variable_subset_now;
+                disp(['Iteration ', num2str(i), ' - arms pulled: ', mat2str(find(variable_subset_now))]);
+                disp(['number of arms pulled: ', mat2str(sum(variable_subset_now))]);
+                reward_now = obj.reward(variable_subset_now, i);
+                obj.update(variable_subset_now, reward_now);
+                obj.evaluate_accuracy(cluster_true, i);
+            end
+            
+            %final clustering
+            final_selection = obj.signal_entry_est;
+            obj.entries_survived(obj.n_iter + 1, :) = final_selection;
+            X_sub_final = obj.X(final_selection, :);
+            kmeans_learner = sdp_kmeans(X_sub_final, obj.K);
+            obj.cluster_est_dict(obj.n_iter + 1) = cluster_est(kmeans_learner.fit_predict());
+            obj.evaluate_accuracy(cluster_true, obj.n_iter + 1);
+        end
+        
+        function evaluate_accuracy(obj, cluster_true, iter)
+            cluster_est_now = obj.cluster_est_dict(iter);
+            obj.acc_dict(iter) = cluster_est_now.evaluate_accuracy(cluster_true);
+            obj.acc_dict(iter)
+        end % end of method evaluate_accuracy
+        function initialize_saving_matrix(obj)
+            obj.x_tilde_est       = zeros(obj.p, obj.n, obj.n_iter);
+            obj.omega_est_time    = zeros(obj.n_iter, 1);
+            obj.sdp_solve_time    = zeros(obj.n_iter, 1);
+            obj.entries_survived  = zeros(obj.n_iter+1, obj.p);
+            obj.obj_val_prim      = zeros(obj.n_iter, 1);
+            obj.obj_val_dual      = zeros(obj.n_iter, 1);
+            obj.obj_val_original  = zeros(obj.n_iter, 1);
+        end
+        function cluster_est_obj = fetch_cluster_est(obj,iter)
+            cluster_est_obj = obj.cluster_est_dict(iter);
+        end
+        function database_subtable = get_database_subtable(obj, rep, Delta, support)
+            s = length(support);
+            current_time = get_current_time();
+            [true_pos_vec, false_pos_vec, false_neg_vec, ~] = obj.evaluate_discovery(support);
+            %fprintf( strcat( "acc =", join(repelem("%f ", length(acc_vec))), "\n"),  acc_vec );
+            
+            
+             
+            %values(obj.acc_dict);
+            %values(cluster_string_dict);
+             
+            n_row = int32(obj.n_iter);
+            database_subtable = table(...
+                repelem(rep, n_row+1)',...                      % 01 replication number
+                (1:(n_row+1))',...                              % 02 step iteration number
+                repelem(Delta, n_row+1)',...                    % 03 separation
+                repelem(obj.p, n_row+1)',...                    % 04 data dimension
+                repelem(obj.n, n_row+1)',...                      % 05 sample size
+                repelem(s, n_row+1)',...                        % 06 model
+                ...
+                cell2mat(values(obj.acc_dict))',...             % 07 accuracy
+                ...
+                repelem(0, n_row+1)',...               % 8 sdp objective function value  
+                repelem(0, n_row+1)',...               % 9 likelihood value
+                ...
+                [0; true_pos_vec],...                           % 10 true positive
+                [0; false_pos_vec],...                          % 11 false positive
+                [0; false_neg_vec],...                          % 12 false negative
+                ...
+                repelem(current_time, n_row+1)', ...            % 13 timestamp
+                'VariableNames', ...
+                ...  %1      2       3      4      5        6         
+                ["rep", "iter", "sep", "dim", "n", "model", ...
+                ...  %7        8           9                       
+                 "acc", "obj_sdp", "obj_lik",  ...
+                ... % 10          11            12
+                 "true_pos", "false_pos",  "false_neg",...
+                ...  13
+                     "jobdate"]);
+        end % end of get_database_subtable
+ 
+        function [true_pos_vec, false_pos_vec, false_neg_vec , survived_indices] = evaluate_discovery(obj, support)
+            true_pos_vec  = zeros(obj.n_iter, 1);
+            false_pos_vec = zeros(obj.n_iter, 1);
+            false_neg_vec = zeros(obj.n_iter, 1);
+            survived_indices = strings(obj.n_iter, 1);
+            for i = 1:obj.n_iter
+                positive_vec = obj.entries_survived(i,:);
+                true_pos_vec(i)  = sum(positive_vec(support));
+                false_pos_vec(i) = sum(positive_vec) - true_pos_vec(i);
+    
+                negative_vec = ~positive_vec;
+                false_neg_vec(i) = sum(negative_vec(support));
+                survived_indices(i) = get_num2str_with_mark( find(positive_vec), ',');
+            end
+        end % end of evaluate_discovery
+        function cluster_string_vec = get_cluster_string_dict(obj)
+            cluster_string_vec = containers.Map(1:(obj.n_iter+1), repelem("", obj.n_iter+1));     
+            for iter = 1:(obj.n_iter+1)
+                cluster_est_now = obj.fetch_cluster_est(iter);
+                cluster_string_vec(iter) = cluster_est_now.cluster_info_string;
+            end % end of for loop
+        end% end of cluster_string_vec   
+     
+    
+    end % end of method
+end % end of class
 %% Simulations - data generator
 %% get_precision_band
 % @export
@@ -2339,3 +2522,13 @@ end
 RI=A/t1;			%Rand 1971		%Probability of agreement
 MI=D/t1;			%Mirkin 1970	%p(disagreement)
 HI=(A-D)/t1;	%Hubert 1977	%p(agree)-p(disagree)
+%% Miscelleonus
+% 
+%% get_current_time
+% @export
+function current_time = get_current_time()
+    import java.util.TimeZone 
+    nn = now;
+    ds = datestr(nn);
+    current_time = datetime(ds,'TimeZone',char(TimeZone.getDefault().getID()));
+end

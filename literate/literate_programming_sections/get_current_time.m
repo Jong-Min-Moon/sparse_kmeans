@@ -1,3 +1,5 @@
+%% get_current_time
+% @export
 function current_time = get_current_time()
     import java.util.TimeZone 
     nn = now;

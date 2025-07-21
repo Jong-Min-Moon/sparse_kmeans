@@ -1,4 +1,3 @@
-function cluster_estimate = ISEE_kmeans_clean(x, k, n_iter, is_parallel, loop_detect_start, window_size, min_delta)
 %% ISEE_kmeans_clean
 % @export
 % 
@@ -32,6 +31,7 @@ function cluster_estimate = ISEE_kmeans_clean(x, k, n_iter, is_parallel, loop_de
 % %   cluster_estimate - Final cluster assignment (1 × n)
 % 
 % 
+function cluster_estimate = ISEE_kmeans_clean(x, k, n_iter, is_parallel, loop_detect_start, window_size, min_delta)
     % Initialize tracking vectors
     obj_sdp = nan(1, n_iter);
     obj_lik = nan(1, n_iter);

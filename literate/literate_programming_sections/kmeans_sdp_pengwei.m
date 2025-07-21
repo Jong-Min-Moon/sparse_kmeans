@@ -1,4 +1,3 @@
-function X=kmeans_sdp_pengwei(A, k)
 %% kmeans_sdp_pengwei
 % @export
 % 
@@ -27,6 +26,7 @@ function X=kmeans_sdp_pengwei(A, k)
 % # Peng, Wei. Approximating k-means-type clustering via semidefinite programming
 % # Yang, Sun, Toh. Sdpnal+: a majorized semismooth newton-cg augmented lagrangian 
 % method for semidefinite programming with nonnegative constraints
+function X=kmeans_sdp_pengwei(A, k)
 D = -A;
 N=size(A,2);
 % SDP definition for SDPNAL+

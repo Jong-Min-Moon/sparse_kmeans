@@ -1,4 +1,3 @@
-function [omega, mu, beta, RI, aRI, optRI, optaRI, group_member] = CHIME(z, zt, TRUE_INDEX, omega0, mu0, beta0, rho, lambda, maxIter, tol)
 %% CHIME
 % @export
 % 
@@ -41,6 +40,7 @@ function [omega, mu, beta, RI, aRI, optRI, optaRI, group_member] = CHIME(z, zt, 
 % * optRI, optaRI: when RI and aRI are vectors, the optimal values for RI and 
 % aRI are also returned.  (for parameter tuning)
 % * group_member: vector of class membership (parameter tuning applied)
+function [omega, mu, beta, RI, aRI, optRI, optaRI, group_member] = CHIME(z, zt, TRUE_INDEX, omega0, mu0, beta0, rho, lambda, maxIter, tol)
 if (nargin < 8), lambda = 0.1;  end
 if (nargin < 9), maxIter = 50;  end
 if (nargin < 10), tol = 1e-06;  end

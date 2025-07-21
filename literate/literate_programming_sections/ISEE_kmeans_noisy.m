@@ -1,4 +1,3 @@
-function cluster_estimate = ISEE_kmeans_noisy(x, k, n_iter, is_parallel)
 %% ISEE_kmeans_noisy
 % @export
 % 
@@ -13,6 +12,7 @@ function cluster_estimate = ISEE_kmeans_noisy(x, k, n_iter, is_parallel)
 %% 
 % * cluster_est: $n$ array of positive integers, where n is the sample size. 
 % estimated cluster size. ex. [1 2 1 2 1 2 2 ]
+function cluster_estimate = ISEE_kmeans_noisy(x, k, n_iter, is_parallel)
 %initialization
     cluster_estimate = cluster_spectral(x, k);
     for iter = 1:n_iter

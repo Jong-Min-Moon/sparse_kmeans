@@ -1,6 +1,6 @@
-function test_ER_isee_clean()
 %% test_ER_isee_clean
 % @export
+function test_ER_isee_clean()
 n = 500;
 p = 400;
 rep = 10;

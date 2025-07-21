@@ -1,4 +1,3 @@
-function cluster_est = cluster_spectral(x, k)
 %% cluster_spectral
 % @export
 % 
@@ -12,6 +11,7 @@ function cluster_est = cluster_spectral(x, k)
 %% 
 % * cluster_est: n array of positive integers, where n is the sample size. ex. 
 % [1 2 1 2 3 4 2 ]
+function cluster_est = cluster_spectral(x, k)
     n = size(x,2);
     H_hat = (x' * x)/n; %compute affinity matrix
     [V,D] = eig(H_hat);

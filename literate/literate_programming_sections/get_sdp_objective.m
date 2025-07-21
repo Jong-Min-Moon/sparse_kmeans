@@ -1,4 +1,3 @@
-function obj = get_sdp_objective(X, G)
 %% get_sdp_objective
 % @export
 % 
@@ -13,6 +12,7 @@ function obj = get_sdp_objective(X, G)
 % 
 % 
 % 
+function obj = get_sdp_objective(X, G)
 A = X' * X;        % n x n Gram matrix
 K = max(G);        % number of clusters
 obj_sum = 0;

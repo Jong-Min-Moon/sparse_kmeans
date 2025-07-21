@@ -1,4 +1,3 @@
-function [cluster_est_new, obj_sdp, obj_lik]  = ISEE_kmeans_noisy_onestep(x, K, cluster_est_prev, is_parallel)
 %% ISEE_kmeans_noisy_onestep
 % @export
 % 
@@ -15,6 +14,7 @@ function [cluster_est_new, obj_sdp, obj_lik]  = ISEE_kmeans_noisy_onestep(x, K, 
 %% 
 % * cluster_est_new: $n$ array of positive integers, where n is the sample size. 
 % News cluster estimate. ex. [1 2 1 2 3 4 2 ]
+function [cluster_est_new, obj_sdp, obj_lik]  = ISEE_kmeans_noisy_onestep(x, K, cluster_est_prev, is_parallel)
 %estimation
     if is_parallel
         [~, noise_mat, Omega_diag_hat, mean_mat]  = ISEE_bicluster_parallel(x, cluster_est_prev);

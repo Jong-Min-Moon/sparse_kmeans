@@ -1,4 +1,3 @@
-function Cont=Contingency(Mem1,Mem2)
 %% Contingency
 % @export
 % 
@@ -15,6 +14,7 @@ function Cont=Contingency(Mem1,Mem2)
 % been modified. 
 % 
 % 
+function Cont=Contingency(Mem1,Mem2)
 if nargin < 2 || min(size(Mem1)) > 1 || min(size(Mem2)) > 1
    error('Contingency: Requires two vector arguments')
 end

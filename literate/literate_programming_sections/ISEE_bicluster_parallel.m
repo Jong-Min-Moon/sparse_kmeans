@@ -1,4 +1,3 @@
-function [mean_vec, noise_mat, Omega_diag_hat, mean_mat] = ISEE_bicluster_parallel(x, cluster_est_now)
 %% ISEE_bicluster_parallel
 % @export
 % 
@@ -20,6 +19,7 @@ function [mean_vec, noise_mat, Omega_diag_hat, mean_mat] = ISEE_bicluster_parall
 % * Omega_diag_hat: $p$ vector of diagonal entries of precision matrix 
 %% 
 % 
+function [mean_vec, noise_mat, Omega_diag_hat, mean_mat] = ISEE_bicluster_parallel(x, cluster_est_now)
 %ISEE_BICLUSTER_PARALLEL Estimates means and noise using blockwise Lasso regressions.
 % 
 % INPUT:

@@ -1,6 +1,6 @@
-function is_stop = decide_stop(obj_sdp, obj_lik, loop_detect_start, window_size, min_delta)
 %% decide_stop
 % @export
+ function is_stop = decide_stop(obj_sdp, obj_lik, loop_detect_start, window_size, min_delta)
  is_stop = false;
         % Early stopping logic
         stop_sdp = detect_relative_change(obj_sdp, loop_detect_start, min_delta);

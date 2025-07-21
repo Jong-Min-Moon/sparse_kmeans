@@ -1,4 +1,3 @@
-function [AR,RI,MI,HI]=RandIndex(c1,c2)
 %% RandIndex
 % @export
 % 
@@ -13,6 +12,7 @@ function [AR,RI,MI,HI]=RandIndex(c1,c2)
 % C) David Corney (2000)   		D.Corney@cs.ucl.ac.uk
 % 
 % 
+function [AR,RI,MI,HI]=RandIndex(c1,c2)
 if nargin < 2 || min(size(c1)) > 1 || min(size(c2)) > 1
    error('RandIndex: Requires two vector arguments');
 end

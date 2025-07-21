@@ -1,4 +1,3 @@
-function is_loop = detect_loop(obj_val_vec, loop_detect_start, window_size, min_delta)
 %% detect_loop
 % @export
 % 
@@ -28,6 +27,7 @@ function is_loop = detect_loop(obj_val_vec, loop_detect_start, window_size, min_
 % optimum so far, return the flag |is_loop|.
 %% 
 % 
+function is_loop = detect_loop(obj_val_vec, loop_detect_start, window_size, min_delta)
     is_loop = false; % Default output
     % Trim input at first NaN, if any
     nan_idx = find(isnan(obj_val_vec), 1, 'first');

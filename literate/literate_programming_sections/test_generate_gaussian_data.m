@@ -1,8 +1,8 @@
-function test_generate_gaussian_data()
 %% test_generate_gaussian_data
 % @export
 % 
 % 
+function test_generate_gaussian_data()
 %TEST_GENERATE_GAUSSIAN_DATA Test data generation for different p values
     n = 200;
     ps = [100, 200, 500, 800];

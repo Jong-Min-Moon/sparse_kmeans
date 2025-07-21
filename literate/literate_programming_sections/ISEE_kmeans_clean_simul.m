@@ -1,6 +1,6 @@
-function cluster_estimate = ISEE_kmeans_clean_simul(x, k, n_iter, is_parallel, loop_detect_start, window_size, min_delta, db_dir, table_name, rep, model, sep, cluster_true)
 %% ISEE_kmeans_clean_simul
 % @export
+function cluster_estimate = ISEE_kmeans_clean_simul(x, k, n_iter, is_parallel, loop_detect_start, window_size, min_delta, db_dir, table_name, rep, model, sep, cluster_true)
 % ISEE_kmeans_clean - Runs iterative clustering with early stopping and logs results to SQLite DB
     [p, n] = size(x);  % Get dimensions
     obj_sdp = nan(1, n_iter);

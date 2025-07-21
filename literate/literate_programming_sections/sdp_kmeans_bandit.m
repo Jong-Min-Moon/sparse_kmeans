@@ -1,7 +1,6 @@
-function obj = sdp_kmeans_bandit(X, K)
+classdef sdp_kmeans_bandit < handle
 %% sdp_kmeans_bandit
 % @export
- classdef sdp_kmeans_bandit < handle
     properties
         X           % Data matrix (d x n)
         K           % Number of clusters
@@ -24,16 +23,7 @@ function obj = sdp_kmeans_bandit(X, K)
         obj_val_original  
     end
     methods
-            % Constructor
-            if nargin < 2
-                error('Two input arguments required: data matrix X and number of clusters K.');
-            end
-            if ~ismatrix(X) || ~isnumeric(X)
-                error('Input X must be a numeric matrix.');
-            end
-            if ~isscalar(K) || K <= 1 || K ~= floor(K)
-                error('Number of clusters K must be an integer greater than 1.');
-            end
+        function obj = sdp_kmeans_bandit(X, K)
             obj.X = X;
             obj.K = K;
             obj.n = size(X, 2);
@@ -52,25 +42,28 @@ function obj = sdp_kmeans_bandit(X, K)
             obj.pi = obj.alpha ./ (obj.alpha + obj.beta);
         end
         function fit_predict(obj, n_iter)
+            tic; % Start timing for the entire fit_predict method
             obj.n_iter = n_iter;
             obj.set_bayesian_parameters();
             obj.initialize_cluster_est();
-            fprintf("initialization done")
+            fprintf("initialization done\n")
             for i = 1:n_iter
                 variable_subset_now = obj.choose();
-                disp(['Iteration ', num2str(i), ' - arms pulled: ', mat2str(find(variable_subset_now))]);
-                disp(['number of arms pulled: ', mat2str(sum(variable_subset_now))]);
+                disp(['Iteration ', num2str(i), ' - arms pulled: ', mat2str(find(variable_subset_now)), '\n']);
+                disp(['number of arms pulled: ', mat2str(sum(variable_subset_now)), '\n']);
                 reward_now = obj.reward(variable_subset_now, i);
                 obj.update(variable_subset_now, reward_now);
             end
             %final clustering
             final_selection = obj.signal_entry_est;
             X_sub_final = obj.X(final_selection, :);
-            kmeans_learner = sdp_kmeans(X_sub_final, obj.K);
-            obj.cluster_est_dict(obj.n_iter + 1) = cluster_est(kmeans_learner.fit_predict());
-            
+            obj.cluster_est_dict(obj.n_iter + 1) = get_cluster_by_sdp(X_sub_final, obj.K);
+            % ... all existing code ...
+        obj.total_fit_predict_time = toc; % End timing for the entire fit_predict method            
+        fprintf('Total fit_predict time: %.4f seconds\n', obj.total_fit_predict_time);
         end
-        
+  
+ 
         function initialize_cluster_est(obj)
             cluster_est_dummy   = cluster_est( repelem(1,obj.n) );
             obj.cluster_est_dict = repelem(cluster_est_dummy, obj.n_iter+1); %dummy
@@ -84,8 +77,7 @@ function obj = sdp_kmeans_bandit(X, K)
         function reward_vec = reward(obj, variable_subset, iter)
             % Use only selected variables
             X_sub = obj.X(variable_subset, :);
-            kmeans_learner = sdp_kmeans(X_sub, obj.K);
-            obj.cluster_est_dict(iter) = cluster_est(kmeans_learner.fit_predict()); 
+            obj.cluster_est_dict(iter) = get_cluster_by_sdp(X_sub, obj.K);
             % Assume K = 2
             sample_cluster_1 = X_sub(:, obj.cluster_est_dict(iter).cluster_info_vec == 1);
             sample_cluster_2 = X_sub(:, obj.cluster_est_dict(iter).cluster_info_vec == 2);
@@ -115,3 +107,6 @@ function obj = sdp_kmeans_bandit(X, K)
     end % end of methods
 end
 %% 
+% 
+% 
+% 

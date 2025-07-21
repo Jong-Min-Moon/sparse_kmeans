@@ -1,4 +1,3 @@
-function [cluster_est_new, obj_sdp, obj_lik] = cluster_SDP_noniso(x, K, mean_now, noise_now, cluster_est_prev, s_hat)
 %% cluster_SDP_noniso
 % @export
 % 
@@ -30,6 +29,7 @@ function [cluster_est_new, obj_sdp, obj_lik] = cluster_SDP_noniso(x, K, mean_now
 % size. Cluster estimate from the prevous step. ex. [1 2 1 2 3 4 2 ]
 %% 
 % outputs:
+function [cluster_est_new, obj_sdp, obj_lik] = cluster_SDP_noniso(x, K, mean_now, noise_now, cluster_est_prev, s_hat)
     %estimate sigma hat s
     n = size(x,2)
     Sigma_hat_s_hat_now = get_cov_small(x, cluster_est_prev, s_hat);

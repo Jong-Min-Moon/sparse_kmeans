@@ -1,6 +1,6 @@
-function test_get_precision_ER()
 %% test_get_precision_ER
 % @export
+function test_get_precision_ER()
 %TEST_GET_PRECISION_ER Tests the get_precision_ER function for correctness
     p = 100;  % Dimensionality to test
     Omega = get_precision_ER(p);

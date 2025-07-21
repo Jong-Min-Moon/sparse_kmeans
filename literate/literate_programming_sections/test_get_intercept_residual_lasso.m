@@ -1,6 +1,6 @@
-function test_get_intercept_residual_lasso()
 %% test_get_intercept_residual_lasso
 % @export
+function test_get_intercept_residual_lasso()
 %TEST_GET_INTERCEPT_RESIDUAL_LASSO Verifies Lasso estimates active and zero coefficients correctly,
 % and ensures output variables have correct sizes.
     rng(42);  % For reproducibility

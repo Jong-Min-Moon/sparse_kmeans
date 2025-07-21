@@ -1,8 +1,8 @@
-function precision_matrix = get_precision_band(p, precision_sparsity, conditional_correlation)
 %% get_precision_band
 % @export
 % 
 % 
+function precision_matrix = get_precision_band(p, precision_sparsity, conditional_correlation)
 % get_precision_band - Constructs a banded symmetric precision matrix with geometric decay
 %                      using spdiags, assuming identity base and symmetric off-diagonal decay.
 %

@@ -1,4 +1,3 @@
-function acc = get_bicluster_accuracy(cluster_est, cluster_true)
 %% get_bicluster_accuracy
 % @export
 %% 
@@ -16,6 +15,7 @@ function acc = get_bicluster_accuracy(cluster_est, cluster_true)
 % * acc: ratio of correctly clustered observations
 %% 
 % 
+function acc = get_bicluster_accuracy(cluster_est, cluster_true)
     % Ensure both inputs are vectors
     if ~isvector(cluster_est) || ~isvector(cluster_true)
         error('Both inputs must be vectors.');

@@ -1,4 +1,3 @@
-function Omega_star = get_precision_ER(p)
 %% get_precision_ER
 % @export
 % 
@@ -17,6 +16,7 @@ function Omega_star = get_precision_ER(p)
 % * Finally, $\Omega^*$ is standardized to have unit diagonals.
 %% 
 % 
+function Omega_star = get_precision_ER(p)
     rng(1);  % set random seed for reproducibility
     % Get upper triangle indices (excluding diagonal)
     upper_idx = triu(true(p), 1);
