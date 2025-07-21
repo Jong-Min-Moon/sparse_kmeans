@@ -1,4 +1,6 @@
 classdef cluster_est < handle
+%% cluster_est
+% @export
     properties
         sample_size
         cluster_info_vec
@@ -17,7 +19,6 @@ classdef cluster_est < handle
             end
             label_cluster = unique(cluster_info_vec);
             ce.number_cluster = length(label_cluster);
-
             % create a struct representation (which aligns with the paper)
             ce.cluster_partition = containers.Map( ...
                 1:ce.number_cluster, ...
@@ -43,14 +44,11 @@ classdef cluster_est < handle
             end % end of the for loop over permutations
             acc_vec = max( acc_permutation_vec );
         end % end of evaluate_accuracy
-
         function cluster_est_permuted = change_label(ce, permutation)
             cluster_est_permuted = ce.cluster_info_vec;
             for i = 1:ce.number_cluster
                 cluster_est_permuted(ce.cluster_info_vec==i) = permutation(i);
             end
         end% end of change_label
-
-
     end% end of methods
 end % end of the class

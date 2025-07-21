@@ -1568,6 +1568,174 @@ classdef sdp_kmeans_bandit_simul  < sdp_kmeans_bandit
     
     end % end of method
 end % end of class
+%% 
+%% permutationTest
+% @export
+% [p, observeddifference, effectsize] = permutationTest(sample1, sample2, permutations [, varargin])
+%
+%       Permutation test (aka randomisation test), testing for a difference
+%       in means between two samples. 
+%
+% In:
+%       sample1 - vector of measurements from one (experimental) sample
+%       sample2 - vector of measurements from a second (control) sample
+%       permutations - the number of permutations
+%
+% Optional (name-value pairs):
+%       sidedness - whether to test one- or two-sided:
+%           'both' - test two-sided (default)
+%           'smaller' - test one-sided, alternative hypothesis is that
+%                       the mean of sample1 is smaller than the mean of
+%                       sample2
+%           'larger' - test one-sided, alternative hypothesis is that
+%                      the mean of sample1 is larger than the mean of
+%                      sample2
+%       exact - whether or not to run an exact test, in which all possible
+%               combinations are considered. this is only feasible for
+%               relatively small sample sizes. the 'permutations' argument
+%               will be ignored for an exact test. (1|0, default 0)
+%       plotresult - whether or not to plot the distribution of randomised
+%                    differences, along with the observed difference (1|0,
+%                    default: 0)
+%       showprogress - whether or not to show a progress bar. if 0, no bar
+%                      is displayed; if showprogress > 0, the bar updates 
+%                      every showprogress-th iteration.
+%
+% Out:  
+%       p - the resulting p-value
+%       observeddifference - the observed difference between the two
+%                            samples, i.e. mean(sample1) - mean(sample2)
+%       effectsize - the effect size, Hedges' g
+%
+% Usage example:
+%       >> permutationTest(rand(1,100), rand(1,100)-.25, 10000, ...
+%          'plotresult', 1, 'showprogress', 250)
+% 
+%                    Copyright 2015-2018, 2021 Laurens R Krol
+%                    Team PhyPA, Biological Psychology and Neuroergonomics,
+%                    Berlin Institute of Technology
+% 2021-01-13 lrk
+%   - Replaced effect size calculation with Hedges' g, from Hedges & Olkin
+%     (1985), Statistical Methods for Meta-Analysis (p. 78, formula 3),
+%     Orlando, FL, USA: Academic Press.
+% 2020-07-14 lrk
+%   - Added version-dependent call to hist/histogram
+% 2019-02-01 lrk
+%   - Added short description
+%   - Increased the number of bins in the plot
+% 2018-03-15 lrk
+%   - Suppressed initial MATLAB:nchoosek:LargeCoefficient warning
+% 2018-03-14 lrk
+%   - Added exact test
+% 2018-01-31 lrk
+%   - Replaced calls to mean() with nanmean()
+% 2017-06-15 lrk
+%   - Updated waitbar message in first iteration
+% 2017-04-04 lrk
+%   - Added progress bar
+% 2017-01-13 lrk
+%   - Switched to inputParser to parse arguments
+% 2016-09-13 lrk
+%   - Caught potential issue when column vectors were used
+%   - Improved plot
+% 2016-02-17 toz
+%   - Added plot functionality
+% 2015-11-26 First version
+% This program is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation, either version 3 of the License, or
+% (at your option) any later version.
+%
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+%
+% You should have received a copy of the GNU General Public License
+% along with this program.  If not, see <http://www.gnu.org/licenses/>.
+function [p, observeddifference, effectsize] = permutationTest(sample1, sample2, permutations, varargin)
+rng('shuffle');
+% parsing input
+p = inputParser;
+addRequired(p, 'sample1', @isnumeric);
+addRequired(p, 'sample2', @isnumeric);
+addRequired(p, 'permutations', @isnumeric);
+addParamValue(p, 'sidedness', 'both', @(x) any(validatestring(x,{'both', 'smaller', 'larger'})));
+addParamValue(p, 'exact' , 0, @isnumeric);
+addParamValue(p, 'plotresult', 0, @isnumeric);
+addParamValue(p, 'showprogress', 0, @isnumeric);
+parse(p, sample1, sample2, permutations, varargin{:})
+sample1 = p.Results.sample1;
+sample2 = p.Results.sample2;
+permutations = p.Results.permutations;
+sidedness = p.Results.sidedness;
+exact = p.Results.exact;
+plotresult = p.Results.plotresult;
+showprogress = p.Results.showprogress;
+% enforcing row vectors
+if iscolumn(sample1), sample1 = sample1'; end
+if iscolumn(sample2), sample2 = sample2'; end
+allobservations = [sample1, sample2];
+observeddifference = nanmean(sample1) - nanmean(sample2);
+pooledstd = sqrt(  ( (numel(sample1)-1)*std(sample1)^2 + (numel(sample2)-1)*std(sample2)^2 )  /  ( numel(allobservations)-2 )  );
+effectsize = observeddifference / pooledstd;
+w = warning('off', 'MATLAB:nchoosek:LargeCoefficient');
+if ~exact && permutations > nchoosek(numel(allobservations), numel(sample1))
+    warning(['the number of permutations (%d) is higher than the number of possible combinations (%d);\n' ...
+             'consider running an exact test using the ''exact'' argument'], ...
+             permutations, nchoosek(numel(allobservations), numel(sample1)));
+end
+warning(w);
+if showprogress, w = waitbar(0, 'Preparing test...', 'Name', 'permutationTest'); end
+if exact
+    % getting all possible combinations
+    allcombinations = nchoosek(1:numel(allobservations), numel(sample1));
+    permutations = size(allcombinations, 1);
+end
+% running test
+randomdifferences = zeros(1, permutations);
+if showprogress, waitbar(0, w, sprintf('Permutation 1 of %d', permutations), 'Name', 'permutationTest'); end
+for n = 1:permutations
+    if showprogress && mod(n,showprogress) == 0, waitbar(n/permutations, w, sprintf('Permutation %d of %d', n, permutations)); end
+    
+    % selecting either next combination, or random permutation
+    if exact, permutation = [allcombinations(n,:), setdiff(1:numel(allobservations), allcombinations(n,:))];
+    else, permutation = randperm(length(allobservations)); end
+    
+    % dividing into two samples
+    randomSample1 = allobservations(permutation(1:length(sample1)));
+    randomSample2 = allobservations(permutation(length(sample1)+1:length(permutation)));
+    
+    % saving differences between the two samples
+    randomdifferences(n) = nanmean(randomSample1) - nanmean(randomSample2);
+end
+if showprogress, delete(w); end
+% getting probability of finding observed difference from random permutations
+if strcmp(sidedness, 'both')
+    p = (length(find(abs(randomdifferences) > abs(observeddifference)))+1) / (permutations+1);
+elseif strcmp(sidedness, 'smaller')
+    p = (length(find(randomdifferences < observeddifference))+1) / (permutations+1);
+elseif strcmp(sidedness, 'larger')
+    p = (length(find(randomdifferences > observeddifference))+1) / (permutations+1);
+end
+% plotting result
+if plotresult
+    figure;
+    if verLessThan('matlab', '8.4')
+        % MATLAB R2014a and earlier
+        hist(randomdifferences, 20);
+    else
+        % MATLAB R2014b and later
+        histogram(randomdifferences, 20);
+    end
+    hold on;
+    xlabel('Random differences');
+    ylabel('Count')
+    od = plot(observeddifference, 0, '*r', 'DisplayName', sprintf('Observed difference.\nEffect size: %.2f,\np = %f', effectsize, p));
+    legend(od);
+end
+end
+%% 
 %% Simulations - data generator
 %% get_precision_band
 % @export
@@ -2202,7 +2370,7 @@ end
 %% Simulation -  auxilary
 % 
 %% sqlite3 table schema for baseline method
-CREATE TABLE isee_new(
+CREATE TABLE table_test(
 "rep"INTEGER,
 "iter"INTEGER,
 "sep"REAL,
@@ -2219,6 +2387,104 @@ CREATE TABLE isee_new(
 );
 %% 
 % 
+%% insertTableIntoSQLite
+% @export
+function insertTableIntoSQLite(db_dir, table_name, obj, rep, Delta, support)
+% insertTableIntoSQLite Inserts a MATLAB table into an SQLite database.
+%
+%   insertTableIntoSQLite(db_dir, table_name, obj, rep, Delta, support, max_attempts, pause_time)
+%   generates a data table using obj.get_database_subtable and attempts to
+%   insert it into the specified SQLite database table. It includes a retry
+%   mechanism for database lock errors.
+%
+%   Inputs:
+%     db_dir       - (char) Full path to the SQLite database file.
+%     table_name   - (char) Name of the table within the database to insert into.
+%     obj          - (object) An instance of a class (e.g., sdp_kmeans_bandit_simul)
+%                    that has a method called 'get_database_subtable' and other
+%                    properties needed by that method.
+%     rep          - (numeric) Replication number for the simulation.
+%     Delta        - (numeric) Separation parameter for the simulation.
+%     support      - (array) Support vector for evaluating discovery.
+%     max_attempts - (numeric) Maximum number of times to retry insertion
+%                    if the database is locked.
+%     pause_time   - (numeric) Time in seconds to pause between retries.
+%
+%   Example:
+%     % Assuming 'myBanditObj', 'dbPath', 'tableName', 'repNum', 'deltaVal', 'supVec'
+%     % are already defined and 'dbPath' exists.
+%     % Also assume 'max_attempts' = 5 and 'pause_time' = 2
+%     % insertTableIntoSQLite('my_database.db', 'simulation_results', myBanditObj, ...
+%     %                       1, 0.5, [1 3 5], 5, 2);
+max_attempts = 10;
+pause_time=2;
+% Input validation (basic checks)
+if ~ischar(db_dir) || isempty(db_dir)
+    error('insertTableIntoSQLite:InvalidDbDir', 'db_dir must be a non-empty character array (path to database).');
+end
+if ~ischar(table_name) || isempty(table_name)
+    error('insertTableIntoSQLite:InvalidTableName', 'table_name must be a non-empty character array.');
+end
+if ~isobject(obj) || ~isprop(obj, 'n_iter') % Basic check if obj is a valid object
+    error('insertTableIntoSQLite:InvalidObject', 'obj must be a valid object with required properties/methods.');
+end
+if ~ismethod(obj, 'get_database_subtable')
+    error('insertTableIntoSQLite:MissingMethod', 'The provided object ''obj'' must have a method named ''get_database_subtable''.');
+end
+if ~isnumeric(rep) || ~isscalar(rep)
+    error('insertTableIntoSQLite:InvalidRep', 'rep must be a numeric scalar.');
+end
+if ~isnumeric(Delta) || ~isscalar(Delta)
+    error('insertTableIntoSQLite:InvalidDelta', 'Delta must be a numeric scalar.');
+end
+if ~isnumeric(support) || ~isvector(support)
+    error('insertTableIntoSQLite:InvalidSupport', 'support must be a numeric vector.');
+end
+% Generate the table using the provided object's method
+fprintf('Generating database subtable...\n');
+try
+    database_subtable = obj.get_database_subtable(rep, Delta, support);
+catch ME
+    error('insertTableIntoSQLite:TableGenerationError', 'Error generating database subtable: %s', ME.message);
+end
+if isempty(database_subtable) || ~istable(database_subtable)
+    error('insertTableIntoSQLite:EmptyOrInvalidTable', 'The generated database_subtable is empty or not a valid MATLAB table.');
+end
+attempt = 1;
+while attempt <= max_attempts
+    conn = []; % Initialize conn to ensure it's cleared if connection fails
+    try
+        % Attempt to connect to the database
+        conn = sqlite(db_dir, 'connect');
+        
+        % *** THE CORRECT AND RECOMMENDED FIX: Use sqlwrite ***
+        sqlwrite(conn, table_name, database_subtable); 
+        
+        % Close connection on success
+        close(conn);
+        fprintf('Inserted %d rows successfully into %s on attempt %d.\n', size(database_subtable, 1), table_name, attempt);
+        return; % Exit the function on successful insertion
+    catch ME
+        % If connection was established, try to close it before retrying/rethrowing
+        if ~isempty(conn) && isvalid(conn)
+            close(conn); 
+        end
+        % Check if the error is due to database lock or busy status
+        if contains(ME.message, 'database is locked', 'IgnoreCase', true) || ...
+           contains(ME.message, 'SQLITE_BUSY', 'IgnoreCase', true)
+            fprintf('Database locked. Attempt %d/%d. Retrying in %.1f seconds...\n', ...
+                    attempt, max_attempts, pause_time);
+            pause(pause_time);
+            attempt = attempt + 1;
+        else
+            % If it's another error, rethrow it
+            rethrow(ME);
+        end
+    end
+end
+% If the loop finishes without successful insertion
+error('insertTableIntoSQLite:MaxAttemptsReached', 'Failed to insert after %d attempts due to persistent database lock.', max_attempts);
+end
 %% clime
 % @export
 % l1dantzig_mod.m
@@ -2524,6 +2790,66 @@ MI=D/t1;			%Mirkin 1970	%p(disagreement)
 HI=(A-D)/t1;	%Hubert 1977	%p(agree)-p(disagree)
 %% Miscelleonus
 % 
+%% get_num2str_with_mark
+% @export
+function num2str_with_mark = get_num2str_with_mark(integer_vec, mark)
+    num2str_with_mark = regexprep(num2str(integer_vec),'\s+',mark);
+end
+%% 
+%% cluster_est
+% @export
+classdef cluster_est < handle
+    properties
+        sample_size
+        cluster_info_vec
+        number_cluster
+        cluster_partition
+        cluster_info_string
+    end
+    
+    methods
+        function ce = cluster_est(cluster_info_vec)
+            ce.sample_size = length(cluster_info_vec);
+            full_index_vec = 1:ce.sample_size;
+            ce.cluster_info_vec = cluster_info_vec;
+            if size(ce.cluster_info_vec,2) == 1
+                ce.cluster_info_vec  = ce.cluster_info_vec';
+            end
+            label_cluster = unique(cluster_info_vec);
+            ce.number_cluster = length(label_cluster);
+            % create a struct representation (which aligns with the paper)
+            ce.cluster_partition = containers.Map( ...
+                1:ce.number_cluster, ...
+                repelem({ce.cluster_info_vec}, ce.number_cluster) ...
+                );
+            for i = 1:ce.number_cluster
+                partition_now = full_index_vec(cluster_info_vec==i);
+                ce.cluster_partition(i) = {partition_now};
+            end % end of the for loop that creates the partition dictionary
+        
+            % create a string representation (for the database)
+            ce.cluster_info_string = get_num2str_with_mark(ce.cluster_info_vec, ",");
+        end %end of the constructor
+    
+        function acc_vec = evaluate_accuracy(ce, cluster_true)
+            permutation_all = perms(1:ce.number_cluster);
+            number_permutation = size(permutation_all, 1);
+            acc_permutation_vec = zeros(number_permutation, 1);
+            for j = 1:number_permutation
+                permutation_now = permutation_all(j,:);
+                cluster_permuted_now = ce.change_label(permutation_now);
+                acc_permutation_vec(j) = mean(cluster_true == cluster_permuted_now);
+            end % end of the for loop over permutations
+            acc_vec = max( acc_permutation_vec );
+        end % end of evaluate_accuracy
+        function cluster_est_permuted = change_label(ce, permutation)
+            cluster_est_permuted = ce.cluster_info_vec;
+            for i = 1:ce.number_cluster
+                cluster_est_permuted(ce.cluster_info_vec==i) = permutation(i);
+            end
+        end% end of change_label
+    end% end of methods
+end % end of the class
 %% get_current_time
 % @export
 function current_time = get_current_time()

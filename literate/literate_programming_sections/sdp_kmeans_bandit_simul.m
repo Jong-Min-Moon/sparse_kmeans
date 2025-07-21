@@ -116,3 +116,4 @@ classdef sdp_kmeans_bandit_simul  < sdp_kmeans_bandit
     
     end % end of method
 end % end of class
+%% 

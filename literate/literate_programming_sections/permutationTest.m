@@ -1,3 +1,5 @@
+%% permutationTest
+% @export
 % [p, observeddifference, effectsize] = permutationTest(sample1, sample2, permutations [, varargin])
 %
 %       Permutation test (aka randomisation test), testing for a difference
@@ -41,7 +43,6 @@
 %                    Copyright 2015-2018, 2021 Laurens R Krol
 %                    Team PhyPA, Biological Psychology and Neuroergonomics,
 %                    Berlin Institute of Technology
-
 % 2021-01-13 lrk
 %   - Replaced effect size calculation with Hedges' g, from Hedges & Olkin
 %     (1985), Statistical Methods for Meta-Analysis (p. 78, formula 3),
@@ -69,7 +70,6 @@
 % 2016-02-17 toz
 %   - Added plot functionality
 % 2015-11-26 First version
-
 % This program is free software: you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
 % the Free Software Foundation, either version 3 of the License, or
@@ -82,24 +82,18 @@
 %
 % You should have received a copy of the GNU General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-
 function [p, observeddifference, effectsize] = permutationTest(sample1, sample2, permutations, varargin)
 rng('shuffle');
 % parsing input
 p = inputParser;
-
 addRequired(p, 'sample1', @isnumeric);
 addRequired(p, 'sample2', @isnumeric);
 addRequired(p, 'permutations', @isnumeric);
-
 addParamValue(p, 'sidedness', 'both', @(x) any(validatestring(x,{'both', 'smaller', 'larger'})));
 addParamValue(p, 'exact' , 0, @isnumeric);
 addParamValue(p, 'plotresult', 0, @isnumeric);
 addParamValue(p, 'showprogress', 0, @isnumeric);
-
 parse(p, sample1, sample2, permutations, varargin{:})
-
 sample1 = p.Results.sample1;
 sample2 = p.Results.sample2;
 permutations = p.Results.permutations;
@@ -107,16 +101,13 @@ sidedness = p.Results.sidedness;
 exact = p.Results.exact;
 plotresult = p.Results.plotresult;
 showprogress = p.Results.showprogress;
-
 % enforcing row vectors
 if iscolumn(sample1), sample1 = sample1'; end
 if iscolumn(sample2), sample2 = sample2'; end
-
 allobservations = [sample1, sample2];
 observeddifference = nanmean(sample1) - nanmean(sample2);
 pooledstd = sqrt(  ( (numel(sample1)-1)*std(sample1)^2 + (numel(sample2)-1)*std(sample2)^2 )  /  ( numel(allobservations)-2 )  );
 effectsize = observeddifference / pooledstd;
-
 w = warning('off', 'MATLAB:nchoosek:LargeCoefficient');
 if ~exact && permutations > nchoosek(numel(allobservations), numel(sample1))
     warning(['the number of permutations (%d) is higher than the number of possible combinations (%d);\n' ...
@@ -124,15 +115,12 @@ if ~exact && permutations > nchoosek(numel(allobservations), numel(sample1))
              permutations, nchoosek(numel(allobservations), numel(sample1)));
 end
 warning(w);
-
 if showprogress, w = waitbar(0, 'Preparing test...', 'Name', 'permutationTest'); end
-
 if exact
     % getting all possible combinations
     allcombinations = nchoosek(1:numel(allobservations), numel(sample1));
     permutations = size(allcombinations, 1);
 end
-
 % running test
 randomdifferences = zeros(1, permutations);
 if showprogress, waitbar(0, w, sprintf('Permutation 1 of %d', permutations), 'Name', 'permutationTest'); end
@@ -151,7 +139,6 @@ for n = 1:permutations
     randomdifferences(n) = nanmean(randomSample1) - nanmean(randomSample2);
 end
 if showprogress, delete(w); end
-
 % getting probability of finding observed difference from random permutations
 if strcmp(sidedness, 'both')
     p = (length(find(abs(randomdifferences) > abs(observeddifference)))+1) / (permutations+1);
@@ -160,7 +147,6 @@ elseif strcmp(sidedness, 'smaller')
 elseif strcmp(sidedness, 'larger')
     p = (length(find(randomdifferences > observeddifference))+1) / (permutations+1);
 end
-
 % plotting result
 if plotresult
     figure;
@@ -177,5 +163,5 @@ if plotresult
     od = plot(observeddifference, 0, '*r', 'DisplayName', sprintf('Observed difference.\nEffect size: %.2f,\np = %f', effectsize, p));
     legend(od);
 end
-
 end
+%% 
