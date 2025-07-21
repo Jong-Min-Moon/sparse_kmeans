@@ -1399,8 +1399,8 @@ classdef sdp_kmeans_bandit < handle
             X_sub_final = obj.X(final_selection, :);
             obj.cluster_est_dict(obj.n_iter + 1) = get_cluster_by_sdp(X_sub_final, obj.K);
             % ... all existing code ...
-        obj.total_fit_predict_time = toc; % End timing for the entire fit_predict method            
-        fprintf('Total fit_predict time: %.4f seconds\n', obj.total_fit_predict_time);
+        total_fit_predict_time = toc; % End timing for the entire fit_predict method            
+        fprintf('Total fit_predict time: %.4f seconds\n', total_fit_predict_time);
         end
   
  
@@ -1428,12 +1428,12 @@ classdef sdp_kmeans_bandit < handle
             % only calculate the p-values for selected variables
             for j = 1:length(idx)
                 i = idx(j);
-                p_val =  permutationTest( ...
+                obj.p =  permutationTest( ...
                     sample_cluster_1(j, :), ...
                     sample_cluster_2(j, :), ...
                     100 ...
                 ); % 
-                reward_vec(i) = p_val < 0.01;
+                reward_vec(i) = obj.p < 0.01;
             end
             
      
@@ -1447,6 +1447,7 @@ classdef sdp_kmeans_bandit < handle
     end % end of methods
 end
 %% 
+%% 
 % 
 % 
 % 
@@ -1457,6 +1458,7 @@ classdef sdp_kmeans_bandit_simul  < sdp_kmeans_bandit
         function obj = sdp_kmeans_bandit_simul(X, number_cluster)
             % Call the superclass constructor first
             % This initializes X, K, n, p, cutoff, and n_iter properties from the superclass
+            
             obj = obj@sdp_kmeans_bandit(X, number_cluster);
             
         end
@@ -1468,7 +1470,8 @@ classdef sdp_kmeans_bandit_simul  < sdp_kmeans_bandit
             for i = 1:n_iter
                 variable_subset_now = obj.choose();
                 obj.entries_survived(i, :) = variable_subset_now;
-                disp(['Iteration ', num2str(i), ' - arms pulled: ', mat2str(find(variable_subset_now))]);
+                arms_pulled = mat2str(find(variable_subset_now));
+                disp(['Iteration ', num2str(i), ' - arms pulled: ', arms_pulled(1:20)]);
                 disp(['number of arms pulled: ', mat2str(sum(variable_subset_now))]);
                 reward_now = obj.reward(variable_subset_now, i);
                 obj.update(variable_subset_now, reward_now);
@@ -1568,7 +1571,62 @@ classdef sdp_kmeans_bandit_simul  < sdp_kmeans_bandit
     
     end % end of method
 end % end of class
-%% 
+%% sdp_kmeans_bandit_even_simul
+% @export
+classdef sdp_kmeans_bandit_even_simul  < sdp_kmeans_bandit_simul 
+    methods
+        function obj = sdp_kmeans_bandit_even_simul(X, number_cluster)
+            % Call the superclass constructor first
+            % This initializes X, K, n, p, cutoff, and n_iter properties from the superclass
+            obj = obj@sdp_kmeans_bandit_simul(X, number_cluster);
+            
+        end
+        
+    
+        function reward_vec = reward(obj, variable_subset, iter)
+            % Use only selected variables
+            num_selected_features = sum(variable_subset);
+            if num_selected_features == 0
+                % If no variables selected, no reward can be computed for features.
+                % All rewards are 0, and we skip clustering.
+                reward_vec = zeros(1, obj.p); 
+                return; % Exit early
+            end
+            X_sub = obj.X(variable_subset, :);
+            % Perform clustering on X_sub (original selected data)
+            obj.cluster_est_dict(iter) = get_cluster_by_sdp(X_sub, obj.K);
+            
+            % --- 1. Add standard normal matrix to X_sub (after clustering) ---
+            % Dimensions of X_sub are (num_selected_features x num_data_points)
+            X_sub_noisy = X_sub + randn(num_selected_features, obj.n); % Use obj.n for num_data_points
+            % Get cluster estimates
+            cluster_labels = obj.cluster_est_dict(iter).cluster_info_vec;
+            % --- 2. Compute cluster_norm for each feature (VECTORIZED) ---
+            A_double = get_assignment_matrix(obj.n, obj.K, cluster_labels);
+            % Calculate the sum of each feature's values within each cluster
+            % Resulting matrix 'cluster_sums' will be (num_selected_features x K)
+            cluster_sums = X_sub_noisy * A_double; 
+            cluster_sums_sq = cluster_sums.^2;
+            cluster_norm = sum(cluster_sums_sq, 2)'; 
+            % --- 3. Define reward_vec by thresholding cluster_norm (VECTORIZED) ---
+            % Calculate the threshold
+            q = obj.n * (log(obj.n) + log(obj.p)) / obj.K;
+            threshold = sqrt(obj.n * q) + q;
+            
+            % Initialize reward_vec (full length of original features, p)
+            reward_vec = zeros(1, obj.p); 
+            
+            % Get original indices of selected variables
+            idx = find(variable_subset); 
+            
+            % Directly assign the thresholded values using vectorized indexed assignment
+            reward_vec(idx) = cluster_norm > threshold; 
+            
+        end % end of method reward            
+     
+ 
+    end % end of methods
+end
 %% permutationTest
 % @export
 % [p, observeddifference, effectsize] = permutationTest(sample1, sample2, permutations [, varargin])
@@ -2850,6 +2908,55 @@ classdef cluster_est < handle
         end% end of change_label
     end% end of methods
 end % end of the class
+%% 
+%% get_assignment_matrix
+% @export
+function A_double = get_assignment_matrix(n, K, cluster_labels)
+% GET_ASSIGNMENT_MATRIX Creates a binary assignment matrix from cluster labels.
+%
+%   A_double = GET_ASSIGNMENT_MATRIX(n, K, cluster_labels) creates a binary
+%   assignment matrix where A(j, k) = 1 if data point j belongs to cluster k,
+%   and 0 otherwise. This function assumes cluster labels are integers from 1 to K.
+%
+%   Inputs:
+%     n              - (numeric) Total number of data points.
+%     K              - (numeric) Total number of clusters.
+%     cluster_labels - A vector of cluster assignments for each data point.
+%                      Expected to contain integer values from 1 to K.
+%
+%   Outputs:
+%     A_double       - A (n x K) double matrix representing the
+%                      binary assignment of data points to clusters.
+%
+%   Example:
+%     n_points = 100;
+%     n_clusters = 3;
+%     labels = randi(n_clusters, n_points, 1); % Example labels
+%     assignment_mat = get_assignment_matrix(n_points, n_clusters, labels);
+%     disp(size(assignment_mat)); % Should be [100 3]
+% Input validation
+if ~isscalar(n) || ~isnumeric(n) || n < 1 || n ~= floor(n)
+    error('get_assignment_matrix:InvalidN', 'Input ''n'' (number of data points) must be a positive integer scalar.');
+end
+if ~isscalar(K) || ~isnumeric(K) || K < 1 || K ~= floor(K)
+    error('get_assignment_matrix:InvalidK', 'Input ''K'' (number of clusters) must be a positive integer scalar.');
+end
+if ~isnumeric(cluster_labels) || ~isvector(cluster_labels) || any(cluster_labels < 1) || any(cluster_labels > K) || any(cluster_labels ~= floor(cluster_labels))
+    error('get_assignment_matrix:InvalidClusterLabels', 'cluster_labels must be a numeric vector of integers from 1 to K.');
+end
+if length(cluster_labels) ~= n
+    error('get_assignment_matrix:DimensionMismatch', 'Length of cluster_labels (%d) must match n (%d).', length(cluster_labels), n);
+end
+% Initialize A_double as a logical matrix for efficiency
+A_double = false(n, K); % A_double will be (num_data_points x K)
+% Vectorized way to populate A_double based on cluster_labels
+% This works if cluster_labels contains integer IDs from 1 to K
+% Ensure cluster_labels is a column vector for sub2ind
+linear_indices = sub2ind(size(A_double), (1:n)', cluster_labels(:));
+A_double(linear_indices) = true;
+% Convert to double for matrix multiplication (as required by your reward function)
+A_double = double(A_double);
+end
 %% get_current_time
 % @export
 function current_time = get_current_time()

@@ -59,8 +59,8 @@ classdef sdp_kmeans_bandit < handle
             X_sub_final = obj.X(final_selection, :);
             obj.cluster_est_dict(obj.n_iter + 1) = get_cluster_by_sdp(X_sub_final, obj.K);
             % ... all existing code ...
-        obj.total_fit_predict_time = toc; % End timing for the entire fit_predict method            
-        fprintf('Total fit_predict time: %.4f seconds\n', obj.total_fit_predict_time);
+        total_fit_predict_time = toc; % End timing for the entire fit_predict method            
+        fprintf('Total fit_predict time: %.4f seconds\n', total_fit_predict_time);
         end
   
  
@@ -88,12 +88,12 @@ classdef sdp_kmeans_bandit < handle
             % only calculate the p-values for selected variables
             for j = 1:length(idx)
                 i = idx(j);
-                p_val =  permutationTest( ...
+                obj.p =  permutationTest( ...
                     sample_cluster_1(j, :), ...
                     sample_cluster_2(j, :), ...
                     100 ...
                 ); % 
-                reward_vec(i) = p_val < 0.01;
+                reward_vec(i) = obj.p < 0.01;
             end
             
      
@@ -106,6 +106,7 @@ classdef sdp_kmeans_bandit < handle
         end % end of method update    
     end % end of methods
 end
+%% 
 %% 
 % 
 % 

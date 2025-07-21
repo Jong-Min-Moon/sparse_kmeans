@@ -5,6 +5,7 @@ classdef sdp_kmeans_bandit_simul  < sdp_kmeans_bandit
         function obj = sdp_kmeans_bandit_simul(X, number_cluster)
             % Call the superclass constructor first
             % This initializes X, K, n, p, cutoff, and n_iter properties from the superclass
+            
             obj = obj@sdp_kmeans_bandit(X, number_cluster);
             
         end
@@ -16,7 +17,8 @@ classdef sdp_kmeans_bandit_simul  < sdp_kmeans_bandit
             for i = 1:n_iter
                 variable_subset_now = obj.choose();
                 obj.entries_survived(i, :) = variable_subset_now;
-                disp(['Iteration ', num2str(i), ' - arms pulled: ', mat2str(find(variable_subset_now))]);
+                arms_pulled = mat2str(find(variable_subset_now));
+                disp(['Iteration ', num2str(i), ' - arms pulled: ', arms_pulled(1:20)]);
                 disp(['number of arms pulled: ', mat2str(sum(variable_subset_now))]);
                 reward_now = obj.reward(variable_subset_now, i);
                 obj.update(variable_subset_now, reward_now);
@@ -116,4 +118,3 @@ classdef sdp_kmeans_bandit_simul  < sdp_kmeans_bandit
     
     end % end of method
 end % end of class
-%% 
