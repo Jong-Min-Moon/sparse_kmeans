@@ -19,3 +19,5 @@ function is_stop = decide_stop(obj_sdp, obj_lik, loop_detect_start, window_size,
             is_stop = true;
         end
  end
+%% 
+%% 
