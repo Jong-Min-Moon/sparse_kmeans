@@ -57,13 +57,15 @@ classdef sdp_kmeans_bandit < handle
             %final clustering
             final_selection = obj.signal_entry_est;
             X_sub_final = obj.X(final_selection, :);
-            obj.cluster_est_dict(obj.n_iter + 1) = get_cluster_by_sdp(X_sub_final, obj.K);
+            obj.cluster_est_dict(obj.n_iter + 1) = get_cluster(X_sub_final, obj.K);
             % ... all existing code ...
         total_fit_predict_time = toc; % End timing for the entire fit_predict method            
         fprintf('Total fit_predict time: %.4f seconds\n', total_fit_predict_time);
         end
   
- 
+        function cluster_est = get_cluster(obj, X, K) % inherit this class and change this part to try simpler clustering methods
+            cluster_est = get_cluster_by_sdp(X, K);
+        end
         function initialize_cluster_est(obj)
             cluster_est_dummy   = cluster_est( repelem(1,obj.n) );
             obj.cluster_est_dict = repelem(cluster_est_dummy, obj.n_iter+1); %dummy
@@ -77,7 +79,7 @@ classdef sdp_kmeans_bandit < handle
         function reward_vec = reward(obj, variable_subset, iter)
             % Use only selected variables
             X_sub = obj.X(variable_subset, :);
-            obj.cluster_est_dict(iter) = get_cluster_by_sdp(X_sub, obj.K);
+            obj.cluster_est_dict(iter) = get_cluster(X_sub, obj.K);
             % Assume K = 2
             sample_cluster_1 = X_sub(:, obj.cluster_est_dict(iter).cluster_info_vec == 1);
             sample_cluster_2 = X_sub(:, obj.cluster_est_dict(iter).cluster_info_vec == 2);
