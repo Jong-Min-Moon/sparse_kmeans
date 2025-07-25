@@ -58,8 +58,7 @@ classdef sdp_kmeans_iter_knowncov < handle
                 cluster_est_now = get_cluster_by_sdp(x_sub_now, obj.K); 
             end
         end % end of fit_predict
-            
-      
+        
     end % end of methods
 end
 %% 
