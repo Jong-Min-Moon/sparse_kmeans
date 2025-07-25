@@ -57,7 +57,7 @@ classdef data_generator_t < handle
             noise_matrix = trnd(df,[obj.p, obj.n]);  % n x p noise
             sd_for_df = sqrt( df/(df-2) );
             noise_matrix = noise_matrix * sd/sd_for_df;
-            empirical_sd = stdev(noise_matrix, 0, 'all');
+            empirical_sd = std(noise_matrix, 0, 'all');
             fprintf('--- empirical_sd =%f  ---\\n', empirical_sd);
             
         end
