@@ -2326,75 +2326,30 @@ classdef data_generator_approximately_sparse_mean < data_generator_t
 end% end of class
 %% 
 %% data_generator_approximately_sparse_precision
-% 
+% @export
 classdef data_generator_approximately_sparse_precision < data_generator_t
     methods
         function get_cov(obj)
-            obj.precision = get_precision_band(obj.p, 2, 0.45) + delta;
-            obj.precision(logical(eye(size(obj.precision)))) = diag(obj.precision) - delta;
+            obj.precision = get_precision_band(obj.p, 2, 0.45);
+            obj.precision(obj.precision==0) =   delta;
             obj.Sigma = inv(obj.precision);
         end
-    end
-function [X, y, mu1, mu2, mahala_dist, Omega_star, beta_star] = generate_gaussian_data(n, p, s, sep, model_cov, model_energy, baseline, seed, cluster_1_ratio, beta_seed)
-  
-    n1 = round(n * cluster_1_ratio);
-    n2 = n - n1;
-    y = [ones(n1, 1); 2 * ones(n2, 1)];
-    % Generate Omega_star
-    switch model_cov
-        case 'iso'
-            Omega_star = eye(p);
-            Sigma = eye(p);
-        case 'ER'
-            Omega_star = get_precision_ER(p);
-            Sigma = inv(Omega_star);
-        case 'chain45'
-            Omega_star = get_precision_band(p, 2, 0.45);
-            Sigma = inv(Omega_star);
-        case 'chain45_approx'
-        otherwise
-            error('Model must be ''ER'' or ''AR''.');
-    end
-    % Set beta_star
-    switch model_energy
-        case 'equal_symmetric'
-                beta_star = zeros(p, 1);
-                beta_star(1:s) = 1;
-                M=sep/2/ sqrt( sum( Sigma(1:s,1:s),"all") );
-                beta_star = M * beta_star;
-                    % Set class means
-                mu1 = Omega_star \ beta_star;
-                mu2 = -mu1;
-    %        signal_beta_1 = zeros(10) + 0.5;
-    %        signal_beta_2 = -signal_beta_1;
-        case 'random_uniform'
-            rng(beta_seed)
-            signal_beta_1 = 10 * rand(1, s) - 5;
-            signal_beta_2 = 10 * rand(1, s) - 5;
-            omega_mu_1_unscaled = [signal_beta_1, repelem(baseline, 1,p-s)];
-            omega_mu_2_unscaled = [signal_beta_2, repelem(baseline, 1,p-s)];
-            beta_unscaled = (omega_mu_1_unscaled - omega_mu_2_unscaled);
-            sep_scale = sqrt(beta_unscaled * Sigma * beta_unscaled');            M = sep /sep_scale ;
-            omega_mu_1 = M*omega_mu_1_unscaled;
-            omega_mu_2 = M*omega_mu_2_unscaled;
-            mu1 = Omega_star \ omega_mu_1';
-            mu2 = Omega_star \ omega_mu_2';
-            beta_star = omega_mu_1 - omega_mu_2;
-    end
     
-    
-    % Mahalanobis distance
-    mahala_dist_sq = (mu1 - mu2)' * Omega_star * (mu1 - mu2);
-    mahala_dist = sqrt(mahala_dist_sq);
-    %fprintf('Mahalanobis distance between mu1 and mu2: %.4f\n', mahala_dist);
-    % Generate noise once
-    rng(seed);
-    Z = mvnrnd(zeros(p, 1), Sigma, n);  % n x p noise
-    % Create mean matrix
-    mean_matrix = [repmat(mu1', n1, 1); repmat(mu2', n2, 1)];
-    % Final data matrix
-    X = Z + mean_matrix;
+   function noise_matrix = get_noise_matrix(obj)
+            % Generate noise once
+            rng(obj.seed);
+            noise_matrix =  sqrtm(obj.Sigma) * normrnd(0,1,[obj.p, obj.n]);  % p x n1 noise
+   end
+        function [X,label] = get_data(obj)
+            obj.get_cov();
+            label = obj.get_cluster_label();
+            mean_matrix= obj.get_mean_matrix();
+            noise_matrix = obj.get_noise_matrix();
+            X = noise_matrix + mean_matrix;
+        end
+    end % end of methods
 end
+ 
 %% Simulation - auxiliary
 %% get_bicluster_accuracy
 % @export
