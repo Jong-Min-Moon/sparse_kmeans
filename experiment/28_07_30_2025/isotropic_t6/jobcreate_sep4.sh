@@ -15,7 +15,7 @@ TABLE_NAME="isotropic_t6"
 # These variables will be passed into the generated MATLAB scripts
 MODEL='iso'
 CLUSTER_1_RATIO=0.5
-SEP=5
+SEP=4
 N=200
 T=100
 DF=6
@@ -70,7 +70,7 @@ df = ${DF};
 fprintf('--- Starting MATLAB simulation for p=%d, rep=%d ---\\n', p, rep);
 
 % --- Data Generation ---
-generator = generater_t(n, p, 10, sep, rep, 0.5)
+generator = data_generator_t(n, p, 10, sep, rep, 0.5)
 [data, label_true] = generator.get_data(6, 1);
  
 

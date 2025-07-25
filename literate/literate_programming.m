@@ -2175,11 +2175,9 @@ function [X, y, mu1, mu2, mahala_dist, Omega_star, beta_star] = generate_gaussia
     % Final data matrix
     X = Z + mean_matrix;
 end
-%% generate_t_data
+%% data_generator_t
 % @export
-% 
-% 
-classdef generater_t < handle
+classdef data_generator_t < handle
     properties
         X           % Data matrix (d x n)
         y           % cluster label
@@ -2200,7 +2198,7 @@ classdef generater_t < handle
     end
     methods
     
-        function obj = generater_t(n, p, s, sep, seed, cluster_1_ratio)
+        function obj = data_generator_t(n, p, s, sep, seed, cluster_1_ratio)
             obj.n = n;
             obj.p = p;
             obj.s = s;
@@ -2236,6 +2234,8 @@ classdef generater_t < handle
             noise_matrix = trnd(df,[obj.p, obj.n]);  % n x p noise
             sd_for_df = sqrt( df/(df-2) );
             noise_matrix = noise_matrix * sd/sd_for_df;
+            empirical_sd = stdev(noise_matrix, 0, 'all');
+            fprintf('--- empirical_sd =%f  ---\\n', empirical_sd);
             
         end
         function [X,label] = get_data(obj, df, sd)
@@ -2249,6 +2249,37 @@ classdef generater_t < handle
     
 end% end of class
 %% 
+%% data_generator_approximately_sparse_mean
+% @export
+classdef data_generator_approximately_sparse_mean < data_generator_t
+ 
+    methods
+    
+        function obj = data_generator_approximately_sparse_mean(n, p, s, sep, seed, cluster_1_ratio)
+            obj = obj@data_generator_t(n, p, s, sep, seed, cluster_1_ratio);
+            
+        end
+        function noise_matrix = get_noise_matrix(obj, sd, delta)
+            % Generate noise once
+            rng(obj.seed);
+            noise_matrix_1 = sd*(1+delta)*normrnd(df,[obj.p, obj.n1]);  % p x n1 noise
+            noise_matrix_2 = sd*(1-delta)*normrnd(df,[obj.p, obj.n2]);  % p x n2 noise
+            noise_matrix = [noise_matrix_1, noise_matrix_2];
+            empirical_sd_1 = stdev(noise_matrix_1, 0, 'all');
+            empirical_sd_2 = stdev(noise_matrix_2, 0, 'all');
+            fprintf('--- empirical_sd =%f, %f  ---\\n', empirical_sd_1, empirical_sd_2);
+            
+        end
+        function [X,label] = get_data(obj, df, sd, delta)
+            obj.get_cov();
+            label = obj.get_cluster_label();
+            mean_matrix= obj.get_mean_matrix();
+            noise_matrix = obj.get_noise_matrix(df, sd, delta);
+            X = noise_matrix + mean_matrix;
+        end
+    end % end of method
+    
+end% end of class
 %% Simulation - auxiliary
 %% get_bicluster_accuracy
 % @export

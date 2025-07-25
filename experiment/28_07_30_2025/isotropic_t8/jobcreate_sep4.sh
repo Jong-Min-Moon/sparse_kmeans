@@ -70,7 +70,7 @@ df = ${DF};
 fprintf('--- Starting MATLAB simulation for p=%d, rep=%d ---\\n', p, rep);
 
 % --- Data Generation ---
-generator = generater_t(n, p, 10, sep, rep, 0.5)
+generator = data_generator_t(n, p, 10, sep, rep, 0.5)
 [data, label_true] = generator.get_data(6, 1);
  
 
