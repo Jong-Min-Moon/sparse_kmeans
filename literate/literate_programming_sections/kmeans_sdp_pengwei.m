@@ -54,3 +54,4 @@ OPTIONS.printlevel = 0;
 [obj,X,s,y,S,Z,y2,v,info,runhist]=sdpnalplus(blk,At,C,b,0,[],[],[],[],OPTIONS);
 X=cell2mat(X);
 end
+%% 
