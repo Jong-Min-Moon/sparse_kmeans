@@ -2238,11 +2238,11 @@ classdef generater_t < handle
             noise_matrix = noise_matrix * sd/sd_for_df;
             
         end
-        function [X,label] = get_data(obj, df)
+        function [X,label] = get_data(obj, df, sd)
             obj.get_cov();
             label = obj.get_cluster_label();
             mean_matrix= obj.get_mean_matrix();
-            noise_matrix = obj.get_noise_matrix(df);
+            noise_matrix = obj.get_noise_matrix(df, sd);
             X = noise_matrix + mean_matrix;
         end
     end % end of method
