@@ -36,7 +36,7 @@ echo "Number of samples (n): $N"
 # Loop for 'rep' (repetition) from 1 to 200
 for REP in $(seq 1 50); do
     # Loop for 'p' (number of features/dimensions)
-    for P in  5000 4500 4000 3500 3000 2500 2000 1500 1000 500 50; do
+    for P in  5000  4000  3000  2000  1000; do
 
         # Define filenames based on current parameters
         MFILE_NAME="isotropic_t6_sep${SEP}_p${P}_rep_${REP}" # Name without .m extension
@@ -71,9 +71,8 @@ fprintf('--- Starting MATLAB simulation for p=%d, rep=%d ---\\n', p, rep);
 
 % --- Data Generation ---
 generator = generater_t(n, p, 10, sep, rep, 0.5)
-[data, label_true] = generator.get_data(6);
-sd = sqrt( df/(df-2) )
-data = data / sd;
+[data, label_true] = generator.get_data(6, 1);
+ 
 
 % --- Run sdp_kmeans_bandit_even_simul ---
 clusterer = sdp_kmeans_iter_knowncov(data, 2);

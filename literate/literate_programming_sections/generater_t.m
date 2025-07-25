@@ -53,10 +53,12 @@ classdef generater_t < handle
              mean_matrix = [repmat(mu1', obj.n1, 1); repmat(mu2', obj.n2, 1)];
              mean_matrix= mean_matrix';
         end
-        function noise_matrix = get_noise_matrix(obj, df)
+        function noise_matrix = get_noise_matrix(obj, df, sd)
             % Generate noise once
             rng(obj.seed);
             noise_matrix = trnd(df,[obj.p, obj.n]);  % n x p noise
+            sd_for_df = sqrt( df/(df-2) );
+            noise_matrix = noise_matrix * sd/sd_for_df;
             
         end
         function [X,label] = get_data(obj, df)
