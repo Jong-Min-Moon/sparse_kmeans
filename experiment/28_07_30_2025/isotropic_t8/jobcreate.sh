@@ -101,8 +101,8 @@ EOF
 #SBATCH --partition=main                   # Specify the partition to use
 #SBATCH --nodes=1                          # Request 1 node
 #SBATCH --ntasks=1                         # Request 1 task (process)
-#SBATCH --cpus-per-task=4                  # Request 8 CPUs per task (for MATLAB's multi-threading)
-#SBATCH --mem=6G                           # Request 6 GB of memory
+#SBATCH --cpus-per-task=2                  # Request 8 CPUs per task (for MATLAB's multi-threading)
+#SBATCH --mem=3G                           # Request 6 GB of memory
 #SBATCH --time=23:59:59                    # Set maximum job run time (HH:MM:SS)
 
 # Echo start time and hostname for logging
