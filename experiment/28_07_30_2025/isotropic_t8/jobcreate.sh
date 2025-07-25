@@ -15,9 +15,9 @@ TABLE_NAME="isotropic_t8"
 # These variables will be passed into the generated MATLAB scripts
 MODEL='iso'
 CLUSTER_1_RATIO=0.5
-SEP=4
+SEP=5
 N=200
-T=100
+T=50
 DF=8
 # --- Ensure Base Directory Exists ---
 # Create the base directory if it doesn't already exist

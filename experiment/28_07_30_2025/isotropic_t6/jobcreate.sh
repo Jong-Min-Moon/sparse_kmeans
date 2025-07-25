@@ -15,7 +15,7 @@ TABLE_NAME="isotropic_t6"
 # These variables will be passed into the generated MATLAB scripts
 MODEL='iso'
 CLUSTER_1_RATIO=0.5
-SEP=4
+SEP=5
 N=200
 T=100
 DF=6
@@ -34,7 +34,7 @@ echo "Number of samples (n): $N"
 
 # --- Loop through simulation parameters ---
 # Loop for 'rep' (repetition) from 1 to 200
-for REP in $(seq 1 200); do
+for REP in $(seq 1 50); do
     # Loop for 'p' (number of features/dimensions)
     for P in  5000 4500 4000 3500 3000 2500 2000 1500 1000 500 50; do
 
