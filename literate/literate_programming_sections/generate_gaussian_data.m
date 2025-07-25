@@ -51,6 +51,12 @@ function [X, y, mu1, mu2, mahala_dist, Omega_star, beta_star] = generate_gaussia
         case 'chain45'
             Omega_star = get_precision_band(p, 2, 0.45);
             Sigma = inv(Omega_star);
+        case 'chain45_approx'
+            Omega_star = get_precision_band(p, 2, 0.45);
+            diag_Omega_star = diag(Omega_star);
+            Omega_star= Omega_star + delta
+            Omega_star(logical(eye(size(Omega_star)))) = diag_Omega_star;
+            Sigma = inv(Omega_star);
         otherwise
             error('Model must be ''ER'' or ''AR''.');
     end
@@ -94,3 +100,8 @@ function [X, y, mu1, mu2, mahala_dist, Omega_star, beta_star] = generate_gaussia
     % Final data matrix
     X = Z + mean_matrix;
 end
+%% 
+%% 
+%% 
+%% 
+%% 

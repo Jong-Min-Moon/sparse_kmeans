@@ -15,7 +15,7 @@ classdef data_generator_t < handle
         cutoff      % Threshold for variable inclusion
         n_iter
         Sigma
-        Omega_star
+        precision
  
   
     end
@@ -37,15 +37,18 @@ classdef data_generator_t < handle
         end
         function get_cov(obj)
             obj.Sigma = eye(obj.p);
-            obj.Omega_star = obj.Sigma;
+            obj.precision = obj.Sigma;
         end
-        function mean_matrix = get_mean_matrix(obj)
+        function beta_star = get_beta(obj)
              beta_star = zeros(obj.p, 1);
              beta_star(1:obj.s) = 1;
              M= (obj.sep)/2/ sqrt( sum( obj.Sigma(1:obj.s,1:obj.s),"all") );
              beta_star = M * beta_star;
+        end
+        function mean_matrix = get_mean_matrix(obj)
+             beta  = obj.get_beta();
                     % Set class means
-             mu1 = obj.Omega_star \ beta_star;
+             mu1 = obj.precision \ beta ;
              mu2 = -mu1;
              % Create mean matrix
              mean_matrix = [repmat(mu1', obj.n1, 1); repmat(mu2', obj.n2, 1)];
