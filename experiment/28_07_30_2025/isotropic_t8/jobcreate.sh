@@ -102,7 +102,7 @@ EOF
 #SBATCH --ntasks=1                         # Request 1 task (process)
 #SBATCH --cpus-per-task=2                  # Request 8 CPUs per task (for MATLAB's multi-threading)
 #SBATCH --mem=3G                           # Request 6 GB of memory
-#SBATCH --time=23:59:59                    # Set maximum job run time (HH:MM:SS)
+#SBATCH --time=3:59:59                    # Set maximum job run time (HH:MM:SS)
 
 # Echo start time and hostname for logging
 echo "Starting job for p=${P}, rep=${REP} on \$(hostname) at \$(date)"
