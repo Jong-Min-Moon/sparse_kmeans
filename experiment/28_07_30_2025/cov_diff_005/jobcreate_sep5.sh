@@ -5,11 +5,11 @@ set -e
 
 # --- Configuration Variables ---
 # Base directory for experiments, MATLAB scripts, job files, and output files
-BASE_DIR="/home1/jongminm/sparse_kmeans/experiment/28_07_30_2025/isotropic_t6"
+BASE_DIR="/home1/jongminm/sparse_kmeans/experiment/28_07_30_2025/cov_diff_005"
 # Path to the SQLite database
 DB_DIR="/home1/jongminm/sparse_kmeans/sparse_kmeans.db"
 # Table name within the SQLite database
-TABLE_NAME="isotropic_t6"
+TABLE_NAME="cov_diff_005"
 
 # --- MATLAB Simulation Parameters (Shell Variables) ---
 # These variables will be passed into the generated MATLAB scripts
@@ -17,8 +17,9 @@ MODEL='iso'
 CLUSTER_1_RATIO=0.5
 SEP=5
 N=200
-T=100
-DF=6
+T=50
+delta=0.05
+ 
 # --- Ensure Base Directory Exists ---
 # Create the base directory if it doesn't already exist
 mkdir -p "$BASE_DIR"
@@ -34,7 +35,7 @@ echo "Number of samples (n): $N"
 
 # --- Loop through simulation parameters ---
 # Loop for 'rep' (repetition) from 1 to 200
-for REP in $(seq 1 50); do
+for REP in $(seq 36 50); do
     # Loop for 'p' (number of features/dimensions)
     for P in  5000  4000  3000  2000  1000; do
 
@@ -66,12 +67,12 @@ sep = ${SEP}; % Separation parameter
 n = ${N};     % Number of samples
 p = ${P};     % Number of features/dimensions (current loop variable)
 rep = ${REP}; % Repetition number (current loop variable)
-df = ${DF};
+delta = ${delta};
 fprintf('--- Starting MATLAB simulation for p=%d, rep=%d ---\\n', p, rep);
 
 % --- Data Generation ---
-generator = data_generator_t(n, p, 10, sep, rep, 0.5)
-[data, label_true] = generator.get_data(6, 1);
+generator = data_generator_different_cov(n, p, 10, sep, rep, 0.5)
+[data, label_true] = generator.get_data(1, delta);
  
 
 % --- Run sdp_kmeans_bandit_even_simul ---
@@ -101,7 +102,7 @@ EOF
 #SBATCH --nodes=1                          # Request 1 node
 #SBATCH --ntasks=1                         # Request 1 task (process)
 #SBATCH --cpus-per-task=2                 # Request 8 CPUs per task (for MATLAB's multi-threading)
-#SBATCH --mem=2G                           # Request 6 GB of memory
+#SBATCH --mem=3G                           # Request 6 GB of memory
 #SBATCH --time=3:59:59                    # Set maximum job run time (HH:MM:SS)
 
 # Echo start time and hostname for logging

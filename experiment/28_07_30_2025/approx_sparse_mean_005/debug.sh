@@ -5,11 +5,11 @@ set -e
 
 # --- Configuration Variables ---
 # Base directory for experiments, MATLAB scripts, job files, and output files
-BASE_DIR="/home1/jongminm/sparse_kmeans/experiment/28_07_30_2025/cov_diff_005"
+BASE_DIR="/home1/jongminm/sparse_kmeans/experiment/28_07_30_2025/approx_sparse_mean_005"
 # Path to the SQLite database
 DB_DIR="/home1/jongminm/sparse_kmeans/sparse_kmeans.db"
 # Table name within the SQLite database
-TABLE_NAME="cov_diff_005"
+TABLE_NAME="approx_sparse_mean_005"
 
 # --- MATLAB Simulation Parameters (Shell Variables) ---
 # These variables will be passed into the generated MATLAB scripts
@@ -35,9 +35,9 @@ echo "Number of samples (n): $N"
 
 # --- Loop through simulation parameters ---
 # Loop for 'rep' (repetition) from 1 to 200
-for REP in $(seq 1 50); do
+for REP in $(seq 1 ); do
     # Loop for 'p' (number of features/dimensions)
-    for P in  5000  4000  3000  2000  1000; do
+    for P in     1000; do
 
         # Define filenames based on current parameters
         MFILE_NAME="${TABLE_NAME}_${SEP}_p${P}_rep_${REP}" # Name without .m extension
@@ -71,7 +71,7 @@ delta = ${delta};
 fprintf('--- Starting MATLAB simulation for p=%d, rep=%d ---\\n', p, rep);
 
 % --- Data Generation ---
-generator = data_generator_different_cov(n, p, 10, sep, rep, 0.5)
+generator = data_generator_approximately_sparse_mean(n, p, 10, sep, rep, 0.5)
 [data, label_true] = generator.get_data(1, delta);
  
 
@@ -98,12 +98,11 @@ EOF
 #!/bin/bash
 #SBATCH --job-name=${TABLE_NAME}_p${P}_rep${REP} # Job name for easier identification in queue
 #SBATCH --output="${OUTFILE}"              # Standard output and error log file
-#SBATCH --partition=main                   # Specify the partition to use
+#SBATCH --partition=debug                   # Specify the partition to use
 #SBATCH --nodes=1                          # Request 1 node
 #SBATCH --ntasks=1                         # Request 1 task (process)
 #SBATCH --cpus-per-task=2                 # Request 8 CPUs per task (for MATLAB's multi-threading)
 #SBATCH --mem=3G                           # Request 6 GB of memory
-#SBATCH --time=3:59:59                    # Set maximum job run time (HH:MM:SS)
 
 # Echo start time and hostname for logging
 echo "Starting job for p=${P}, rep=${REP} on \$(hostname) at \$(date)"
