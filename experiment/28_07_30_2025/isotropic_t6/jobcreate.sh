@@ -17,7 +17,8 @@ MODEL='iso'
 CLUSTER_1_RATIO=0.5
 SEP=4
 N=200
-T=1000
+T=2
+DF=6
 # --- Ensure Base Directory Exists ---
 # Create the base directory if it doesn't already exist
 mkdir -p "$BASE_DIR"
@@ -35,7 +36,7 @@ echo "Number of samples (n): $N"
 # Loop for 'rep' (repetition) from 1 to 200
 for REP in $(seq 1 200); do
     # Loop for 'p' (number of features/dimensions)
-    for P in  1000 2000 3000 4000 5000 6000 7000 8000 9000 10000; do
+    for P in  5000 4500 4000 3500 3000 2500 2000 1500 1000 500 50; do
 
         # Define filenames based on current parameters
         MFILE_NAME="isotropic_t6_sep${SEP}_p${P}_rep_${REP}" # Name without .m extension
@@ -65,26 +66,25 @@ sep = ${SEP}; % Separation parameter
 n = ${N};     % Number of samples
 p = ${P};     % Number of features/dimensions (current loop variable)
 rep = ${REP}; % Repetition number (current loop variable)
-
+df = ${DF};
 fprintf('--- Starting MATLAB simulation for p=%d, rep=%d ---\\n', p, rep);
 
 % --- Data Generation ---
-% Generate Gaussian data based on specified parameters
-[data, label_true, mu1, mu2, generated_sep, ~, beta_star] = generate_gaussian_data(n, p, 10, sep, 'iso', 'equal_symmetric', 0, rep, cluster_1_ratio, rep);
-% Transpose data and labels to match expected format (e.g., rows as samples)
-data = data';
-label_true = label_true';
-
+generator = generater_t(n, p, 10, sep, rep, 0.5)
+[data, label_true] = generator.get_data(6);
+sd = sqrt( df/(df-2) )
+data = data / sd;
 
 % --- Run sdp_kmeans_bandit_even_simul ---
-% Initialize and run the bandit k-means simulation
-bandit = sdp_kmeans_bandit_even_simul(data, 2);
-bandit.fit_predict(${T}, label_true);
+clusterer = sdp_kmeans_iter_knowncov(data, 2);
+cluster_est=clusterer.fit_predict(${T});
+acc = get_bicluster_accuracy(cluster_est, label_true);
+table = get_database_subtable(rep, sep, 1:10,  clusterer,  acc);
 
 % --- Insert Results into SQLite Database ---
 % Insert the results from the bandit simulation into the specified SQLite table
 % The '1:10' is assumed to be a placeholder for a specific range or set of values.
-insertTableIntoSQLite(db_dir, table_name, bandit, rep, sep, 1:10);
+insertTableIntoSQLite(db_dir, table_name, table, rep, sep, 1:10);
 
 fprintf('--- Finished MATLAB simulation for p=%d, rep=%d ---\\n', p, rep);
 
