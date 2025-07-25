@@ -2329,23 +2329,20 @@ end% end of class
 % @export
 classdef data_generator_approximately_sparse_precision < data_generator_t
     methods
-        function get_cov(obj)
+        function get_cov(obj, delta)
             obj.precision = get_precision_band(obj.p, 2, 0.45);
             obj.precision(obj.precision==0) =   delta;
             obj.Sigma = inv(obj.precision);
         end
     
-   function noise_matrix = get_noise_matrix(obj)
-            % Generate noise once
-            rng(obj.seed);
-            noise_matrix =  sqrtm(obj.Sigma) * normrnd(0,1,[obj.p, obj.n]);  % p x n1 noise
-   end
-        function [X,label] = get_data(obj)
-            obj.get_cov();
+ 
+        function [X,label] = get_data(obj, delta)
+            obj.get_cov(delta);
             label = obj.get_cluster_label();
             mean_matrix= obj.get_mean_matrix();
-            noise_matrix = obj.get_noise_matrix();
-            X = noise_matrix + mean_matrix;
+    
+            X = mvnrnd(mean_matrix', obj.Sigma);
+            X=X';
         end
     end % end of methods
 end
