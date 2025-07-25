@@ -17,7 +17,7 @@ MODEL='iso'
 CLUSTER_1_RATIO=0.5
 SEP=4
 N=200
-T=2
+T=100
 DF=6
 # --- Ensure Base Directory Exists ---
 # Create the base directory if it doesn't already exist
