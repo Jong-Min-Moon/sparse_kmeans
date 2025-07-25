@@ -2176,39 +2176,77 @@ function [X, y, mu1, mu2, mahala_dist, Omega_star, beta_star] = generate_gaussia
     % Final data matrix
     X = Z + mean_matrix;
 end
-%% test_generate_gaussian_data
+%% generate_t_data
 % @export
 % 
 % 
-function test_generate_gaussian_data()
-%TEST_GENERATE_GAUSSIAN_DATA Test data generation for different p values
-    n = 200;
-    ps = [100, 200, 500, 800];
-    seed = 42;
-    cluster_1_ratio = 0.5;
-    model = 'ER';
-    for i = 1:length(ps)
-        p = ps(i);
-        fprintf('\n--- Testing with p = %d ---\n', p);
-        [X, y, Omega_star, beta_star] = generate_gaussian_data(n, p, model, seed, cluster_1_ratio);
-        % Check dimensions
-        assert(isequal(size(X), [n, p]), 'Data matrix X has incorrect dimensions.');
-        assert(isequal(size(y), [n, 1]), 'Label vector y has incorrect dimensions.');
-        assert(isequal(size(Omega_star), [p, p]), 'Precision matrix has incorrect dimensions.');
-        assert(isequal(size(beta_star), [p, 1]), 'Discriminant vector beta_star has incorrect dimensions.');
-        % Basic checks
-        fprintf('Number of samples in class 1: %d\n', sum(y == 1));
-        fprintf('Number of samples in class 2: %d\n', sum(y == 2));
-        fprintf('Number of non-zero entries in beta_star: %d\n', nnz(beta_star));
-        % Optional: check symmetry and positive definiteness
-        if ~isequal(Omega_star, Omega_star')
-            warning('Omega_star is not symmetric.');
-        end
-        if any(eig(Omega_star) <= 0)
-            warning('Omega_star is not positive definite.');
-        end
+classdef generater_t < handle
+    properties
+        X           % Data matrix (d x n)
+        y           % cluster label
+        K           % Number of clusters
+        n           % Number of data points
+        n1
+        n2
+        sep
+        seed
+        s
+        p           % Data dimensions
+        cutoff      % Threshold for variable inclusion
+        n_iter
+        Sigma
+        Omega_star
+ 
+  
     end
-end
+    methods
+    
+        function obj = generater_t(n, p, s, sep, seed, cluster_1_ratio)
+            obj.n = n;
+            obj.p = p;
+            obj.s = s;
+            obj.sep = sep;
+            obj.seed = seed;
+            obj.n1 = round(n * cluster_1_ratio);
+            obj.n2 = n - obj.n1;
+            
+        end
+        function label = get_cluster_label(obj)
+            label = [ones(obj.n1, 1); 2 * ones(obj.n2, 1)];
+            label = label';
+        end
+        function get_cov(obj)
+            obj.Sigma = eye(obj.p);
+            obj.Omega_star = obj.Sigma;
+        end
+        function mean_matrix = get_mean_matrix(obj)
+             beta_star = zeros(obj.p, 1);
+             beta_star(1:obj.s) = 1;
+             M= (obj.sep)/2/ sqrt( sum( obj.Sigma(1:obj.s,1:obj.s),"all") );
+             beta_star = M * beta_star;
+                    % Set class means
+             mu1 = obj.Omega_star \ beta_star;
+             mu2 = -mu1;
+             % Create mean matrix
+             mean_matrix = [repmat(mu1', obj.n1, 1); repmat(mu2', obj.n2, 1)];
+             mean_matrix= mean_matrix';
+        end
+        function noise_matrix = get_noise_matrix(obj, df)
+            % Generate noise once
+            rng(obj.seed);
+            noise_matrix = trnd(df,[obj.p, obj.n]);  % n x p noise
+            
+        end
+        function [X,label] = get_data(obj, df)
+            obj.get_cov();
+            label = obj.get_cluster_label();
+            mean_matrix= obj.get_mean_matrix();
+            noise_matrix = obj.get_noise_matrix(df);
+            X = noise_matrix + mean_matrix;
+        end
+    end % end of method
+    
+end% end of class
 %% 
 %% Simulation - auxiliary
 %% get_bicluster_accuracy
