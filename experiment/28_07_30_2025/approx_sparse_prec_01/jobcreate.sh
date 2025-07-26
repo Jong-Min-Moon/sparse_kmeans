@@ -11,9 +11,11 @@ DB_DIR="/home1/jongminm/sparse_kmeans/sparse_kmeans.db"
 delta=0.1
 
 # Loop through different P values
-for P in 100 200 300 400; do
-    # Loop through repetitions
+#for P in 100 200 300 400; do
     for rep in $(seq 1 50); do
+for P in   400 300 200 100; do
+    # Loop through repetitions
+
         # Define filenames for .m, .sh, and .out files
         MFILE="$BASE_DIR/${TABLE_NAME}_rep_${rep}_p${P}.m"
         JOBFILE="$BASE_DIR/${TABLE_NAME}_rep_${rep}_p${P}.sh"
@@ -71,12 +73,12 @@ EOF
         cat > "$JOBFILE" <<EOF
 #!/bin/bash
 #SBATCH --output="${OUTFILE}"
-#SBATCH --partition=debug
+#SBATCH --partition=main
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=8
-#SBATCH --mem=16G
-#SBATCH --time=23:59:59
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=8G
+#SBATCH --time=3:59:59
 
 # Echo job start time and host
 echo "Starting job for rep=${rep} on \$(hostname) at \$(date)"
