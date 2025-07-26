@@ -1,14 +1,14 @@
 #!/bin/bash
 
 # Directories
-TABLE_NAME="approx_sparse_prec_01"
+TABLE_NAME="approx_sparse_prec_002"
 BASE_DIR="/home1/jongminm/sparse_kmeans/experiment/28_07_30_2025/${TABLE_NAME}"
 
 # Database directory
 DB_DIR="/home1/jongminm/sparse_kmeans/sparse_kmeans.db"
 
 # Define delta parameter
-delta=0.1
+delta=0.02
 
 # Loop through different P values
 #for P in 100 200 300 400; do
