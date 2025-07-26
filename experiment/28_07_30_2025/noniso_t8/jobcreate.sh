@@ -11,7 +11,7 @@ DB_DIR="/home1/jongminm/sparse_kmeans/sparse_kmeans.db"
 SEP=4
 N=200
 T=100
-DF=6
+DF=8
 
 # Loop through different P values
 #for P in 100 200 300 400; do

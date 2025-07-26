@@ -5,7 +5,7 @@ set -e
 
 # --- Configuration Variables ---
 # Base directory for experiments, MATLAB scripts, job files, and output files
-TABLE_NAME="approx_sparse_mean_002"
+TABLE_NAME="approx_sparse_mean_01"
 BASE_DIR="/home1/jongminm/sparse_kmeans/experiment/28_07_30_2025/${TABLE_NAME}"
 # Path to the SQLite database
 DB_DIR="/home1/jongminm/sparse_kmeans/sparse_kmeans.db"
@@ -19,7 +19,7 @@ CLUSTER_1_RATIO=0.5
 SEP=4
 N=200
 T=50
-delta=0.02
+delta=0.1
  
 # --- Ensure Base Directory Exists ---
 # Create the base directory if it doesn't already exist
