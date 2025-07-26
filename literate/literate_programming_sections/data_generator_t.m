@@ -74,4 +74,3 @@ classdef data_generator_t < handle
     end % end of method
     
 end% end of class
-%% 
