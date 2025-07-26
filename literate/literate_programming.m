@@ -2340,7 +2340,7 @@ classdef data_generator_approximately_sparse_precision < data_generator_t
             obj.get_cov(delta);
             label = obj.get_cluster_label();
             mean_matrix= obj.get_mean_matrix();
-    
+                rng(obj.seed);
             X = mvnrnd(mean_matrix', obj.Sigma);
             X=X';
         end
