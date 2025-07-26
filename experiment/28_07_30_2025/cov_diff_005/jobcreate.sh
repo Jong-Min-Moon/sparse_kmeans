@@ -15,7 +15,7 @@ TABLE_NAME="cov_diff_005"
 # These variables will be passed into the generated MATLAB scripts
 MODEL='iso'
 CLUSTER_1_RATIO=0.5
-SEP=5
+SEP=4
 N=200
 T=50
 delta=0.05
@@ -102,8 +102,8 @@ EOF
 #SBATCH --nodes=1                          # Request 1 node
 #SBATCH --ntasks=1                         # Request 1 task (process)
 #SBATCH --cpus-per-task=2                 # Request 8 CPUs per task (for MATLAB's multi-threading)
-#SBATCH --mem=3G                           # Request 6 GB of memory
-#SBATCH --time=3:59:59                    # Set maximum job run time (HH:MM:SS)
+#SBATCH --mem=2G                           # Request 6 GB of memory
+#SBATCH --time=0:59:59                    # Set maximum job run time (HH:MM:SS)
 
 # Echo start time and hostname for logging
 echo "Starting job for p=${P}, rep=${REP} on \$(hostname) at \$(date)"
