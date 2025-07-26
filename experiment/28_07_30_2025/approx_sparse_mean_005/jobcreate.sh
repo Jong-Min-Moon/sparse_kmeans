@@ -35,9 +35,9 @@ echo "Number of samples (n): $N"
 
 # --- Loop through simulation parameters ---
 # Loop for 'rep' (repetition) from 1 to 200
-for REP in $(seq 1 ); do
+for REP in $(seq 1 50); do
     # Loop for 'p' (number of features/dimensions)
-    for P in     1000; do
+    for P in  5000  4000  3000  2000  1000; do
 
         # Define filenames based on current parameters
         MFILE_NAME="${TABLE_NAME}_${SEP}_p${P}_rep_${REP}" # Name without .m extension
@@ -98,11 +98,12 @@ EOF
 #!/bin/bash
 #SBATCH --job-name=${TABLE_NAME}_p${P}_rep${REP} # Job name for easier identification in queue
 #SBATCH --output="${OUTFILE}"              # Standard output and error log file
-#SBATCH --partition=debug                   # Specify the partition to use
+#SBATCH --partition=main                   # Specify the partition to use
 #SBATCH --nodes=1                          # Request 1 node
 #SBATCH --ntasks=1                         # Request 1 task (process)
 #SBATCH --cpus-per-task=2                 # Request 8 CPUs per task (for MATLAB's multi-threading)
-#SBATCH --mem=3G                           # Request 6 GB of memory
+#SBATCH --mem=2G                           # Request 6 GB of memory
+#SBATCH --time=0:59:59                    # Set maximum job run time (HH:MM:SS)
 
 # Echo start time and hostname for logging
 echo "Starting job for p=${P}, rep=${REP} on \$(hostname) at \$(date)"
