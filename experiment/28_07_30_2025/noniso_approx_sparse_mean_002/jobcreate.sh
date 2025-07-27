@@ -1,17 +1,14 @@
 #!/bin/bash
 
 # Directories
-TABLE_NAME="noniso_t8"
+TABLE_NAME="noniso_approx_sparse_mean_002"
 BASE_DIR="/home1/jongminm/sparse_kmeans/experiment/28_07_30_2025/${TABLE_NAME}"
 
 # Database directory
 DB_DIR="/home1/jongminm/sparse_kmeans/sparse_kmeans.db"
 
 # Define delta parameter
-SEP=4
-N=200
-T=100
-DF=8
+delta=0
 
 # Loop through different P values
 #for P in 100 200 300 400; do
@@ -47,8 +44,8 @@ pool = parpool(pc, ncores);
 s = 10;
 p = ${P};
 rep = ${rep};
-sep = ${SEP};
-df = ${DF};
+sep = 4;
+delta = ${delta};
 n = 500;
 
 % Add sparse_kmeans path
@@ -61,8 +58,8 @@ db_dir = '${DB_DIR}';
 % Data generation
 cluster_1_ratio = 0.5;
 % Note: Semicolon added to suppress output
-generator = data_generator_t_correlated(n, p, s, sep, rep, 0.5);
-[data, label_true] = generator.get_data(df,1);
+generator = data_generator_correlated_approximately_sparse_mean(n, p, s, sep, rep, 0.5);
+[data, label_true] = generator.get_data(delta);
 
 % Run ISEE_kmeans_clean_simul
 model = 'chain45'
@@ -81,7 +78,8 @@ EOF
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=8G
- 
+#SBATCH --time=3:59:59
+
 # Echo job start time and host
 echo "Starting job for rep=${rep} on \$(hostname) at \$(date)"
 
