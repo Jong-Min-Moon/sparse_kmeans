@@ -2298,10 +2298,9 @@ classdef data_generator_correlated_approximately_sparse_mean < data_generator_t_
             
         end
         function mean_matrix = get_mean_matrix(obj, delta)
-             beta  = obj.get_beta();
-                    % Set class means
-             mu1_primitive = beta;
-             mu2_primitive = -beta;
+ 
+             mu1_primitive = obj.get_beta();
+             mu2_primitive = -mu1_primitive;
              mu2_primitive(obj.s+1:end) = delta;
              mu1 = obj.precision \ mu1_primitive;
              mu2 = obj.precision \ mu2_primitive;
@@ -2312,12 +2311,12 @@ classdef data_generator_correlated_approximately_sparse_mean < data_generator_t_
        function noise_matrix = get_noise_matrix(obj) %modification: t noise -> Gaussian noise
             % Generate noise once
             rng(obj.seed);
-            noise_matrix = mvnrnd(zeros([n,p]), obj.Sigma); %$Gaussian noise
+            noise_matrix = mvnrnd(zeros([obj.n, obj.p]), obj.Sigma); %$Gaussian noise
             noise_matrix = noise_matrix'; % p x n matrix
             noise_matrix = sqrtm(obj.Sigma) * noise_matrix;
  
         end        
-        function [X,label] = get_data(obj)
+        function [X,label] = get_data(obj, delta)
             obj.get_cov();
             label = obj.get_cluster_label();
             mean_matrix= obj.get_mean_matrix(delta);

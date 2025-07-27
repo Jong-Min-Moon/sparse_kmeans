@@ -16,6 +16,8 @@ classdef data_generator_t < handle
         n_iter
         Sigma
         precision
+        mean_matrix
+        noise_matrix
  
   
     end
