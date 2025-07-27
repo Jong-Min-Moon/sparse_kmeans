@@ -2204,6 +2204,8 @@ classdef data_generator_t < handle
         n_iter
         Sigma
         precision
+        mean_matrix
+        noise_matrix
  
   
     end
@@ -2263,51 +2265,24 @@ end% end of class
 %% data_generator_t_correlated
 % @export
 classdef data_generator_t_correlated < data_generator_t
- 
-    methods
-    
+    methods    
         function obj = data_generator_t_correlated(n, p, s, sep, seed, cluster_1_ratio)
             obj = obj@data_generator_t(n, p, s, sep, seed, cluster_1_ratio);
         end
-  
         function get_cov(obj)
             obj.precision = get_precision_band(obj.p, 2, 0.45);
             obj.Sigma = inv(obj.precision);
         end
-     
-        function [X,label] = get_data(obj, df, sd)
-            obj.get_cov();
-            label = obj.get_cluster_label();
-            mean_matrix= obj.get_mean_matrix();
-            noise_matrix = obj.get_noise_matrix(df, sd);
-            X = sqrtm(obj.Sigma) * noise_matrix + mean_matrix;
+        
+        function noise_matrix = get_noise_matrix(obj, df, sd)
+            % Generate noise once
+            rng(obj.seed);
+            noise_matrix = trnd(df,[obj.p, obj.n]);  % n x p noise
+            sd_for_df = sqrt( df/(df-2) );
+            noise_matrix = noise_matrix * sd/sd_for_df;
+            noise_matrix = sqrtm(obj.Sigma) * noise_matrix;
         end
-    end % end of method
-    
-end% end of class
-%% 
-%% data_generator_correlated_different_cov
-% @export
-classdef data_generator_correlated_different_cov < data_generator_t_correlated
- 
-    methods
-    
-        function obj = data_generator_correlated_different_cov(n, p, s, sep, seed, cluster_1_ratio)
-            obj = obj@data_generator_t_correlated(n, p, s, sep, seed, cluster_1_ratio);
-        end
- 
-     
-        function [X,label] = get_data(obj,   sd, delta)
-            obj.get_cov();
-            label = obj.get_cluster_label();
-            
-            noise_matrix = mvnrnd(zeros([n,p]), obj.Sigma); %$Gaussian noise
-            noise_matrix = noise_matrix';
-            noise_matrix(:,1:obj.n1)         = sd * (1+delta) * noise_matrix(:,1:obj.n1);
-            noise_matrix(:,(obj.n1+1):obj.n) = sd * (1-delta) * noise_matrix(:,(obj.n1+1):obj.n);
-            mean_matrix= obj.get_mean_matrix();
-            X = sqrtm(obj.Sigma) * noise_matrix + mean_matrix;
-        end
+   
     end % end of method
     
 end% end of class
@@ -2334,17 +2309,57 @@ classdef data_generator_correlated_approximately_sparse_mean < data_generator_t_
              mean_matrix = [repmat(mu1', obj.n1, 1); repmat(mu2', obj.n2, 1)];
              mean_matrix= mean_matrix';
         end
+       function noise_matrix = get_noise_matrix(obj) %modification: t noise -> Gaussian noise
+            % Generate noise once
+            rng(obj.seed);
+            noise_matrix = mvnrnd(zeros([n,p]), obj.Sigma); %$Gaussian noise
+            noise_matrix = noise_matrix'; % p x n matrix
+            noise_matrix = sqrtm(obj.Sigma) * noise_matrix;
  
-        function [X,label] = get_data(obj, sd, delta)
+        end        
+        function [X,label] = get_data(obj)
             obj.get_cov();
             label = obj.get_cluster_label();
             mean_matrix= obj.get_mean_matrix(delta);
-             noise_matrix = obj.get_noise_matrix(sd);
+            noise_matrix = obj.get_noise_matrix();
             X = noise_matrix + mean_matrix;
         end
     end % end of method
     
 end% end of class
+%% 
+%% data_generator_correlated_different_cov
+% @export
+classdef data_generator_correlated_different_cov < data_generator_t_correlated
+ 
+    methods
+    
+        function obj = data_generator_correlated_different_cov(n, p, s, sep, seed, cluster_1_ratio)
+            obj = obj@data_generator_t_correlated(n, p, s, sep, seed, cluster_1_ratio);
+        end
+        function noise_matrix = get_noise_matrix(obj,  sd, delta) %modification: t noise -> Gaussian noise
+            % Generate noise once
+            rng(obj.seed);
+            noise_matrix = mvnrnd(zeros([n,p]), obj.Sigma); %$Gaussian noise
+            noise_matrix = noise_matrix'; % p x n matrix
+            noise_matrix = sqrtm(obj.Sigma) * noise_matrix;
+            noise_matrix(:,1:obj.n1)         = sd * (1+delta) * noise_matrix(:,1:obj.n1);
+            noise_matrix(:,(obj.n1+1):obj.n) = sd * (1-delta) * noise_matrix(:,(obj.n1+1):obj.n);
+ 
+        end 
+     
+        function [X,label] = get_data(obj, sd, delta)
+            obj.get_cov();
+            label = obj.get_cluster_label();
+            
+            mean_matrix= obj.get_mean_matrix();
+            noise_matrix= obj.get_noise_matrix(obj,  sd, delta);
+            X =  noise_matrix + mean_matrix;
+        end
+    end % end of method
+    
+end% end of class
+%% 
 %% 
 %% data_generator_different_cov
 % @export
