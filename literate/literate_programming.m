@@ -7,7 +7,15 @@ end
 %% 
 % 
 %% Basic functions
-%% 
+%% sdp_sol_to_cluster
+% @export
+function cluster_est = sdp_sol_to_cluster(Z_opt)
+    [U_sdp, ~, ~] = svd(Z_opt); % extract the left singular vectors
+    U_top_K = U_sdp(:, 1:K); % columns are singular vectors. extract to K. thus U_top_K is n x K (n data points, K features)
+    cluster_labels = kmeans(U_top_K, K, 'Replicates', 10, 'MaxIter', 500); % Added options for robustness
+    % Return cluster assignments as a row vector
+    cluster_est = cluster_labels';
+end
 %% kmeans_sdp_pengwei
 % @export
 % 
@@ -67,28 +75,9 @@ end
 %% 
 %% get_cluster_by_sdp
 % @export
+% 
+% Solver: SDPNAL+
 function cluster_est = get_cluster_by_sdp(X, K)
-%GET_CLUSTER_BY_SDP Clusters data using SDP relaxation of K-means and spectral clustering.
-%
-%   cluster_est = GET_CLUSTER_BY_SDP(X, K) performs clustering on the data
-%   matrix X using a Semi-Definite Programming (SDP) relaxation of the
-%   K-means problem, followed by K-means on the top K eigenvectors of the
-%   SDP solution.
-%
-%   Inputs:
-%       X - A numeric matrix where each column is a data point.
-%       K - The desired number of clusters (an integer greater than 1).
-%
-%   Outputs:
-%       cluster_est - A row vector containing the cluster assignments for
-%                     each data point.
-%
-%   Example:
-%       % Generate some sample data
-%       data = [randn(2, 50) + 2, randn(2, 50) - 2];
-%       num_clusters = 2;
-%       cluster_assignments = get_cluster_by_sdp(data, num_clusters);
-%       disp(cluster_assignments);
 % Input validation
 if nargin < 2
     error('GET_CLUSTER_BY_SDP:NotEnoughInputs', 'Two input arguments required: data matrix X and number of clusters K.');
@@ -118,21 +107,46 @@ if size(Z_opt, 1) ~= n || size(Z_opt, 2) ~= n
         'Expected Z_opt to be an %d x %d matrix, but got %d x %d. Proceeding with SVD, but results might be unexpected.', ...
         n, n, size(Z_opt, 1), size(Z_opt, 2));
 end
-[U_sdp, S_sdp, V_sdp] = svd(Z_opt); % Using SVD which is robust
-% Extract the top K eigenvectors
-% These eigenvectors form a new feature space where K-means can be applied.
-U_top_K = U_sdp(:, 1:K);
-% Apply K-means to the projected data
-% The 'kmeans' function expects data points as rows. If U_top_K has
-% eigenvectors as columns, we need to transpose it.
-% 'kmeans' in MATLAB typically takes data points as rows.
-% If U_top_K is n x K (n data points, K eigenvectors), then no transpose
-% is needed for kmeans input.
-cluster_labels = kmeans(U_top_K, K, 'Replicates', 10, 'MaxIter', 500); % Added options for robustness
-% Return cluster assignments as a row vector
-cluster_est = cluster_labels';
+cluster_est = sdp_sol_to_cluster(Z_opt);
 end
  
+%% 
+%% get_cluster_by_sdp_NMF
+% @export
+function cluster_est = get_cluster_by_sdp_NMF(X,K)
+%% Initialization
+n = size(X,2); % Sample size
+nmX = norm(X,'fro'); % Norm of matrix X
+r = 2*K; % Rank of the matrix in NNMF
+alpha = 1e-6; % Step size
+tol = 1e-6; % Tolerance of stopping criteria
+maxiter = 50000; % Maximum of iterations
+% Projection operator
+proj = @(V) max(V,0) ;
+%% Gradient of function
+grad = @(U) -4*X'*(X*U) + 4*U*(U'*U); 
+%% Implement algorithm
+U_p = abs(randn(n,r));  U = U_p/norm(U_p,'fro')*nmX; % Random intialization
+for iter = 1:maxiter
+    G = grad(U);
+    Unew = proj(U - alpha*G);
+    
+    % Evaluate iterate
+    rdiff = norm(Unew - U,'fro')/norm(U,'fro');
+    
+    % Update the variable
+    U = Unew;
+% Stopping criteria
+if rdiff<tol
+    break
+end
+end
+% Output matrix
+U_out = U;
+cluster_est = sdp_sol_to_cluster(U_out);
+end
+%% 
+%% 
 %% Implementing our iterative algorithm
 % Our iterative algorithm has the following structure:
 %% 
@@ -209,6 +223,9 @@ classdef sdp_kmeans_iter_knowncov < handle
         function set_cutoff(obj)
             obj.cutoff = sqrt(2 * log(obj.p) );
         end
+        function cluster_est = get_cluster(obj, X, K)
+            cluster_est = get_cluster_by_sdp(X, K);
+        end
             
         function cluster_est_now = fit_predict(obj, n_iter)     
              % written 01/11/2024
@@ -239,14 +256,26 @@ classdef sdp_kmeans_iter_knowncov < handle
                 fprintf("%i entries survived \n\n",sum(thresholder_vec))
                 x_sub_now = obj.X(thresholder_vec,:);
                     % 3. apply SDP k-means   
-                cluster_est_now = get_cluster_by_sdp(x_sub_now, obj.K); 
+                cluster_est_now = obj.get_cluster(x_sub_now, obj.K); 
             end
         end % end of fit_predict
-        
     end % end of methods
 end
 %% 
+%% sdp_kmeans_iter_knowncov_NMF
+% @export
+classdef sdp_kmeans_iter_knowncov_NMF < sdp_kmeans_iter_knowncov
+       methods
+    
+        function obj = sdp_kmeans_iter_knowncov_NMF(X, K)
+            obj = obj@sdp_kmeans_iter_knowncov(X, K);
+        end        
+        function cluster_est = get_cluster(obj, X, K)
+            cluster_est = get_cluster_by_sdp_NMF(X, K);
+        end
+end
 %% 
+% 
 %% Variable selection
 % Variable selection is two-step:
 %% 
@@ -2277,7 +2306,7 @@ classdef data_generator_t_correlated < data_generator_t
         function noise_matrix = get_noise_matrix(obj, df, sd)
             % Generate noise once
             rng(obj.seed);
-            noise_matrix = trnd(df,[obj.p, obj.n]);  % n x p noise
+            noise_matrix = trnd(df,[obj.p, obj.n]);  % p x n noise
             sd_for_df = sqrt( df/(df-2) );
             noise_matrix = noise_matrix * sd/sd_for_df;
             noise_matrix = sqrtm(obj.Sigma) * noise_matrix;
@@ -2314,7 +2343,6 @@ classdef data_generator_correlated_approximately_sparse_mean < data_generator_t_
             rng(obj.seed);
             noise_matrix = mvnrnd(zeros([obj.n, obj.p]), obj.Sigma); %$Gaussian noise
             noise_matrix = noise_matrix'; % p x n matrix
-            noise_matrix = sqrtm(obj.Sigma) * noise_matrix;
             obj.noise_matrix = noise_matrix;
  
         end        
@@ -2331,31 +2359,22 @@ end% end of class
 %% 
 %% data_generator_correlated_different_cov
 % @export
-classdef data_generator_correlated_different_cov < data_generator_t_correlated
+classdef data_generator_correlated_different_cov < data_generator_correlated_approximately_sparse_mean
  
     methods
     
         function obj = data_generator_correlated_different_cov(n, p, s, sep, seed, cluster_1_ratio)
-            obj = obj@data_generator_t_correlated(n, p, s, sep, seed, cluster_1_ratio);
+            obj = obj@data_generator_correlated_approximately_sparse_mean(n, p, s, sep, seed, cluster_1_ratio);
         end
-        function noise_matrix = get_noise_matrix(obj,  sd, delta) %modification: t noise -> Gaussian noise
-            % Generate noise once
-            rng(obj.seed);
-            noise_matrix = mvnrnd(zeros([n,p]), obj.Sigma); %$Gaussian noise
-            noise_matrix = noise_matrix'; % p x n matrix
-            noise_matrix = sqrtm(obj.Sigma) * noise_matrix;
-            noise_matrix(:,1:obj.n1)         = sd * (1+delta) * noise_matrix(:,1:obj.n1);
-            noise_matrix(:,(obj.n1+1):obj.n) = sd * (1-delta) * noise_matrix(:,(obj.n1+1):obj.n);
  
-        end 
-     
-        function [X,label] = get_data(obj, sd, delta)
+        function [X,label] = get_data(obj, delta)
             obj.get_cov();
             label = obj.get_cluster_label();
-            
-            mean_matrix= obj.get_mean_matrix();
-            noise_matrix= obj.get_noise_matrix(obj,  sd, delta);
-            X =  noise_matrix + mean_matrix;
+            mean_matrix= obj.get_mean_matrix(0);
+            noise_matrix = obj.get_noise_matrix(delta);
+            noise_matrix(:, 1:obj.n1      ) = (1+delta)*noise_matrix(:,1:obj.n1);
+            noise_matrix(:, (obj.n1+1) : n) = (1-delta)*noise_matrix(:, (obj.n1+1) : n);
+            X = noise_matrix + mean_matrix;
         end
     end % end of method
     
