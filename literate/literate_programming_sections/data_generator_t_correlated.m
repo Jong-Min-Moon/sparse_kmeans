@@ -23,3 +23,4 @@ classdef data_generator_t_correlated < data_generator_t
     end % end of method
     
 end% end of class
+%% 

@@ -11,7 +11,7 @@ for i = 1:4
         generator = data_generator_approximately_sparse_mean(n, p, s, sep, rep, 0.5);
         [x_noisy, cluster_true] = generator.get_data(1, 0);
         cluster_est = randomProjectionKMeans(x_noisy,2, 10);
-        acc_now = get_bicluster_accuracy(cluster_est, cluster_true)
+        acc_now = get_bicluster_accuracy(cluster_est, cluster_true);
         acc = acc + acc_now/200;
     end
     fprintf("acc %f", acc(i))
