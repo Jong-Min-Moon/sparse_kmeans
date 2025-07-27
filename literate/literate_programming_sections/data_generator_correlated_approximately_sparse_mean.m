@@ -25,7 +25,6 @@ classdef data_generator_correlated_approximately_sparse_mean < data_generator_t_
             rng(obj.seed);
             noise_matrix = mvnrnd(zeros([obj.n, obj.p]), obj.Sigma); %$Gaussian noise
             noise_matrix = noise_matrix'; % p x n matrix
-            noise_matrix = sqrtm(obj.Sigma) * noise_matrix;
             obj.noise_matrix = noise_matrix;
  
         end        

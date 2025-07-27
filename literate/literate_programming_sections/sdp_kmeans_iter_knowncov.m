@@ -25,6 +25,9 @@ classdef sdp_kmeans_iter_knowncov < handle
         function set_cutoff(obj)
             obj.cutoff = sqrt(2 * log(obj.p) );
         end
+        function cluster_est = get_cluster(obj, X, K)
+            cluster_est = get_cluster_by_sdp(X, K);
+        end
             
         function cluster_est_now = fit_predict(obj, n_iter)     
              % written 01/11/2024
@@ -55,11 +58,9 @@ classdef sdp_kmeans_iter_knowncov < handle
                 fprintf("%i entries survived \n\n",sum(thresholder_vec))
                 x_sub_now = obj.X(thresholder_vec,:);
                     % 3. apply SDP k-means   
-                cluster_est_now = get_cluster_by_sdp(x_sub_now, obj.K); 
+                cluster_est_now = obj.get_cluster(x_sub_now, obj.K); 
             end
         end % end of fit_predict
-        
     end % end of methods
 end
-%% 
 %% 

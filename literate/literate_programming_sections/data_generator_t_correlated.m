@@ -13,7 +13,7 @@ classdef data_generator_t_correlated < data_generator_t
         function noise_matrix = get_noise_matrix(obj, df, sd)
             % Generate noise once
             rng(obj.seed);
-            noise_matrix = trnd(df,[obj.p, obj.n]);  % n x p noise
+            noise_matrix = trnd(df,[obj.p, obj.n]);  % p x n noise
             sd_for_df = sqrt( df/(df-2) );
             noise_matrix = noise_matrix * sd/sd_for_df;
             noise_matrix = sqrtm(obj.Sigma) * noise_matrix;
