@@ -596,7 +596,7 @@ function s_hat = select_variable_ISEE_clean(mean_vec, n)
     end
     % Estimate sparse support
     mu_diff_hat = mean_vec(:,1) - mean_vec(:,2);
-    threshold = 2*sqrt(log(p) * log(n) / n);
+    threshold = 2*sqrt(log(p) * log(log(n)) / n);
     s_hat = abs(mu_diff_hat) > threshold;  % p-dimensional boolean array
     % Print summary
     num_selected = sum(s_hat);
