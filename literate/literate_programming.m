@@ -2300,16 +2300,52 @@ classdef data_generator_correlated_different_cov < data_generator_t_correlated
         function [X,label] = get_data(obj,   sd, delta)
             obj.get_cov();
             label = obj.get_cluster_label();
-            mean_matrix= obj.get_mean_matrix();
-            noise_matrix = mvnrnd(mean_matrix', obj.Sigma); %$Gaussian noise
+            
+            noise_matrix = mvnrnd(zeros([n,p]), obj.Sigma); %$Gaussian noise
             noise_matrix = noise_matrix';
-            noise_matrix(:,1:obj.n1)         = sd* (1+delta) * noise_matrix(:,1:obj.n1);
+            noise_matrix(:,1:obj.n1)         = sd * (1+delta) * noise_matrix(:,1:obj.n1);
             noise_matrix(:,(obj.n1+1):obj.n) = sd * (1-delta) * noise_matrix(:,(obj.n1+1):obj.n);
+            mean_matrix= obj.get_mean_matrix();
             X = sqrtm(obj.Sigma) * noise_matrix + mean_matrix;
         end
     end % end of method
     
 end% end of class
+%% 
+%% data_generator_correlated_approximately_sparse_mean
+% @export
+classdef data_generator_correlated_approximately_sparse_mean < data_generator_t_correlated
+ 
+    methods
+    
+        function obj = data_generator_correlated_approximately_sparse_mean(n, p, s, sep, seed, cluster_1_ratio)
+            obj = obj@data_generator_t_correlated(n, p, s, sep, seed, cluster_1_ratio);
+            
+        end
+        function mean_matrix = get_mean_matrix(obj, delta)
+             beta  = obj.get_beta();
+                    % Set class means
+             mu1_primitive = beta;
+             mu2_primitive = -beta;
+             mu2_primitive(obj.s+1:end) = delta;
+             mu1 = obj.precision \ mu1_primitive;
+             mu2 = obj.precision \ mu2_primitive;
+             % Create mean matrix
+             mean_matrix = [repmat(mu1', obj.n1, 1); repmat(mu2', obj.n2, 1)];
+             mean_matrix= mean_matrix';
+        end
+ 
+        function [X,label] = get_data(obj, sd, delta)
+            obj.get_cov();
+            label = obj.get_cluster_label();
+            mean_matrix= obj.get_mean_matrix(delta);
+             noise_matrix = obj.get_noise_matrix(sd);
+            X = noise_matrix + mean_matrix;
+        end
+    end % end of method
+    
+end% end of class
+%% 
 %% data_generator_different_cov
 % @export
 classdef data_generator_different_cov < data_generator_t

@@ -14,5 +14,6 @@ for i = 1:4
         acc_now = get_bicluster_accuracy(cluster_est, cluster_true);
         acc = acc + acc_now/200;
     end
+    acc_vec(i) = acc;
     fprintf("acc %f", acc(i))
 end
