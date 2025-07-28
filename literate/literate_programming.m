@@ -9,7 +9,7 @@ end
 %% Basic functions
 %% sdp_sol_to_cluster
 % @export
-function cluster_est = sdp_sol_to_cluster(Z_opt)
+function cluster_est = sdp_sol_to_cluster(Z_opt, K)
     [U_sdp, ~, ~] = svd(Z_opt); % extract the left singular vectors
     U_top_K = U_sdp(:, 1:K); % columns are singular vectors. extract to K. thus U_top_K is n x K (n data points, K features)
     cluster_labels = kmeans(U_top_K, K, 'Replicates', 10, 'MaxIter', 500); % Added options for robustness
@@ -107,7 +107,7 @@ if size(Z_opt, 1) ~= n || size(Z_opt, 2) ~= n
         'Expected Z_opt to be an %d x %d matrix, but got %d x %d. Proceeding with SVD, but results might be unexpected.', ...
         n, n, size(Z_opt, 1), size(Z_opt, 2));
 end
-cluster_est = sdp_sol_to_cluster(Z_opt);
+cluster_est = sdp_sol_to_cluster(Z_opt, K);
 end
  
 %% 
@@ -143,7 +143,7 @@ end
 end
 % Output matrix
 U_out = U;
-cluster_est = sdp_sol_to_cluster(U_out);
+cluster_est = sdp_sol_to_cluster(U_out, K);
 end
 %% 
 %% 
@@ -2331,7 +2331,7 @@ classdef data_generator_correlated_approximately_sparse_mean < data_generator_t_
              mu1_primitive = obj.get_beta();
              mu2_primitive = -mu1_primitive;
              n_delta = floor(0.1*obj.p);
-             mu2_primitive(obj.s+1:n_delta) = delta;
+             mu2_primitive( (obj.s+1): (obj.s+n_delta)) = delta;
              mu1 = obj.precision \ mu1_primitive;
              mu2 = obj.precision \ mu2_primitive;
              % Create mean matrix
@@ -2436,7 +2436,8 @@ classdef data_generator_approximately_sparse_mean < data_generator_t
             obj.get_cov();
             label = obj.get_cluster_label();
             mean_matrix= obj.get_mean_matrix();
-            mean_matrix(obj.s+1:end, 1:obj.n1) =  delta; %approximate sparsity for cluster mean
+            n_delta = floor(p * 0.1);
+            mean_matrix((obj.s+1): (obj.s+n_delta), 1:obj.n1) =  delta; %approximate sparsity for cluster mean
             noise_matrix = obj.get_noise_matrix(sd);
             X = noise_matrix + mean_matrix;
         end

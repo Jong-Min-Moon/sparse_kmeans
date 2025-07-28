@@ -32,7 +32,7 @@ if size(Z_opt, 1) ~= n || size(Z_opt, 2) ~= n
         'Expected Z_opt to be an %d x %d matrix, but got %d x %d. Proceeding with SVD, but results might be unexpected.', ...
         n, n, size(Z_opt, 1), size(Z_opt, 2));
 end
-cluster_est = sdp_sol_to_cluster(Z_opt);
+cluster_est = sdp_sol_to_cluster(Z_opt, K);
 end
  
 %% 

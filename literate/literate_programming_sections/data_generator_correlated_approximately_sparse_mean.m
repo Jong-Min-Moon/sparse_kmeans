@@ -13,7 +13,7 @@ classdef data_generator_correlated_approximately_sparse_mean < data_generator_t_
              mu1_primitive = obj.get_beta();
              mu2_primitive = -mu1_primitive;
              n_delta = floor(0.1*obj.p);
-             mu2_primitive(obj.s+1:n_delta) = delta;
+             mu2_primitive( (obj.s+1): (obj.s+n_delta)) = delta;
              mu1 = obj.precision \ mu1_primitive;
              mu2 = obj.precision \ mu2_primitive;
              % Create mean matrix
