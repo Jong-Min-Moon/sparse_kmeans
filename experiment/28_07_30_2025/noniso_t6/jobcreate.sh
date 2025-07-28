@@ -15,7 +15,7 @@ DF=6
 
 # Loop through different P values
 #for P in 100 200 300 400; do
-    for rep in $(seq 1 50); do
+    for rep in $(seq 51 200); do
 for P in   400 300 200 100; do
     # Loop through repetitions
 
