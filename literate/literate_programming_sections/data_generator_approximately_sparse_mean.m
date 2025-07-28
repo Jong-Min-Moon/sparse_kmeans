@@ -20,7 +20,7 @@ classdef data_generator_approximately_sparse_mean < data_generator_t
             obj.get_cov();
             label = obj.get_cluster_label();
             mean_matrix= obj.get_mean_matrix();
-            n_delta = floor(p * 0.1);
+            n_delta = floor(obj.p * 0.1);
             mean_matrix((obj.s+1): (obj.s+n_delta), 1:obj.n1) =  delta; %approximate sparsity for cluster mean
             noise_matrix = obj.get_noise_matrix(sd);
             X = noise_matrix + mean_matrix;
