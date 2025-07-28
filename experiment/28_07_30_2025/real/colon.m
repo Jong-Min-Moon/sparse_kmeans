@@ -26,8 +26,8 @@ file_y = "colon_y.txt";
 % readmatrix is generally good for plain numerical data files
 try
     colon_x = readmatrix(file_x);
-    colon_x = colon_x';
-    disp(['Successfully loaded: ' file_x]);
+    colon_x = normalize(colon_x,2);
+     disp(['Successfully loaded: ' file_x]);
     disp(['Size of colon_x: ' num2str(size(colon_x))]);
 catch ME
     warning(['Error loading ' file_x ': ' ME.message]);
@@ -35,6 +35,7 @@ end
 
 try
     colon_y = readmatrix(file_y);
+    colon_y= colon_y'+1
     disp(['Successfully loaded: ' file_y]);
     disp(['Size of colon_y: ' num2str(size(colon_y))]);
 catch ME
