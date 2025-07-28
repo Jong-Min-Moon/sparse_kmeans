@@ -17,7 +17,11 @@ DB_DIR="/home1/jongminm/sparse_kmeans/sparse_kmeans.db"
 MODEL='iso'
 CLUSTER_1_RATIO=0.5
 SEP=4
+<<<<<<< HEAD
 N=200
+=======
+N=10000
+>>>>>>> 7cdfa40ba3aa29d04af3f35e275324849de943f5
 T=50
 delta=0
  
@@ -38,7 +42,8 @@ echo "Number of samples (n): $N"
 # Loop for 'rep' (repetition) from 1 to 200
 for REP in $(seq 1 ); do
     # Loop for 'p' (number of features/dimensions)
-    for P in  5000 4000 3000 2000 1000   ; do
+
+    for P in  20000   ; do
 
         # Define filenames based on current parameters
         MFILE_NAME="${TABLE_NAME}_${SEP}_p${P}_rep_${REP}" # Name without .m extension
