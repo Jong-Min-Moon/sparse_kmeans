@@ -9,6 +9,7 @@ classdef sdp_kmeans_iter_knowncov_NMF < sdp_kmeans_iter_knowncov
         function cluster_est = get_cluster(obj, X, K)
             cluster_est = get_cluster_by_sdp_NMF(X, K);
         end
+       end
 end
 %% 
 % 
