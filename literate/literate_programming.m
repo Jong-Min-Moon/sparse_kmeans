@@ -179,12 +179,24 @@ end
 % [1 2 1 2 3 4 2 ]
 function cluster_est = cluster_spectral(x, k)
     n = size(x,2);
-    H_hat = (x' * x)/n; %compute affinity matrix
+    p = size(x,1);
+    H_hat = (x' * x)/n; %n x n  affinity matrix
     [V,D] = eig(H_hat);
     [d,ind] = sort(diag(D), "descend");
-    Ds = D(ind,ind);
+        Ds = D(ind,ind);
+        
     Vs = V(:,ind);
-    [cluster_est,C] = kmeans(Vs(:,1),k);
+    tau_n = 1/ log(n+p);
+    delta_n = tau_n^2;
+        f1 = abs(sum(V(:,1)))/sqrt(n) - 1;
+    if d(1)/d(2) < 1+ tau_n
+        new_data = V(:,1:2);
+    elseif f1 > delta_n
+        new_data = V(:,1);
+    else
+        new_data = V(:,2);
+    end
+    [cluster_est,~] = kmeans(new_data,k);
     cluster_est= cluster_est';
 end
 %% 
