@@ -23,7 +23,7 @@ classdef sdp_kmeans_iter_knowncov < handle
         end
         
         function set_cutoff(obj)
-            obj.cutoff = sqrt(  log(obj.p) );
+            obj.cutoff = sqrt(2 * log(obj.p) );
         end
         function cluster_est = get_cluster(obj, X, K)
             cluster_est = get_cluster_by_sdp(X, K);
@@ -62,7 +62,7 @@ classdef sdp_kmeans_iter_knowncov < handle
                 n_selected_features = sum(thresholder_vec);
                 fprintf("%i entries survived \n\n",n_selected_features)
                 while n_selected_features==0 & cutoff_now>1/10
-                    cutoff_now = cutoff_now/2;
+                    cutoff_now = cutoff_now*0.8;
                     thresholder_vec = abs_diff > obj.cutoff;
                     n_selected_features = sum(thresholder_vec);
                     fprintf("%i entries survived \n\n",n_selected_features)

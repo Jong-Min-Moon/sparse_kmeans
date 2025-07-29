@@ -20,8 +20,6 @@ function cluster_est = cluster_spectral(x, k)
     Vs = V(:,ind);
     [cluster_est,C] = kmeans(Vs(:,1),k);
     cluster_est= cluster_est';
-    sum(cluster_est==1)
-    sum(cluster_est==2)
 end
 %% 
 % 
