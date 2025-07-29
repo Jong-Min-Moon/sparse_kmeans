@@ -1,10 +1,10 @@
 #!/bin/bash
-#SBATCH --output="/home1/jongminm/sparse_kmeans/experiment/28_07_30_2025/real/colon.out"
+#SBATCH --output="/home1/jongminm/sparse_kmeans/experiment/28_07_30_2025/real/lung.out"
 #SBATCH --partition=main
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=4
-#SBATCH --mem=8G
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=16G
 #SBATCH --time=3:59:59
 
 # Echo job start time and host
@@ -19,7 +19,7 @@ module load matlab/2022a
 cd "/home1/jongminm/sparse_kmeans/experiment/28_07_30_2025/real"
 
 # Run MATLAB script in batch mode
-matlab -batch colon
+matlab -batch lung
 
 # Echo job finish time
 echo "Finished job for rep=1 at $(date)"

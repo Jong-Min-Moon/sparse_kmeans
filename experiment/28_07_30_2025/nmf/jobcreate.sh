@@ -17,7 +17,11 @@ DB_DIR="/home1/jongminm/sparse_kmeans/sparse_kmeans.db"
 MODEL='iso'
 CLUSTER_1_RATIO=0.5
 SEP=4
+<<<<<<< HEAD
+N=200
+=======
 N=10000
+>>>>>>> 7cdfa40ba3aa29d04af3f35e275324849de943f5
 T=50
 delta=0
  
@@ -36,8 +40,9 @@ echo "Number of samples (n): $N"
 
 # --- Loop through simulation parameters ---
 # Loop for 'rep' (repetition) from 1 to 200
-for REP in $(seq 1 50); do
+for REP in $(seq 1 ); do
     # Loop for 'p' (number of features/dimensions)
+
     for P in  20000   ; do
 
         # Define filenames based on current parameters

@@ -5,7 +5,7 @@ set -e
 
 # --- Configuration Variables ---
 # Base directory for experiments, MATLAB scripts, job files, and output files
-TABLE_NAME="approx_sparse_mean_01"
+TABLE_NAME="nmf"
 BASE_DIR="/home1/jongminm/sparse_kmeans/experiment/28_07_30_2025/${TABLE_NAME}"
 # Path to the SQLite database
 DB_DIR="/home1/jongminm/sparse_kmeans/sparse_kmeans.db"
@@ -16,10 +16,10 @@ DB_DIR="/home1/jongminm/sparse_kmeans/sparse_kmeans.db"
 # These variables will be passed into the generated MATLAB scripts
 MODEL='iso'
 CLUSTER_1_RATIO=0.5
-SEP=4
-N=200
-T=50
-delta=0.1
+SEP=3
+P=10000
+T=20
+delta=0
  
 # --- Ensure Base Directory Exists ---
 # Create the base directory if it doesn't already exist
@@ -38,15 +38,15 @@ echo "Number of samples (n): $N"
 # Loop for 'rep' (repetition) from 1 to 200
 for REP in $(seq 1 50); do
     # Loop for 'p' (number of features/dimensions)
-    for P in  5000  4000  3000  2000  1000; do
+    for N in 6000 7000 8000 9000 10000  ; do
 
         # Define filenames based on current parameters
-        MFILE_NAME="${TABLE_NAME}_${SEP}_p${P}_rep_${REP}" # Name without .m extension
+        MFILE_NAME="${TABLE_NAME}_${SEP}_n${N}_rep_${REP}" # Name without .m extension
         MFILE="$BASE_DIR/${MFILE_NAME}.m"
         JOBFILE="$BASE_DIR/${MFILE_NAME}.sh"
         OUTFILE="$BASE_DIR/${MFILE_NAME}.out"
 
-        echo "Generating files for p=${P}, rep=${REP}..."
+        echo "Generating files for n=${N}, rep=${REP}..."
 
         # === Create MATLAB .m file ===
         # This block writes the MATLAB code into the .m file
@@ -77,7 +77,7 @@ generator = data_generator_approximately_sparse_mean(n, p, 10, sep, rep, 0.5)
  
 
 % --- Run sdp_kmeans_bandit_even_simul ---
-clusterer = sdp_kmeans_iter_knowncov(data, 2);
+clusterer = sdp_kmeans_iter_knowncov_NMF(data, 2);
 cluster_est=clusterer.fit_predict(${T});
 acc = get_bicluster_accuracy(cluster_est, label_true);
 table = get_database_subtable(rep, sep, 1:10,  clusterer,  acc);
@@ -102,8 +102,8 @@ EOF
 #SBATCH --partition=main                   # Specify the partition to use
 #SBATCH --nodes=1                          # Request 1 node
 #SBATCH --ntasks=1                         # Request 1 task (process)
-#SBATCH --cpus-per-task=2                 # Request 8 CPUs per task (for MATLAB's multi-threading)
-#SBATCH --mem=2G                           # Request 6 GB of memory
+#SBATCH --cpus-per-task=4                # Request 8 CPUs per task (for MATLAB's multi-threading)
+#SBATCH --mem=10G                           # Request 6 GB of memory
 #SBATCH --time=0:59:59                    # Set maximum job run time (HH:MM:SS)
 
 # Echo start time and hostname for logging

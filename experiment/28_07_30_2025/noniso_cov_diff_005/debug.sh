@@ -1,22 +1,19 @@
 #!/bin/bash
 
 # Directories
-TABLE_NAME="noniso_t6"
+TABLE_NAME="noniso_cov_diff_005"
 BASE_DIR="/home1/jongminm/sparse_kmeans/experiment/28_07_30_2025/${TABLE_NAME}"
 
 # Database directory
 DB_DIR="/home1/jongminm/sparse_kmeans/sparse_kmeans.db"
 
 # Define delta parameter
-SEP=4
-N=200
-T=100
-DF=6
+delta=0.05
 
 # Loop through different P values
 #for P in 100 200 300 400; do
-    for rep in $(seq 51 200); do
-for P in   400 300 200 100; do
+    for rep in $(seq 1  ); do
+for P in   400 ; do
     # Loop through repetitions
 
         # Define filenames for .m, .sh, and .out files
@@ -47,8 +44,8 @@ pool = parpool(pc, ncores);
 s = 10;
 p = ${P};
 rep = ${rep};
-sep = ${SEP};
-df = ${DF};
+sep = 4;
+delta = ${delta};
 n = 500;
 
 % Add sparse_kmeans path
@@ -61,8 +58,8 @@ db_dir = '${DB_DIR}';
 % Data generation
 cluster_1_ratio = 0.5;
 % Note: Semicolon added to suppress output
-generator = data_generator_t_correlated(n, p, s, sep, rep, 0.5);
-[data, label_true] = generator.get_data(df,1);
+generator = data_generator_correlated_different_cov(n, p, s, sep, rep, 0.5);
+[data, label_true] = generator.get_data(1, delta);
 
 % Run ISEE_kmeans_clean_simul
 model = 'chain45'
@@ -76,7 +73,7 @@ EOF
         cat > "$JOBFILE" <<EOF
 #!/bin/bash
 #SBATCH --output="${OUTFILE}"
-#SBATCH --partition=main
+#SBATCH --partition=debug
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Directories
-TABLE_NAME="noniso_t6"
+TABLE_NAME="noniso_t8"
 BASE_DIR="/home1/jongminm/sparse_kmeans/experiment/28_07_30_2025/${TABLE_NAME}"
 
 # Database directory

@@ -19,34 +19,29 @@ db_dir = '/home1/jongminm/sparse_kmeans/sparse_kmeans.db';
 addpath(genpath('/home1/jongminm/sparse_kmeans'));
 
 % Define the file paths
-file_x = "colon_x.txt";
-file_y = "colon_y.txt";
+file_x = "lung_x.txt";
+file_y = "lung_y.txt";
 
 % Read the data from the text files
 % readmatrix is generally good for plain numerical data files
-try
-    colon_x = readmatrix(file_x);
-    colon_x = colon_x';
-    disp(['Successfully loaded: ' file_x]);
-    disp(['Size of colon_x: ' num2str(size(colon_x))]);
-catch ME
-    warning(['Error loading ' file_x ': ' ME.message]);
-end
-
-try
-    colon_y = readmatrix(file_y);
-    disp(['Successfully loaded: ' file_y]);
-    disp(['Size of colon_y: ' num2str(size(colon_y))]);
-catch ME
-    warning(['Error loading ' file_y ': ' ME.message]);
-end
+ 
+    x = readmatrix(file_x);
+    x = normalize(x');
+    x=  x';
+       disp(['Size of x: ' num2str(size(x))]);
+ 
+ 
+    y = readmatrix(file_y);
+    y= y 
+     disp(['Size of colon_y: ' num2str(size(y))]);
+ 
  
 
 %  
 
 % Run ISEE_kmeans_clean_simul
 model = 'chain45'
-ISEE_kmeans_clean_simul(colon_x, 2, 200, true, 10, 5, 0.01, db_dir, 'real', 0, 'colon', 0, colon_y);
+ISEE_kmeans_clean_simul(x, 2, 200, true, 10, 5, 0.01, db_dir, 'real', 0, 'lung', 0, y);
 
 % Delete parallel pool
 delete(pool);
