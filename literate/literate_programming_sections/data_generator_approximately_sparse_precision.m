@@ -3,12 +3,11 @@ classdef data_generator_approximately_sparse_precision < data_generator_t
 % @export
     methods
         function get_cov(obj, delta)
-            obj.precision = get_precision_band(obj.p, 2, 0.45);
-for i = 1:obj.p - 2
-    obj.precision(i, i+2) = delta;   % Upper second off-diagonal
-    obj.precision(i+2, i) = delta;   % Lower second off-diagonal
-end
-            obj.Sigma = inv(obj.precision);
+           omat = get_precision_band(p, 2, 0.45);
+           [mat, rn] = findPDMatrix(omat, delta);
+           rn
+           obj.precision = mat;
+           obj.Sigma = inv(obj.precision);
         end
     
  
