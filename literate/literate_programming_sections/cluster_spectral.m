@@ -29,5 +29,4 @@ end
 % variable selection and SDP-based clustering. We implement these two parts sequentially 
 % and combine them into a single step function.
 %% 
-%% 
-%% 
+%%  

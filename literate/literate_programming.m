@@ -195,8 +195,7 @@ end
 % variable selection and SDP-based clustering. We implement these two parts sequentially 
 % and combine them into a single step function.
 %% 
-%% 
-%% 
+%%  
 %% Iterative algorithm: known covariance
 %% sdp_kmeans_iter_knowncov
 % @export
@@ -228,12 +227,15 @@ classdef sdp_kmeans_iter_knowncov < handle
         function cluster_est = get_cluster(obj, X, K)
             cluster_est = get_cluster_by_sdp(X, K);
         end
+        function cluster_est = get_cluster_initial(obj, X, K)
+            cluster_est = cluster_spectral(X, K);
+        end
             
-        function cluster_est_now = fit_predict(obj, n_iter)     
+        function cluster_est_now = fit_predict(obj, n_iter, initial_cluster)     
              % written 01/11/2024
-             cluster_est_now = cluster_spectral(obj.X, obj.K); % initial clustering
-             obj.set_cutoff();
- 
+             cluster_est_now = initial_cluster; % initial clustering
+             
+ obj.set_cutoff();
             % iterate
             for iter = 1:n_iter
                 fprintf("\n%i th iteration\n\n", iter)
@@ -254,8 +256,16 @@ classdef sdp_kmeans_iter_knowncov < handle
                 x_bar_g2 = mean(x_now_g2, 2);
                 % thresholding
                 abs_diff = abs(x_bar_g1 - x_bar_g2) * sqrt( n_g1_now*n_g2_now/obj.n );
-                thresholder_vec = abs_diff > obj.cutoff;
-                fprintf("%i entries survived \n\n",sum(thresholder_vec))
+                cutoff_now = obj.cutoff;
+                thresholder_vec = abs_diff > cutoff_now;
+                n_selected_features = sum(thresholder_vec);
+                fprintf("%i entries survived \n\n",n_selected_features)
+                while n_selected_features==0 & cutoff_now>1/10
+                    cutoff_now = cutoff_now*0.8;
+                    thresholder_vec = abs_diff > obj.cutoff;
+                    n_selected_features = sum(thresholder_vec);
+                    fprintf("%i entries survived \n\n",n_selected_features)
+                end
                 x_sub_now = obj.X(thresholder_vec,:);
                     % 3. apply SDP k-means   
                 cluster_est_now = obj.get_cluster(x_sub_now, obj.K); 
@@ -263,7 +273,16 @@ classdef sdp_kmeans_iter_knowncov < handle
         end % end of fit_predict
     end % end of methods
 end
-%% 
+%% sdp_kmeans_iter_knowncov_ifpca
+% @export
+classdef sdp_kmeans_iter_knowncov_ifpca < sdp_kmeans_iter_knowncov
+       methods
+    
+           function cluster_est = get_cluster_initial(obj, X, K)
+            cluster_est = ifpca(X, K);
+        end
+       end
+end
 %% sdp_kmeans_iter_knowncov_NMF
 % @export
 classdef sdp_kmeans_iter_knowncov_NMF < sdp_kmeans_iter_knowncov
@@ -399,7 +418,9 @@ end
 % * Intercept - The scalar intercept term from the selected Lasso model.
 % * residual  - An n-by-1 vector of residuals from the fitted model.
 function [intercept, residual] = get_intercept_residual_lasso(response, predictor)                 
-    model_lasso = glm_gaussian(response, predictor); 
+  
+model_lasso = glm_gaussian(response, predictor); 
+    
     fit = penalized(model_lasso, @p_lasso, "standardize", true); % Fit lasso
     % Select model with minimum AIC
     AIC = goodness_of_fit('aic', fit);
@@ -1978,6 +1999,51 @@ end
 end
 %% 
 %% Simulations - data generator
+% 
+%% data_generator_subsample
+% @export
+classdef data_generator_subsample < handle
+    properties
+        X        % Data matrix (d x n)
+        y
+        n           % Number of data points
+     percent_cluster_1
+ 
+  
+    end
+    methods
+    
+        function obj = data_generator_subsample(X, y)
+            obj.n = size(X, 2);
+            obj.y = y;
+             obj.X  =X;
+             obj.percent_cluster_1 = sum(y==1)/sum(y>0);
+        end
+ 
+        function [X_new,y_new] = get_data(obj, subsample_size, seed)
+            rng(seed);
+            idx_cluster_1 = find(obj.y == 1);
+            idx_cluster_2 = find(obj.y == 2); % Assuming cluster 2 is the other cluster
+            
+            subsample_size_cluster_1 = floor(subsample_size * obj.percent_cluster_1);
+            subsample_size_cluster_2 = subsample_size - subsample_size_cluster_1;
+            
+            %pseudocode
+            perm_idx_cluster_1 = randperm(numel(idx_cluster_1));
+            selected_idx_cluster_1 = idx_cluster_1(perm_idx_cluster_1(1:subsample_size_cluster_1));
+            
+            % --- Select samples from cluster 2 ---
+            perm_idx_cluster_2 = randperm(numel(idx_cluster_2));
+            selected_idx_cluster_2 = idx_cluster_2(perm_idx_cluster_2(1:subsample_size_cluster_2));
+            final_idx = [selected_idx_cluster_1, selected_idx_cluster_1];
+            
+            X_new =  obj.X(:,final_idx);
+            y_new = obj.y(final_idx);
+                 
+        end
+    end % end of method
+    
+end% end of class
 %% get_precision_band
 % @export
 % 
@@ -2575,7 +2641,147 @@ end
 %% 
 % 
 %% Baseline methods
-% 
+%% ifpca
+% @export
+function [label, stats, numselect] = ifpca(Data, K, KSvalue, pvalcut, rep, kmeansrep, per)
+%The function IFPCA gives an estimation of cluster labels with IF-PCA
+%method according to Jin and Wang (2014).
+%
+%Function: [label, stats, numselect] = ifpca(Data, K, KSvalue, pvalcut, rep, kmeansrep, per)
+%
+%Inputs: 
+%Data: p by n data matrix where p is the number of features and n is the 
+%number of samples. Each column presents the observations for a 
+%sample. 
+%K: number of clusters
+%KSvalue: simulated Kolmogorov-Smirnov statistics if possible, used to 
+%estimate p-value for each feature. If left null, corresponding statistics
+%will be genearated by the algorithm
+%pvalcut: the threshold to elminate the effect of features as outliers.
+%The default value is log(p)/p.
+%rep: the number of Kolmogorov-Smirnov statistics to be simulated in the
+%algorithm, defacult 100*p.
+%kmeansrep: repetitions in kmeans algorithm for the last step of IF-PCA,
+%defacult to be 30. 
+%per: a number with 0 < per <= 1, the percentage of Kolmogorov-Smirnov 
+%statistics that will be used in the normalization step, default to be 1. 
+%When the data is highly skewed, this parameter can be specified, such as
+%0.5.
+%
+%Output: 
+%label: n by 1 vector, as the estimated labels for each sample
+%stats: 4 by 1 struct, including the important statistics in the algorithm
+%as following:
+%  stats.KS: p by 1 vector shows normalized KS value for each feature;
+%  stats.HC: p by 1 vector shows the HC value for each feature;
+%  stats.pval: p by 1 vector shows the p-value for each feature;
+%  stats.ranking: p by 1 vector shows the ranking for each feature
+%    according to ranking with p-values
+%numselect: number of selected features in IF-PCA
+%
+%Example:
+% load('lungCancer.mat');
+% Data = [lungCancer_test(1:149, 1:12533); lungCancertrain(:, 1:12533)];
+% Data = Data';
+% [p, n] = size(Data);
+% [label, stats, L] = ifpca(Data, 2, [], [], 100*p, 30);
+%
+%Reference: 
+%Jin and Wang (2014): Important Features PCA for High Dimensional
+%Clustering. 
+[p, n] = size(Data);
+% Error checking
+if (nargin<2 || isempty(K))
+  error 'Please include the number of clusters'
+end
+if (nargin<3||isempty(KSvalue))
+    nullsimu = true; 
+else 
+    nullsimu = false;
+end
+    
+if (nargin<4||isempty(pvalcut))
+    pvalcut = (log(p))/p;
+end
+if ((nargin<5||isempty(rep)) && nullsimu)
+    rep = 100*p;
+end
+if (nargin<6||isempty(kmeansrep))
+    kmeansrep = 30;
+end
+if (nargin<7||isempty(per))
+    per = 1;
+end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%  Main Function %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Normalize Data
+gm = mean(Data'); gsd = std(Data');
+Data = (Data - repmat(gm', 1, n))./repmat(gsd', 1, n);
+%Simulate KS values
+if(nullsimu)
+KSvalue = zeros(rep,1); kk = (0:n)'/n;
+for i = 1:rep
+    
+	x = randn(n,1); 
+	z = (x - mean(x))/std(x);
+	z = z/sqrt(1 - 1/n);
+	pi = normcdf(z);
+	pi = sort(pi);
+	KSvalue(i) = max(max(abs(kk(1:n) - pi)), max(abs(kk(2:(n+1)) - pi)));
+	end
+KSvalue = KSvalue*sqrt(n);
+clear x z pi kk;
+end
+KSmean = mean(KSvalue); KSstd = std(KSvalue);
+if (per < 1)
+    KSvalue = sort(KSvalue, 'ascend');
+    KSmean = mean(KSvalue(1:round(rep*per)));
+    KSstd = std(KSvalue(1:round(rep*per)));
+end
+%Calculate KS value for each feature in the data set
+kk = (0:n)'/n;
+KS = zeros(p, 1);
+for j= 1:p
+    pi = normcdf(Data(j,:)/sqrt(1 - 1/n));
+    pi = sort(pi);
+    KS(j) = sqrt(n)*max(max(abs(kk(1:n) - pi')), max(abs(kk(2:(n+1)) - pi')));
+    clear pi;
+end
+% Standardize KS value according to Efron's idea
+if (per == 1)
+    KS = (KS - mean(KS))/std(KS)*KSstd + KSmean;
+else 
+    KS = sort(KS, 'ascend');
+    KSm = mean(KS(1:round(per*p))); KSs = std(KS(1:round(per*p)));
+    KS = (KS - KSm)/KSs*KSstd + KSmean;
+end
+% Calculate p-value with simulated KS values
+pval = zeros(p,1);
+for i = 1:p
+    pval(i) = mean(KSvalue > KS(i));
+end
+[psort, ranking] = sort(pval, 'ascend');
+% Calculate HC functional at each data point
+kk = (1:p)'/(1 + p);
+HCsort = sqrt(p)*(kk - psort)./sqrt(kk);
+HCsort  =   HCsort./sqrt(max(sqrt(n)*(kk - psort)./kk, 0) + 1 );
+HC = zeros(p,1);
+HC(ranking) = HCsort;
+% Decide the threshold
+Ind = find(psort>pvalcut, 1, 'first');
+ratio = HCsort;
+ratio(1:Ind-1) = -Inf; ratio(round(p/2)+1:end)=-Inf;
+L = find(ratio == max(ratio), 1, 'last');
+numselect = L; 
+% Record the statistics for every feature
+stats.KS = KS; stats.HC = HC; stats.pval = pval; stats.ranking = ranking; 
+% IF-PCA
+data_select = Data(pval <= psort(L), :);
+G = data_select'*data_select;
+[V, ~] = eigs(G, K - 1); 
+label = kmeans(V, K, 'replicates', kmeansrep);
+end
 %% randomProjectionKMeans
 % @export
 function cluster_est = randomProjectionKMeans(X, k, t)

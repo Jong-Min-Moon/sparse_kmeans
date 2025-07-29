@@ -23,17 +23,20 @@ classdef sdp_kmeans_iter_knowncov < handle
         end
         
         function set_cutoff(obj)
-            obj.cutoff = sqrt(2 * log(obj.p) );
+            obj.cutoff = sqrt(  log(obj.p) );
         end
         function cluster_est = get_cluster(obj, X, K)
             cluster_est = get_cluster_by_sdp(X, K);
         end
+        function cluster_est = get_cluster_initial(obj, X, K)
+            cluster_est = cluster_spectral(X, K);
+        end
             
-        function cluster_est_now = fit_predict(obj, n_iter)     
+        function cluster_est_now = fit_predict(obj, n_iter, initial_cluster)     
              % written 01/11/2024
-             cluster_est_now = cluster_spectral(obj.X, obj.K); % initial clustering
-             obj.set_cutoff();
- 
+             cluster_est_now = initial_cluster; % initial clustering
+             
+ obj.set_cutoff();
             % iterate
             for iter = 1:n_iter
                 fprintf("\n%i th iteration\n\n", iter)
@@ -54,8 +57,16 @@ classdef sdp_kmeans_iter_knowncov < handle
                 x_bar_g2 = mean(x_now_g2, 2);
                 % thresholding
                 abs_diff = abs(x_bar_g1 - x_bar_g2) * sqrt( n_g1_now*n_g2_now/obj.n );
-                thresholder_vec = abs_diff > obj.cutoff;
-                fprintf("%i entries survived \n\n",sum(thresholder_vec))
+                cutoff_now = obj.cutoff;
+                thresholder_vec = abs_diff > cutoff_now;
+                n_selected_features = sum(thresholder_vec);
+                fprintf("%i entries survived \n\n",n_selected_features)
+                while n_selected_features==0 & cutoff_now>1/10
+                    cutoff_now = cutoff_now/2;
+                    thresholder_vec = abs_diff > obj.cutoff;
+                    n_selected_features = sum(thresholder_vec);
+                    fprintf("%i entries survived \n\n",n_selected_features)
+                end
                 x_sub_now = obj.X(thresholder_vec,:);
                     % 3. apply SDP k-means   
                 cluster_est_now = obj.get_cluster(x_sub_now, obj.K); 
@@ -63,4 +74,3 @@ classdef sdp_kmeans_iter_knowncov < handle
         end % end of fit_predict
     end % end of methods
 end
-%% 

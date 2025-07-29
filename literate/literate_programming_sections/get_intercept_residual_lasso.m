@@ -19,7 +19,9 @@
 % * Intercept - The scalar intercept term from the selected Lasso model.
 % * residual  - An n-by-1 vector of residuals from the fitted model.
 function [intercept, residual] = get_intercept_residual_lasso(response, predictor)                 
-    model_lasso = glm_gaussian(response, predictor); 
+  
+model_lasso = glm_gaussian(response, predictor); 
+    
     fit = penalized(model_lasso, @p_lasso, "standardize", true); % Fit lasso
     % Select model with minimum AIC
     AIC = goodness_of_fit('aic', fit);
