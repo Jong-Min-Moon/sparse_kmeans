@@ -20,26 +20,31 @@ addpath(genpath('/home1/jongminm/sparse_kmeans'));
 
 % Define the file paths
 file_x = "leuk_x.txt";
+x = readmatrix(file_x);
+disp(['Size of x: ' num2str(size(x))])
+x = 2.^x;
+
 file_y = "leuk_y.txt";
+y = readmatrix(file_y);
+y= y' +1
+disp(['Size of colon_y: ' num2str(size(y))]);
+ 
+ 
+   
 
-% Read the data from the text files
-% readmatrix is generally good for plain numerical data files
+ %0.87 vs 0.91        
  
-    x = readmatrix(file_x);
-       disp(['Size of x: ' num2str(size(x))]);
+    
+n_rep=30;
+n_subsample = 50
+acc = 0;
+acc_ours = 0;
+gen = data_generator_subsample(x, y);
+for i = 1:n_rep
+    [x_new, y_new] = gen.get_data(n_subsample, i);
+    ISEE_kmeans_clean_simul(x_new, 2, 200, true, 10, 5, 0.01, db_dir, 'real', 0, 'leuk', 0, y_new);
  
+end
  
-    y = readmatrix(file_y);
-    y= y'+1
-     disp(['Size of colon_y: ' num2str(size(y))]);
- 
- 
-
-%  
-
-% Run ISEE_kmeans_clean_simul
-model = 'chain45'
-ISEE_kmeans_clean_simul(x, 2, 200, true, 10, 5, 0.01, db_dir, 'real', 0, 'leuk', 0, y);
-
 % Delete parallel pool
 delete(pool);
