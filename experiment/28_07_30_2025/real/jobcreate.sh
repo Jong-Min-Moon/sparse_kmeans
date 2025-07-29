@@ -1,20 +1,18 @@
 #!/bin/bash
 
 # Directories
-TABLE_NAME="approx_sparse_prec_005"
+TABLE_NAME="real"
 BASE_DIR="/home1/jongminm/sparse_kmeans/experiment/28_07_30_2025/${TABLE_NAME}"
 
 # Database directory
 DB_DIR="/home1/jongminm/sparse_kmeans/sparse_kmeans.db"
 
-# Define delta parameter
-delta=0.05
+ 
 
 # Loop through different P values
 #for P in 100 200 300 400; do
-    for rep in $(seq 1 200); do
-for P in   400 300 200 100; do
-    # Loop through repetitions
+    for rep in $(seq 1 30); do
+     # Loop through repetitions
 
         # Define filenames for .m, .sh, and .out files
         MFILE="$BASE_DIR/${TABLE_NAME}_rep_${rep}_p${P}.m"
@@ -40,13 +38,22 @@ set(pc, 'JobStorageLocation', job_folder);
 ncores = str2num(getenv('SLURM_CPUS_PER_TASK')) - 1;
 pool = parpool(pc, ncores);
 
-% Define simulation parameters
-s = 10;
-p = ${P};
+ 
 rep = ${rep};
-sep = 4;
-delta = ${delta};
-n = 500;
+ % Add sparse_kmeans path
+addpath(genpath('/home1/jongminm/sparse_kmeans'));
+
+% Define the file paths
+file_x = "leuk_x.txt";
+x = readmatrix(file_x);
+disp(['Size of x: ' num2str(size(x))])
+x = 2.^x;
+ 
+file_y = "leuk_y.txt";
+y = readmatrix(file_y);
+y= y' +1
+disp(['Size of colon_y: ' num2str(size(y))]);
+ 
 
 % Add sparse_kmeans path
 addpath(genpath('/home1/jongminm/sparse_kmeans'));
@@ -54,17 +61,14 @@ addpath(genpath('/home1/jongminm/sparse_kmeans'));
 % Database and table names
 table_name = '${TABLE_NAME}';
 db_dir = '${DB_DIR}';
-
-% Data generation
-cluster_1_ratio = 0.5;
-% Note: Semicolon added to suppress output
-generator = data_generator_approximately_sparse_precision(n, p, s, sep, rep, 0.5);
-[data, label_true] = generator.get_data(delta);
-
-% Run ISEE_kmeans_clean_simul
-model = 'chain45'
-ISEE_kmeans_clean_simul(data, 2, 100, true, 10, 5, 0.01, db_dir, table_name, rep, model, sep, label_true);
-
+ n_subsample = 45
+ 
+gen = data_generator_subsample(x, y);
+ 
+    [x_new, y_new] = gen.get_data(n_subsample, rep);
+    ISEE_kmeans_clean_simul(x_new, 2, 200, true, 10, 5, 0.01, db_dir, 'real', rep, 'leuk', 0, y_new);
+ 
+ 
 % Delete parallel pool
 delete(pool);
 EOF
@@ -76,10 +80,9 @@ EOF
 #SBATCH --partition=main
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=4
-#SBATCH --mem=8G
-#SBATCH --time=3:59:59
-
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=16G
+ 
 # Echo job start time and host
 echo "Starting job for rep=${rep} on \$(hostname) at \$(date)"
 
@@ -103,5 +106,4 @@ EOF
         sbatch "$JOBFILE"
         # Small delay to avoid overwhelming the scheduler
         sleep 1
-    done
-done
+ done

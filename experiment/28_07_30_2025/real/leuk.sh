@@ -1,12 +1,11 @@
 #!/bin/bash
 #SBATCH --output="/home1/jongminm/sparse_kmeans/experiment/28_07_30_2025/real/leuk.out"
-#SBATCH --partition=main
+#SBATCH --partition=debug
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=8
-#SBATCH --mem=16G
-#SBATCH --time=3:59:59
-
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=8G
+ 
 # Echo job start time and host
 echo "Starting job for rep=1 on $(hostname) at $(date)"
 
@@ -19,7 +18,7 @@ module load matlab/2022a
 cd "/home1/jongminm/sparse_kmeans/experiment/28_07_30_2025/real"
 
 # Run MATLAB script in batch mode
-matlab -batch leuk
+matlab -batch leuksimul
 
 # Echo job finish time
 echo "Finished job for rep=1 at $(date)"

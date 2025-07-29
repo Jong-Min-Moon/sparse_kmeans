@@ -28,13 +28,11 @@ classdef sdp_kmeans_iter_knowncov < handle
         function cluster_est = get_cluster(obj, X, K)
             cluster_est = get_cluster_by_sdp(X, K);
         end
-        function cluster_est = get_cluster_initial(obj, X, K)
-            cluster_est = cluster_spectral(X, K);
-        end
+  
             
-        function cluster_est_now = fit_predict(obj, n_iter, initial_cluster)     
+        function cluster_est_now = fit_predict(obj, n_iter )     
              % written 01/11/2024
-             cluster_est_now = initial_cluster; % initial clustering
+             cluster_est_now = obj.get_cluster(obj.X, obj.K); % initial clustering
              
  obj.set_cutoff();
             % iterate

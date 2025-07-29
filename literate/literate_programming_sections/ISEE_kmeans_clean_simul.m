@@ -6,9 +6,13 @@ function cluster_estimate = ISEE_kmeans_clean_simul(x, k, n_iter, is_parallel, l
     obj_sdp = nan(1, n_iter);
     obj_lik = nan(1, n_iter);
     % Initialize cluster assignment
-    cluster_estimate = cluster_spectral(x, k);
+    %cluster_estimate = cluster_spectral(x, k);
+    cluster_estimate = kmeans(x', k);
+    cluster_estimate = cluster_estimate';
+    get_bicluster_accuracy(cluster_estimate, cluster_true)
     for iter = 1:n_iter
         [cluster_estimate, s_hat, obj_sdp(iter), obj_lik(iter)] = ISEE_kmeans_clean_onestep(x, k, cluster_estimate, is_parallel);
+        cluster_estimate
        %%%%%%%%%%%%%%%% simul part starts
         TP = sum(s_hat(1:10));
         FP = sum(s_hat) - TP;
