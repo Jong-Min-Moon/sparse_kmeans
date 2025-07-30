@@ -2566,7 +2566,7 @@ end
 classdef data_generator_approximately_sparse_precision2 < data_generator_approximately_sparse_precision
     methods
         function get_cov(obj, delta)
-           obj.precision = get_precision_band(p, 2, 0.45);
+           obj.precision = get_precision_band(obj.p, 2, 0.45);
            obj.precision(obj.precision == 0) = delta;     
            obj.Sigma = inv(obj.precision);
         end
