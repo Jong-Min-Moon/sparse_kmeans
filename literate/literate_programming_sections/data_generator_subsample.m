@@ -17,8 +17,6 @@ classdef data_generator_subsample < handle
             obj.y = y;
              obj.X  =X;
              obj.percent_cluster_1 = sum(y==1)/sum(y>0);
-             obj.subsample_size_cluster_1 = 0;
-             obj.subsample_size_cluster_2= 0;
         end
  
         function [X_new,y_new] = get_data(obj, subsample_size, seed)
@@ -26,7 +24,7 @@ classdef data_generator_subsample < handle
             idx_cluster_1 = find(obj.y == 1);
             idx_cluster_2 = find(obj.y == 2); % Assuming cluster 2 is the other cluster
             
-            obj.subsample_size_cluster_1 = floor(subsample_size * obj.percent_cluster_1);
+                         obj.subsample_size_cluster_1 = floor(subsample_size * obj.percent_cluster_1);
             obj.subsample_size_cluster_2 = subsample_size - obj.subsample_size_cluster_1;
             
             %pseudocode

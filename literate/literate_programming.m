@@ -78,35 +78,8 @@ end
 % 
 % Solver: SDPNAL+
 function cluster_est = get_cluster_by_sdp(X, K)
-% Input validation
-if nargin < 2
-    error('GET_CLUSTER_BY_SDP:NotEnoughInputs', 'Two input arguments required: data matrix X and number of clusters K.');
-end
-if ~ismatrix(X) || ~isnumeric(X)
-    error('GET_CLUSTER_BY_SDP:InvalidX', 'Input X must be a numeric matrix.');
-end
-if ~isscalar(K) || K <= 1 || K ~= floor(K)
-    error('GET_CLUSTER_BY_BY_SDP:InvalidK', 'Number of clusters K must be an integer greater than 1.');
-end
-[d, n] = size(X); % d is dimension, n is number of data points
-if K > n
-    error('GET_CLUSTER_BY_SDP:KExceedsN', 'Number of clusters K cannot exceed the number of data points (%d).', n);
-end
 D = X' * X;
 Z_opt = kmeans_sdp_pengwei(D, K);
-% Check if Z_opt is valid
-if isempty(Z_opt) || ~ismatrix(Z_opt) || ~isnumeric(Z_opt)
-    error('GET_CLUSTER_BY_SDP:InvalidZOpt', 'The SDP solver ''kmeans_sdp_pengwei'' returned an invalid or empty solution.');
-end
-% Perform eigendecomposition on the SDP solution
-% The SDP solution Z_opt is often a matrix (e.g., n x n) from which
-% eigenvectors are extracted for spectral clustering.
-% Assuming Z_opt is an n x n matrix where n is the number of data points.
-if size(Z_opt, 1) ~= n || size(Z_opt, 2) ~= n
-    warning('GET_CLUSTER_BY_SDP:ZOptDimensionMismatch', ...
-        'Expected Z_opt to be an %d x %d matrix, but got %d x %d. Proceeding with SVD, but results might be unexpected.', ...
-        n, n, size(Z_opt, 1), size(Z_opt, 2));
-end
 cluster_est = sdp_sol_to_cluster(Z_opt, K);
 end
  
@@ -206,6 +179,44 @@ end
 % to construct the full iterative procedure. Each step consists of two components: 
 % variable selection and SDP-based clustering. We implement these two parts sequentially 
 % and combine them into a single step function.
+%% Vanilla SDP K-means
+%% sdp_kmeans
+% @export
+% Solver: SDPNAL+
+function cluster_est = sdp_kmeans(X, K)
+% Input validation
+if nargin < 2
+    error('sdp_kmeans:NotEnoughInputs', 'Two input arguments required: data matrix X and number of clusters K.');
+end
+if ~ismatrix(X) || ~isnumeric(X)
+    error('sdp_kmeans:InvalidX', 'Input X must be a numeric matrix.');
+end
+if ~isscalar(K) || K <= 1 || K ~= floor(K)
+    error('GET_CLUSTER_BY_BY_SDP:InvalidK', 'Number of clusters K must be an integer greater than 1.');
+end
+[d, n] = size(X); % d is dimension, n is number of data points
+if K > n
+    error('sdp_kmeans:KExceedsN', 'Number of clusters K cannot exceed the number of data points (%d).', n);
+end
+ X_scaled = normalize(X');
+D =  X_scaled * X_scaled';
+Z_opt = kmeans_sdp_pengwei(D, K);
+% Check if Z_opt is valid
+if isempty(Z_opt) || ~ismatrix(Z_opt) || ~isnumeric(Z_opt)
+    error('sdp_kmeans:InvalidZOpt', 'The SDP solver ''kmeans_sdp_pengwei'' returned an invalid or empty solution.');
+end
+% Perform eigendecomposition on the SDP solution
+% The SDP solution Z_opt is often a matrix (e.g., n x n) from which
+% eigenvectors are extracted for spectral clustering.
+% Assuming Z_opt is an n x n matrix where n is the number of data points.
+if size(Z_opt, 1) ~= n || size(Z_opt, 2) ~= n
+    warning('sdp_kmeans:ZOptDimensionMismatch', ...
+        'Expected Z_opt to be an %d x %d matrix, but got %d x %d. Proceeding with SVD, but results might be unexpected.', ...
+        n, n, size(Z_opt, 1), size(Z_opt, 2));
+end
+cluster_est = sdp_sol_to_cluster(Z_opt, K);
+end
+ 
 %% 
 %%  
 %% Iterative algorithm: known covariance
@@ -239,13 +250,10 @@ classdef sdp_kmeans_iter_knowncov < handle
         function cluster_est = get_cluster(obj, X, K)
             cluster_est = get_cluster_by_sdp(X, K);
         end
-        function cluster_est = get_cluster_initial(obj, X, K)
-            cluster_est = cluster_spectral(X, K);
-        end
-            
-        function cluster_est_now = fit_predict(obj, n_iter, initial_cluster)     
+  
+        function cluster_est_now = fit_predict(obj, n_iter)     
              % written 01/11/2024
-             cluster_est_now = initial_cluster; % initial clustering
+             cluster_est_now = obj.get_cluster(obj.X, obj.K); % initial clustering
              
  obj.set_cutoff();
             % iterate
@@ -2552,6 +2560,22 @@ classdef data_generator_approximately_sparse_precision < data_generator_t
     end % end of methods
 end
  
+%% 
+%% data_generator_approximately_sparse_precision2
+% @export
+classdef data_generator_approximately_sparse_precision2 < data_generator_approximately_sparse_precision
+    methods
+        function get_cov(obj, delta)
+           obj.precision = get_precision_band(p, 2, 0.45);
+           obj.precision(obj.precision == 0) = delta;     
+           obj.Sigma = inv(obj.precision);
+        end
+    
+ 
+ 
+    end % end of methods
+end
+ 
 %% Simulation - auxiliary
 %% get_bicluster_accuracy
 % @export
@@ -2601,7 +2625,7 @@ function cluster_estimate = ISEE_kmeans_clean_simul(x, k, n_iter, is_parallel, l
     obj_sdp = nan(1, n_iter);
     obj_lik = nan(1, n_iter);
     % Initialize cluster assignment
-    cluster_estimate = cluster_spectral(x, k);
+    cluster_estimate = sdp_kmeans(x, k);
     for iter = 1:n_iter
         [cluster_estimate, s_hat, obj_sdp(iter), obj_lik(iter)] = ISEE_kmeans_clean_onestep(x, k, cluster_estimate, is_parallel);
        %%%%%%%%%%%%%%%% simul part starts

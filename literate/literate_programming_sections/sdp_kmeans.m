@@ -1,6 +1,5 @@
 %% sdp_kmeans
 % @export
-% 
 % Solver: SDPNAL+
 function cluster_est = sdp_kmeans(X, K)
 % Input validation
@@ -37,3 +36,4 @@ cluster_est = sdp_sol_to_cluster(Z_opt, K);
 end
  
 %% 
+%%  
