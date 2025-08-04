@@ -2576,6 +2576,8 @@ classdef data_generator_approximately_sparse_precision2 < data_generator_approxi
     end % end of methods
 end
  
+%% 
+%% 
 %% Simulation - auxiliary
 %% get_bicluster_accuracy
 % @export
