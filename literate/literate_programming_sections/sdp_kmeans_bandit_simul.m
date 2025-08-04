@@ -29,8 +29,7 @@ classdef sdp_kmeans_bandit_simul  < sdp_kmeans_bandit
             final_selection = obj.signal_entry_est;
             obj.entries_survived(obj.n_iter + 1, :) = final_selection;
             X_sub_final = obj.X(final_selection, :);
-            kmeans_learner = sdp_kmeans(X_sub_final, obj.K);
-            obj.cluster_est_dict(obj.n_iter + 1) = cluster_est(kmeans_learner.fit_predict());
+            obj.cluster_est_dict(obj.n_iter + 1) = obj.get_cluster(X_sub_final, obj.K);
             obj.evaluate_accuracy(cluster_true, obj.n_iter + 1);
         end
         

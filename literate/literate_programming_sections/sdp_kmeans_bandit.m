@@ -41,6 +41,7 @@ classdef sdp_kmeans_bandit < handle
             obj.beta = repmat(1, 1, obj.p);
             obj.pi = obj.alpha ./ (obj.alpha + obj.beta);
         end
+ 
         function fit_predict(obj, n_iter)
             tic; % Start timing for the entire fit_predict method
             obj.n_iter = n_iter;
@@ -57,7 +58,7 @@ classdef sdp_kmeans_bandit < handle
             %final clustering
             final_selection = obj.signal_entry_est;
             X_sub_final = obj.X(final_selection, :);
-            obj.cluster_est_dict(obj.n_iter + 1) = get_cluster(X_sub_final, obj.K);
+            obj.cluster_est_dict(obj.n_iter + 1) = obj.get_cluster(X_sub_final, obj.K);
             % ... all existing code ...
         total_fit_predict_time = toc; % End timing for the entire fit_predict method            
         fprintf('Total fit_predict time: %.4f seconds\n', total_fit_predict_time);
@@ -79,7 +80,7 @@ classdef sdp_kmeans_bandit < handle
         function reward_vec = reward(obj, variable_subset, iter)
             % Use only selected variables
             X_sub = obj.X(variable_subset, :);
-            obj.cluster_est_dict(iter) = get_cluster(X_sub, obj.K);
+            obj.cluster_est_dict(iter) = obj.get_cluster(X_sub, obj.K);
             % Assume K = 2
             sample_cluster_1 = X_sub(:, obj.cluster_est_dict(iter).cluster_info_vec == 1);
             sample_cluster_2 = X_sub(:, obj.cluster_est_dict(iter).cluster_info_vec == 2);
@@ -90,12 +91,12 @@ classdef sdp_kmeans_bandit < handle
             % only calculate the p-values for selected variables
             for j = 1:length(idx)
                 i = idx(j);
-                obj.p =  permutationTest( ...
+                pval =  permutationTest( ...
                     sample_cluster_1(j, :), ...
                     sample_cluster_2(j, :), ...
                     100 ...
                 ); % 
-                reward_vec(i) = obj.p < 0.01;
+                reward_vec(i) = pval < 0.01;
             end
             
      

@@ -1526,6 +1526,7 @@ classdef sdp_kmeans_bandit < handle
             obj.beta = repmat(1, 1, obj.p);
             obj.pi = obj.alpha ./ (obj.alpha + obj.beta);
         end
+ 
         function fit_predict(obj, n_iter)
             tic; % Start timing for the entire fit_predict method
             obj.n_iter = n_iter;
@@ -1542,7 +1543,7 @@ classdef sdp_kmeans_bandit < handle
             %final clustering
             final_selection = obj.signal_entry_est;
             X_sub_final = obj.X(final_selection, :);
-            obj.cluster_est_dict(obj.n_iter + 1) = get_cluster(X_sub_final, obj.K);
+            obj.cluster_est_dict(obj.n_iter + 1) = obj.get_cluster(X_sub_final, obj.K);
             % ... all existing code ...
         total_fit_predict_time = toc; % End timing for the entire fit_predict method            
         fprintf('Total fit_predict time: %.4f seconds\n', total_fit_predict_time);
@@ -1564,7 +1565,7 @@ classdef sdp_kmeans_bandit < handle
         function reward_vec = reward(obj, variable_subset, iter)
             % Use only selected variables
             X_sub = obj.X(variable_subset, :);
-            obj.cluster_est_dict(iter) = get_cluster(X_sub, obj.K);
+            obj.cluster_est_dict(iter) = obj.get_cluster(X_sub, obj.K);
             % Assume K = 2
             sample_cluster_1 = X_sub(:, obj.cluster_est_dict(iter).cluster_info_vec == 1);
             sample_cluster_2 = X_sub(:, obj.cluster_est_dict(iter).cluster_info_vec == 2);
@@ -1575,12 +1576,12 @@ classdef sdp_kmeans_bandit < handle
             % only calculate the p-values for selected variables
             for j = 1:length(idx)
                 i = idx(j);
-                obj.p =  permutationTest( ...
+                pval =  permutationTest( ...
                     sample_cluster_1(j, :), ...
                     sample_cluster_2(j, :), ...
                     100 ...
                 ); % 
-                reward_vec(i) = obj.p < 0.01;
+                reward_vec(i) = pval < 0.01;
             end
             
      
@@ -1629,8 +1630,7 @@ classdef sdp_kmeans_bandit_simul  < sdp_kmeans_bandit
             final_selection = obj.signal_entry_est;
             obj.entries_survived(obj.n_iter + 1, :) = final_selection;
             X_sub_final = obj.X(final_selection, :);
-            kmeans_learner = sdp_kmeans(X_sub_final, obj.K);
-            obj.cluster_est_dict(obj.n_iter + 1) = cluster_est(kmeans_learner.fit_predict());
+            obj.cluster_est_dict(obj.n_iter + 1) = obj.get_cluster(X_sub_final, obj.K);
             obj.evaluate_accuracy(cluster_true, obj.n_iter + 1);
         end
         
@@ -1744,7 +1744,7 @@ classdef sdp_kmeans_bandit_thinning_simul  < sdp_kmeans_bandit_simul
             X_sub_cluetering = X_sub + noise_new; 
             X_sub_variable_selection = X_sub - noise_new;
             % clustering
-            obj.cluster_est_dict(iter) = get_cluster_by_sdp(X_sub_cluetering, obj.K);
+            obj.cluster_est_dict(iter) = obj.get_cluster(X_sub_cluetering, obj.K);
             cluster_labels = obj.cluster_est_dict(iter).cluster_info_vec;
             
             % variable selection
@@ -2449,6 +2449,7 @@ classdef data_generator_correlated_approximately_sparse_mean < data_generator_t_
     
 end% end of class
 %% 
+% 
 %% data_generator_correlated_different_cov
 % @export
 classdef data_generator_correlated_different_cov < data_generator_correlated_approximately_sparse_mean
@@ -2541,7 +2542,7 @@ end% end of class
 classdef data_generator_approximately_sparse_precision < data_generator_t
     methods
         function get_cov(obj, delta)
-           omat = get_precision_band(p, 2, 0.45);
+           omat = get_precision_band(obj.p, 2, 0.45);
            [mat, rn] = findPDMatrix(omat, delta);
            rn
            obj.precision = mat;

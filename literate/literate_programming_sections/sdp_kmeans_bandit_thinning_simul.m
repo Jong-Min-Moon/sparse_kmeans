@@ -24,7 +24,7 @@ classdef sdp_kmeans_bandit_thinning_simul  < sdp_kmeans_bandit_simul
             X_sub_cluetering = X_sub + noise_new; 
             X_sub_variable_selection = X_sub - noise_new;
             % clustering
-            obj.cluster_est_dict(iter) = get_cluster_by_sdp(X_sub_cluetering, obj.K);
+            obj.cluster_est_dict(iter) = obj.get_cluster(X_sub_cluetering, obj.K);
             cluster_labels = obj.cluster_est_dict(iter).cluster_info_vec;
             
             % variable selection
