@@ -35,7 +35,7 @@ echo "Number of samples (n): $N"
 # Loop for 'rep' (repetition) from 1 to 200
 
     # Loop for 'p' (number of features/dimensions)
-    for P in  16000 14000 12000 10000 8000 6000 4000 2000; do
+    for P in    14000 12000 10000 8000 6000 4000 2000; do
 for REP in $(seq 1 100); do
         # Define filenames based on current parameters
         MFILE_NAME="bandit_spectral_sep${SEP}_p${P}_rep_${REP}" # Name without .m extension

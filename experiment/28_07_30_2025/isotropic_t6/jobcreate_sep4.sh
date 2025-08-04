@@ -34,7 +34,7 @@ echo "Number of samples (n): $N"
 
 # --- Loop through simulation parameters ---
 # Loop for 'rep' (repetition) from 1 to 200
-for REP in $(seq 1 50); do
+for REP in $(seq 51 200); do
     # Loop for 'p' (number of features/dimensions)
     for P in  5000  4000  3000  2000  1000; do
 
