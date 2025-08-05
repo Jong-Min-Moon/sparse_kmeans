@@ -18,5 +18,3 @@ classdef sdp_kmeans_bandit_thinning_spectral_simul  < sdp_kmeans_bandit_thinning
  
     end % end of methods
 end
-%% 
-% 

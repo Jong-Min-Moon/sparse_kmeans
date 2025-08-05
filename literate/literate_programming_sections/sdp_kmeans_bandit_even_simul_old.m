@@ -21,7 +21,7 @@ classdef sdp_kmeans_bandit_even_simul_old  < sdp_kmeans_bandit_simul
             end
             X_sub = obj.X(variable_subset, :);
             % Perform clustering on X_sub (original selected data)
-            obj.cluster_est_dict(iter) = get_cluster_by_sdp(X_sub, obj.K);
+            obj.cluster_est_dict(iter) = obj.get_cluster(X_sub, obj.K);
             
             % --- 1. Add standard normal matrix to X_sub (after clustering) ---
             % Dimensions of X_sub are (num_selected_features x num_data_points)

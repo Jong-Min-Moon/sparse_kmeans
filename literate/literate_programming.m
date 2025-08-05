@@ -1794,8 +1794,25 @@ classdef sdp_kmeans_bandit_thinning_spectral_simul  < sdp_kmeans_bandit_thinning
  
     end % end of methods
 end
-%% 
-% 
+%% sdp_kmeans_bandit_thinning_nmf_simul
+% @export
+classdef sdp_kmeans_bandit_thinning_nmf_simul  < sdp_kmeans_bandit_even_simul_old 
+    methods
+        function obj = sdp_kmeans_bandit_thinning_nmf_simul(X, number_cluster)
+            % Call the superclass constructor first
+            % This initializes X, K, n, p, cutoff, and n_iter properties from the superclass
+            obj = obj@sdp_kmeans_bandit_even_simul_old(X, number_cluster);
+            
+        end
+        
+    
+        function cluster_est = get_cluster(obj, X, K) % inherit this class and change this part to try simpler clustering methods
+             cluster_est = get_cluster_by_sdp(X, K);
+         end          
+     
+ 
+    end % end of methods
+end
 %% sdp_kmeans_bandit_even_simul_old
 % @export
 classdef sdp_kmeans_bandit_even_simul_old  < sdp_kmeans_bandit_simul 
@@ -1819,7 +1836,7 @@ classdef sdp_kmeans_bandit_even_simul_old  < sdp_kmeans_bandit_simul
             end
             X_sub = obj.X(variable_subset, :);
             % Perform clustering on X_sub (original selected data)
-            obj.cluster_est_dict(iter) = get_cluster_by_sdp(X_sub, obj.K);
+            obj.cluster_est_dict(iter) = obj.get_cluster(X_sub, obj.K);
             
             % --- 1. Add standard normal matrix to X_sub (after clustering) ---
             % Dimensions of X_sub are (num_selected_features x num_data_points)
