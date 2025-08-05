@@ -79,7 +79,7 @@ label_true = label_true';
 
 % --- Run sdp_kmeans_bandit_even_simul ---
 % Initialize and run the bandit k-means simulation
-bandit = sdp_kmeans_bandit_thinning_simul(data, 2);
+bandit = sdp_kmeans_bandit_thinning_nmf_simul(data, 2);
 bandit.fit_predict(${T}, label_true);
 
 % --- Insert Results into SQLite Database ---
