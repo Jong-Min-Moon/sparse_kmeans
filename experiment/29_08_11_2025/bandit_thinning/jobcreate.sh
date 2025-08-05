@@ -17,7 +17,7 @@ MODEL='iso'
 CLUSTER_1_RATIO=0.5
 SEP=4
 N=200
-T=1000
+T=2000
 # --- Ensure Base Directory Exists ---
 # Create the base directory if it doesn't already exist
 mkdir -p "$BASE_DIR"
@@ -33,9 +33,9 @@ echo "Number of samples (n): $N"
 
 # --- Loop through simulation parameters ---
 # Loop for 'rep' (repetition) from 1 to 200
-for REP in $(seq 1 3); do
+for REP in $(seq 1 100); do
     # Loop for 'p' (number of features/dimensions)
-    for P in    10000; do
+    for P in    6000; do
 
         # Define filenames based on current parameters
         MFILE_NAME="bandit_thinning_sep${SEP}_p${P}_rep_${REP}" # Name without .m extension
@@ -101,9 +101,9 @@ EOF
 #SBATCH --partition=main                   # Specify the partition to use
 #SBATCH --nodes=1                          # Request 1 node
 #SBATCH --ntasks=1                         # Request 1 task (process)
-#SBATCH --cpus-per-task=4                  # Request 8 CPUs per task (for MATLAB's multi-threading)
-#SBATCH --mem=6G                           # Request 6 GB of memory
-#SBATCH --time=23:59:59                    # Set maximum job run time (HH:MM:SS)
+#SBATCH --cpus-per-task=3                  # Request 8 CPUs per task (for MATLAB's multi-threading)
+#SBATCH --mem=4G                           # Request 6 GB of memory
+#SBATCH --time=3:59:59                    # Set maximum job run time (HH:MM:SS)
 
 # Echo start time and hostname for logging
 echo "Starting job for p=${P}, rep=${REP} on \$(hostname) at \$(date)"
