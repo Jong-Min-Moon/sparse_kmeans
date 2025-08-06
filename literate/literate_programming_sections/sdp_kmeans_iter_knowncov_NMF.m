@@ -11,5 +11,3 @@ classdef sdp_kmeans_iter_knowncov_NMF < sdp_kmeans_iter_knowncov
         end
        end
 end
-%% 
-% 

@@ -86,8 +86,6 @@ end
 %% 
 %% get_cluster_by_sdp_NMF
 % @export
-% 
-% 
 function cluster_est = get_cluster_by_sdp_NMF(X,K)
 % Initialization
 n = size(X,2); % Sample size
@@ -121,7 +119,80 @@ U_out = U;
 cluster_est = sdp_sol_to_cluster(U_out, K);
 end
 %% 
-%% 
+%% get_cluster_by_sdp_SL
+% @export
+function cluster_est = get_cluster_by_sdp_SL(X,K) 
+    n = size(X,2); % Sample size
+    p = size(X,1); % dimension
+    gama = 0.1;
+    columns=(rand(1,n) <gama );
+    q =sum(columns);  % Random select q data points
+    X_hat = X(:,columns); % New matrix with dimension p*q    
+    idx_hat=get_cluster_by_sdp(X_hat, K);
+ 
+    sumsub = histcounts(idx_hat, 1:K+1);
+    C_hat=zeros(p,K);
+    X_hat_1=X_hat';
+ 
+    % Get the centers
+    for cc=1:K
+        findindx=find(idx_hat==cc);
+        newcoln=randperm(sumsub(cc),min(sumsub));
+        newindx=findindx(newcoln);
+        linearIndices = newindx;
+        inter=mean(X_hat_1(linearIndices,:));
+        C_hat(:,cc)=inter';
+    end
+  
+    % Assign Xi to nearesr centroid of X_hat
+    cluster_est = zeros(n,1);
+        for j=1:n
+            fmv=zeros(1,K);
+            for i=1:K
+                fmv(1,i)=norm(X(:,j)-C_hat(:,i)); % Every point compared with centers
+            end
+            [mv,mp]=min(fmv);
+        cluster_est(j)=mp; % Assigned to the position of center
+    end
+cluster_est = cluster_est';
+end 
+%% get_cluster_by_sdp_SL_NMF
+% @export
+function cluster_est = get_cluster_by_sdp_SL_NMF(X,K) 
+    n = size(X,2); % Sample size
+    p = size(X,1); % dimension
+    gama = 0.1;
+    columns=(rand(1,n) <gama );
+    q =sum(columns);  % Random select q data points
+    X_hat = X(:,columns); % New matrix with dimension p*q    
+    idx_hat=get_cluster_by_sdp_NMF(X_hat, K);
+ 
+    sumsub = histcounts(idx_hat, 1:K+1);
+    C_hat=zeros(p,K);
+    X_hat_1=X_hat';
+ 
+    % Get the centers
+    for cc=1:K
+        findindx=find(idx_hat==cc);
+        newcoln=randperm(sumsub(cc),min(sumsub));
+        newindx=findindx(newcoln);
+        linearIndices = newindx;
+        inter=mean(X_hat_1(linearIndices,:));
+        C_hat(:,cc)=inter';
+    end
+  
+    % Assign Xi to nearesr centroid of X_hat
+    cluster_est = zeros(n,1);
+        for j=1:n
+            fmv=zeros(1,K);
+            for i=1:K
+                fmv(1,i)=norm(X(:,j)-C_hat(:,i)); % Every point compared with centers
+            end
+            [mv,mp]=min(fmv);
+        cluster_est(j)=mp; % Assigned to the position of center
+    end
+cluster_est = cluster_est';
+ end 
 %% Implementing our iterative algorithm
 % Our iterative algorithm has the following structure:
 %% 
@@ -316,8 +387,19 @@ classdef sdp_kmeans_iter_knowncov_NMF < sdp_kmeans_iter_knowncov
         end
        end
 end
-%% 
-% 
+%% sdp_kmeans_iter_knowncov_SL
+% @export
+classdef sdp_kmeans_iter_knowncov_SL < sdp_kmeans_iter_knowncov
+       methods
+    
+        function obj = sdp_kmeans_iter_knowncov_SL(X, K)
+            obj = obj@sdp_kmeans_iter_knowncov(X, K);
+        end        
+        function cluster_est = get_cluster(obj, X, K)
+            cluster_est = get_cluster_by_sdp_SL(X, K);
+        end
+       end
+end
 %% Variable selection
 % Variable selection is two-step:
 %% 
@@ -1776,12 +1858,12 @@ end
 %% 
 %% sdp_kmeans_bandit_thinning_spectral_simul
 % @export
-classdef sdp_kmeans_bandit_thinning_spectral_simul  < sdp_kmeans_bandit_thinning_simul 
+classdef sdp_kmeans_bandit_thinning_spectral_simul  < sdp_kmeans_bandit_even_simul_old 
     methods
         function obj = sdp_kmeans_bandit_thinning_spectral_simul(X, number_cluster)
             % Call the superclass constructor first
             % This initializes X, K, n, p, cutoff, and n_iter properties from the superclass
-            obj = obj@sdp_kmeans_bandit_thinning_simul(X, number_cluster);
+            obj = obj@sdp_kmeans_bandit_even_simul_old(X, number_cluster);
             
         end
         

@@ -1,7 +1,5 @@
 %% get_cluster_by_sdp_NMF
 % @export
-% 
-% 
 function cluster_est = get_cluster_by_sdp_NMF(X,K)
 % Initialization
 n = size(X,2); % Sample size
@@ -34,5 +32,4 @@ end
 U_out = U;
 cluster_est = sdp_sol_to_cluster(U_out, K);
 end
-%% 
 %% 
