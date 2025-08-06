@@ -394,10 +394,10 @@ classdef sdp_kmeans_iter_knowncov_NMF < sdp_kmeans_iter_knowncov
 end
 %% sdp_kmeans_iter_knowncov_SL_NMF
 % @export
-classdef sdp_kmeans_iter_knowncov_SL < sdp_kmeans_iter_knowncov
+classdef sdp_kmeans_iter_knowncov_SL_NMF < sdp_kmeans_iter_knowncov
        methods
     
-        function obj = sdp_kmeans_iter_knowncov_SL(X, K)
+        function obj = sdp_kmeans_iter_knowncov_SL_NMF(X, K)
             obj = obj@sdp_kmeans_iter_knowncov(X, K);
         end      
         
