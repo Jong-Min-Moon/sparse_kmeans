@@ -3,7 +3,7 @@
 function cluster_est = get_cluster_by_sdp_SL_NMF(X,K) 
     n = size(X,2); % Sample size
     p = size(X,1); % dimension
-    gama = 0.1;
+    gama = sqrt(n)/n;
     columns=(rand(1,n) <gama );
     q =sum(columns);  % Random select q data points
     X_hat = X(:,columns); % New matrix with dimension p*q    

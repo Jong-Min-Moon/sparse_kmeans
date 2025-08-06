@@ -5,8 +5,8 @@ set -e
 
 # --- Configuration Variables ---
 # Base directory for experiments, MATLAB scripts, job files, and output files
-TABLE_NAME="nmf"
-BASE_DIR="/home1/jongminm/sparse_kmeans/experiment/28_07_30_2025/${TABLE_NAME}"
+TABLE_NAME="SL"
+BASE_DIR="/home1/jongminm/sparse_kmeans/experiment/29_08_11_2025/${TABLE_NAME}"
 # Path to the SQLite database
 DB_DIR="/home1/jongminm/sparse_kmeans/sparse_kmeans.db"
 # Table name within the SQLite database
@@ -17,8 +17,8 @@ DB_DIR="/home1/jongminm/sparse_kmeans/sparse_kmeans.db"
 MODEL='iso'
 CLUSTER_1_RATIO=0.5
 SEP=3
-P=10000
-T=20
+P=5000
+T=100
 delta=0
  
 # --- Ensure Base Directory Exists ---
@@ -38,7 +38,7 @@ echo "Number of samples (n): $N"
 # Loop for 'rep' (repetition) from 1 to 200
 for REP in $(seq 1 50); do
     # Loop for 'p' (number of features/dimensions)
-    for N in 6000 7000 8000 9000 10000  ; do
+    for N in 40000 60000 80000 100000  ; do
 
         # Define filenames based on current parameters
         MFILE_NAME="${TABLE_NAME}_${SEP}_n${N}_rep_${REP}" # Name without .m extension
@@ -77,10 +77,11 @@ generator = data_generator_approximately_sparse_mean(n, p, 10, sep, rep, 0.5)
  
 
 % --- Run sdp_kmeans_bandit_even_simul ---
-clusterer = sdp_kmeans_iter_knowncov_NMF(data, 2);
+clusterer = get_cluster_by_sdp_SL_NMF(data, 2);
 cluster_est=clusterer.fit_predict(${T});
 acc = get_bicluster_accuracy(cluster_est, label_true);
-table = get_database_subtable(rep, sep, 1:10,  clusterer,  acc);
+time = clusterer.time;
+table = get_database_subtable(rep, sep, 1:10,  clusterer,  acc, time);
 
 % --- Insert Results into SQLite Database ---
 % Insert the results from the bandit simulation into the specified SQLite table
@@ -104,7 +105,7 @@ EOF
 #SBATCH --ntasks=1                         # Request 1 task (process)
 #SBATCH --cpus-per-task=4                # Request 8 CPUs per task (for MATLAB's multi-threading)
 #SBATCH --mem=10G                           # Request 6 GB of memory
-#SBATCH --time=0:59:59                    # Set maximum job run time (HH:MM:SS)
+#SBATCH --time=3:59:59                    # Set maximum job run time (HH:MM:SS)
 
 # Echo start time and hostname for logging
 echo "Starting job for p=${P}, rep=${REP} on \$(hostname) at \$(date)"

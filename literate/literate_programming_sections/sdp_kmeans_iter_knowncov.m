@@ -8,6 +8,7 @@ classdef sdp_kmeans_iter_knowncov < handle
         p           % Data dimension
         cutoff      % Threshold for variable inclusion
         n_iter
+        time
   
     end
     methods
@@ -28,12 +29,15 @@ classdef sdp_kmeans_iter_knowncov < handle
         function cluster_est = get_cluster(obj, X, K)
             cluster_est = get_cluster_by_sdp(X, K);
         end
-  
+        function cluster_est = get_initial_cluster(obj, X, K)
+            cluster_est = get_cluster_by_sdp(X, K);
+        end
         function cluster_est_now = fit_predict(obj, n_iter)     
              % written 01/11/2024
-             cluster_est_now = obj.get_cluster(obj.X, obj.K); % initial clustering
-             
- obj.set_cutoff();
+             tic
+             cluster_est_now = obj.get_initial_cluster(obj.X, obj.K); % initial clustering             
+             obj.set_cutoff();
+             toc
             % iterate
             for iter = 1:n_iter
                 fprintf("\n%i th iteration\n\n", iter)
@@ -68,6 +72,7 @@ classdef sdp_kmeans_iter_knowncov < handle
                     % 3. apply SDP k-means   
                 cluster_est_now = obj.get_cluster(x_sub_now, obj.K); 
             end
+            obj.time = toc
         end % end of fit_predict
     end % end of methods
 end

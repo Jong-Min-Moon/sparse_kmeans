@@ -161,7 +161,7 @@ end
 function cluster_est = get_cluster_by_sdp_SL_NMF(X,K) 
     n = size(X,2); % Sample size
     p = size(X,1); % dimension
-    gama = 0.1;
+    gama = sqrt(n)/n;
     columns=(rand(1,n) <gama );
     q =sum(columns);  % Random select q data points
     X_hat = X(:,columns); % New matrix with dimension p*q    
@@ -301,6 +301,7 @@ classdef sdp_kmeans_iter_knowncov < handle
         p           % Data dimension
         cutoff      % Threshold for variable inclusion
         n_iter
+        time
   
     end
     methods
@@ -321,12 +322,15 @@ classdef sdp_kmeans_iter_knowncov < handle
         function cluster_est = get_cluster(obj, X, K)
             cluster_est = get_cluster_by_sdp(X, K);
         end
-  
+        function cluster_est = get_initial_cluster(obj, X, K)
+            cluster_est = get_cluster_by_sdp(X, K);
+        end
         function cluster_est_now = fit_predict(obj, n_iter)     
              % written 01/11/2024
-             cluster_est_now = obj.get_cluster(obj.X, obj.K); % initial clustering
-             
- obj.set_cutoff();
+             tic
+             cluster_est_now = obj.get_initial_cluster(obj.X, obj.K); % initial clustering             
+             obj.set_cutoff();
+             toc
             % iterate
             for iter = 1:n_iter
                 fprintf("\n%i th iteration\n\n", iter)
@@ -361,6 +365,7 @@ classdef sdp_kmeans_iter_knowncov < handle
                     % 3. apply SDP k-means   
                 cluster_est_now = obj.get_cluster(x_sub_now, obj.K); 
             end
+            obj.time = toc
         end % end of fit_predict
     end % end of methods
 end
@@ -387,16 +392,25 @@ classdef sdp_kmeans_iter_knowncov_NMF < sdp_kmeans_iter_knowncov
         end
        end
 end
-%% sdp_kmeans_iter_knowncov_SL
+%% sdp_kmeans_iter_knowncov_SL_NMF
 % @export
 classdef sdp_kmeans_iter_knowncov_SL < sdp_kmeans_iter_knowncov
        methods
     
         function obj = sdp_kmeans_iter_knowncov_SL(X, K)
             obj = obj@sdp_kmeans_iter_knowncov(X, K);
-        end        
+        end      
+        
+        function cluster_est = get_initial_cluster(obj, X, K)
+            num_components = min(200, obj.p); % You specified 200 dimensions
+            % Note: The `pca` function performs centering by default.
+            % To avoid this, we'll use singular value decomposition (SVD) directly.
+            [U, S, V] = svd( X', 'econ');
+            data_pca = obj.X' * V(:, 1:num_components);
+            cluster_est = get_cluster_by_sdp_SL_NMF(data_pca', K); % Transpose back to original format (p x n)
+        end
         function cluster_est = get_cluster(obj, X, K)
-            cluster_est = get_cluster_by_sdp_SL(X, K);
+            cluster_est = get_cluster_by_sdp_SL_NMF(X, K);
         end
        end
 end
@@ -3279,9 +3293,9 @@ CREATE TABLE table_test(
 % 
 %% get_database_subtable
 % @export
-function database_subtable = get_database_subtable(rep, Delta, support, obj, acc)
+function database_subtable = get_database_subtable(rep, Delta, support, obj, acc, time)
             s = length(support);
-            current_time = get_current_time();
+          
             
  
              
@@ -3304,7 +3318,7 @@ function database_subtable = get_database_subtable(rep, Delta, support, obj, acc
                 dummy,...                          % 11 false positive
                 dummy,...                          % 12 false negative
                 ...
-                repelem(current_time, n_row+1)', ...            % 13 timestamp
+                repelem(time, n_row+1)', ...            % 13 timestamp
                 'VariableNames', ...
                 ...  %1      2       3      4      5        6         
                 ["rep", "iter", "sep", "dim", "n", "model", ...

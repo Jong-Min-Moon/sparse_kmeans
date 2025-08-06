@@ -1,8 +1,8 @@
 %% get_database_subtable
 % @export
-function database_subtable = get_database_subtable(rep, Delta, support, obj, acc)
+function database_subtable = get_database_subtable(rep, Delta, support, obj, acc, time)
             s = length(support);
-            current_time = get_current_time();
+          
             
  
              
@@ -25,7 +25,7 @@ function database_subtable = get_database_subtable(rep, Delta, support, obj, acc
                 dummy,...                          % 11 false positive
                 dummy,...                          % 12 false negative
                 ...
-                repelem(current_time, n_row+1)', ...            % 13 timestamp
+                repelem(time, n_row+1)', ...            % 13 timestamp
                 'VariableNames', ...
                 ...  %1      2       3      4      5        6         
                 ["rep", "iter", "sep", "dim", "n", "model", ...
