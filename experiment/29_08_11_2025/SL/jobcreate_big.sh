@@ -16,9 +16,9 @@ DB_DIR="/home1/jongminm/sparse_kmeans/sparse_kmeans.db"
 # These variables will be passed into the generated MATLAB scripts
 MODEL='iso'
 CLUSTER_1_RATIO=0.5
-SEP=3
-P=5000
-T=100
+SEP=4
+P=10000
+T=30
 delta=0
  
 # --- Ensure Base Directory Exists ---
@@ -38,7 +38,7 @@ echo "Number of samples (n): $N"
 # Loop for 'rep' (repetition) from 1 to 200
 for REP in $(seq 1 50); do
     # Loop for 'p' (number of features/dimensions)
-    for N in 40000 60000 80000 100000  ; do
+    for N in  100000  ; do
 
         # Define filenames based on current parameters
         MFILE_NAME="${TABLE_NAME}_${SEP}_n${N}_rep_${REP}" # Name without .m extension
@@ -77,7 +77,7 @@ generator = data_generator_approximately_sparse_mean(n, p, 10, sep, rep, 0.5)
  
 
 % --- Run sdp_kmeans_bandit_even_simul ---
-clusterer = get_cluster_by_sdp_SL_NMF(data, 2);
+clusterer = sdp_kmeans_iter_knowncov_SL_NMF(data, 2);
 cluster_est=clusterer.fit_predict(${T});
 acc = get_bicluster_accuracy(cluster_est, label_true);
 time = clusterer.time;
@@ -103,8 +103,8 @@ EOF
 #SBATCH --partition=main                   # Specify the partition to use
 #SBATCH --nodes=1                          # Request 1 node
 #SBATCH --ntasks=1                         # Request 1 task (process)
-#SBATCH --cpus-per-task=4                # Request 8 CPUs per task (for MATLAB's multi-threading)
-#SBATCH --mem=10G                           # Request 6 GB of memory
+#SBATCH --cpus-per-task=8                # Request 8 CPUs per task (for MATLAB's multi-threading)
+#SBATCH --mem=32G                           # Request 6 GB of memory
 #SBATCH --time=3:59:59                    # Set maximum job run time (HH:MM:SS)
 
 # Echo start time and hostname for logging
