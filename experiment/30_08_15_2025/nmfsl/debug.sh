@@ -5,8 +5,8 @@ set -e
 
 # --- Configuration Variables ---
 # Base directory for experiments, MATLAB scripts, job files, and output files
-TABLE_NAME="SL"
-BASE_DIR="/home1/jongminm/sparse_kmeans/experiment/29_08_11_2025/${TABLE_NAME}"
+TABLE_NAME="nmfsl"
+BASE_DIR="/home1/jongminm/sparse_kmeans/experiment/30_08_15_2025/${TABLE_NAME}"
 # Path to the SQLite database
 DB_DIR="/home1/jongminm/sparse_kmeans/sparse_kmeans.db"
 # Table name within the SQLite database
@@ -17,8 +17,9 @@ DB_DIR="/home1/jongminm/sparse_kmeans/sparse_kmeans.db"
 MODEL='iso'
 CLUSTER_1_RATIO=0.5
 SEP=4
-P=10000
-T=30
+ N=200
+ 
+ T=100
 delta=0
  
 # --- Ensure Base Directory Exists ---
@@ -36,17 +37,18 @@ echo "Number of samples (n): $N"
 
 # --- Loop through simulation parameters ---
 # Loop for 'rep' (repetition) from 1 to 200
-for REP in $(seq 1 50); do
+for REP in $(seq 1  ); do
     # Loop for 'p' (number of features/dimensions)
-    for N in  100000  ; do
+
+    for P in  1000    ; do
 
         # Define filenames based on current parameters
-        MFILE_NAME="${TABLE_NAME}_${SEP}_n${N}_rep_${REP}" # Name without .m extension
+        MFILE_NAME="${TABLE_NAME}_${SEP}_p${P}_rep_${REP}" # Name without .m extension
         MFILE="$BASE_DIR/${MFILE_NAME}.m"
         JOBFILE="$BASE_DIR/${MFILE_NAME}.sh"
         OUTFILE="$BASE_DIR/${MFILE_NAME}.out"
 
-        echo "Generating files for n=${N}, rep=${REP}..."
+        echo "Generating files for p=${P}, rep=${REP}..."
 
         # === Create MATLAB .m file ===
         # This block writes the MATLAB code into the .m file
@@ -80,8 +82,7 @@ generator = data_generator_approximately_sparse_mean(n, p, 10, sep, rep, 0.5)
 clusterer = sdp_kmeans_iter_knowncov_SL_NMF(data, 2);
 cluster_est=clusterer.fit_predict(${T});
 acc = get_bicluster_accuracy(cluster_est, label_true);
-time = clusterer.time;
-table = get_database_subtable(rep, sep, 1:10,  clusterer,  acc, time);
+table = get_database_subtable(rep, sep, 1:10,  clusterer,  acc);
 
 % --- Insert Results into SQLite Database ---
 % Insert the results from the bandit simulation into the specified SQLite table
@@ -100,12 +101,12 @@ EOF
 #!/bin/bash
 #SBATCH --job-name=${TABLE_NAME}_p${P}_rep${REP} # Job name for easier identification in queue
 #SBATCH --output="${OUTFILE}"              # Standard output and error log file
-#SBATCH --partition=main                   # Specify the partition to use
+#SBATCH --partition=debug                   # Specify the partition to use
 #SBATCH --nodes=1                          # Request 1 node
 #SBATCH --ntasks=1                         # Request 1 task (process)
-#SBATCH --cpus-per-task=8                # Request 8 CPUs per task (for MATLAB's multi-threading)
-#SBATCH --mem=32G                           # Request 6 GB of memory
-#SBATCH --time=3:59:59                    # Set maximum job run time (HH:MM:SS)
+#SBATCH --cpus-per-task=2                 # Request 8 CPUs per task (for MATLAB's multi-threading)
+#SBATCH --mem=2G                           # Request 6 GB of memory
+#SBATCH --time=0:59:59                    # Set maximum job run time (HH:MM:SS)
 
 # Echo start time and hostname for logging
 echo "Starting job for p=${P}, rep=${REP} on \$(hostname) at \$(date)"
