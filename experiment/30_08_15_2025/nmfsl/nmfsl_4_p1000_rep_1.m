@@ -24,10 +24,13 @@ generator = data_generator_approximately_sparse_mean(n, p, 10, sep, rep, 0.5)
  
 
 % --- Run sdp_kmeans_bandit_even_simul ---
+tic;
 clusterer = sdp_kmeans_iter_knowncov_SL_NMF(data, 2);
+
 cluster_est=clusterer.fit_predict(100);
-acc = get_bicluster_accuracy(cluster_est, label_true);
-table = get_database_subtable(rep, sep, 1:10,  clusterer,  acc);
+acc = get_bicluster_accuracy(cluster_est, label_true)
+timing = toc;
+table = get_database_subtable(rep, sep, 1:10,  clusterer,  acc, timing);
 
 % --- Insert Results into SQLite Database ---
 % Insert the results from the bandit simulation into the specified SQLite table

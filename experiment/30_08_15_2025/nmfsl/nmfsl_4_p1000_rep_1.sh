@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=nmfsl_p1000_rep1 # Job name for easier identification in queue
 #SBATCH --output="/home1/jongminm/sparse_kmeans/experiment/30_08_15_2025/nmfsl/nmfsl_4_p1000_rep_1.out"              # Standard output and error log file
-#SBATCH --partition=debug                   # Specify the partition to use
+#SBATCH --partition=main                   # Specify the partition to use
 #SBATCH --nodes=1                          # Request 1 node
 #SBATCH --ntasks=1                         # Request 1 task (process)
 #SBATCH --cpus-per-task=2                 # Request 8 CPUs per task (for MATLAB's multi-threading)

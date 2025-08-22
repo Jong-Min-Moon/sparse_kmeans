@@ -15,7 +15,7 @@ TABLE_NAME="bandit_thinning_new"
 # These variables will be passed into the generated MATLAB scripts
 MODEL='iso'
 CLUSTER_1_RATIO=0.5
-SEP=4
+SEP=5
 N=200
 T=2000
 # --- Ensure Base Directory Exists ---
@@ -35,7 +35,7 @@ echo "Number of samples (n): $N"
 # Loop for 'rep' (repetition) from 1 to 200
 for REP in $(seq 1 100); do
     # Loop for 'p' (number of features/dimensions)
-    for P in    6000; do
+    for P in    1000 2000 3000 4000 5000; do
 
         # Define filenames based on current parameters
         MFILE_NAME="bandit_thinning_sep${SEP}_p${P}_rep_${REP}" # Name without .m extension
