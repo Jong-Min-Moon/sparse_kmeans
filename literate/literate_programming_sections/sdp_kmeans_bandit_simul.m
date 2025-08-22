@@ -9,7 +9,7 @@ classdef sdp_kmeans_bandit_simul  < sdp_kmeans_bandit
             obj = obj@sdp_kmeans_bandit(X, number_cluster);
             
         end
-        function fit_predict(obj, n_iter, cluster_true)
+        function cluster_est_final = fit_predict(obj, n_iter, cluster_true)
             obj.n_iter = n_iter;
             obj.set_bayesian_parameters();
             obj.initialize_cluster_est();
@@ -31,6 +31,7 @@ classdef sdp_kmeans_bandit_simul  < sdp_kmeans_bandit
             X_sub_final = obj.X(final_selection, :);
             obj.cluster_est = obj.get_cluster(X_sub_final, obj.K);
             obj.evaluate_accuracy(obj.cluster_est, cluster_true, obj.n_iter + 1);
+            cluster_est_final = obj.cluster_est;
         end
         
         function evaluate_accuracy(obj, cluster_est, cluster_true, iter)
