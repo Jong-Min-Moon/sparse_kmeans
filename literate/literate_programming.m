@@ -1872,11 +1872,10 @@ classdef sdp_kmeans_bandit_thinning_simul  < sdp_kmeans_bandit_simul
             X_sub_cluetering = X_sub + noise_new; 
             X_sub_variable_selection = X_sub - noise_new;
             % clustering
-            obj.cluster_est_dict(iter) = obj.get_cluster(X_sub_cluetering, obj.K);
-            cluster_labels = obj.cluster_est_dict(iter).cluster_info_vec;
-            
+            obj.cluster_est = obj.get_cluster(X_sub_cluetering, obj.K);
+             
             % variable selection
-            A_double = get_assignment_matrix(obj.n, obj.K, cluster_labels);
+            A_double = get_assignment_matrix(obj.n, obj.K, obj.cluster_est);
             % Calculate the sum of each feature's values within each cluster
             % Resulting matrix 'cluster_sums' will be (num_selected_features x K)
             cluster_sums = X_sub_variable_selection * A_double; 
