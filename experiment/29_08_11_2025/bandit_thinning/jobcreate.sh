@@ -17,7 +17,7 @@ MODEL='iso'
 CLUSTER_1_RATIO=0.5
 SEP=5
 N=200
-T=2000
+T=500
 # --- Ensure Base Directory Exists ---
 # Create the base directory if it doesn't already exist
 mkdir -p "$BASE_DIR"
@@ -78,7 +78,7 @@ label_true = label_true';
 
 % --- Run sdp_kmeans_bandit_even_simul ---
 % Initialize and run the bandit k-means simulation
-bandit = sdp_kmeans_bandit_thinning_simul(data, 2);
+bandit = sdp_kmeans_bandit_thinning_nmf_simul(data, 2);
 bandit.fit_predict(${T}, label_true);
 
 % --- Insert Results into SQLite Database ---

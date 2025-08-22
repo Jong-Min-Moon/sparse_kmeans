@@ -18,38 +18,33 @@ classdef sdp_kmeans_bandit_simul  < sdp_kmeans_bandit
                 variable_subset_now = obj.choose();
                 obj.entries_survived(i, :) = variable_subset_now;
                 arms_pulled = mat2str(find(variable_subset_now));
-                disp(['Iteration ', num2str(i), ' - arms pulled: ', arms_pulled(1:20)]);
+                disp(['Iteration ', num2str(i), ' - arms pulled: ', arms_pulled(1: min(20, size(arms_pulled,2)))]);
                 disp(['number of arms pulled: ', mat2str(sum(variable_subset_now))]);
                 reward_now = obj.reward(variable_subset_now, i);
                 obj.update(variable_subset_now, reward_now);
-                obj.evaluate_accuracy(cluster_true, i);
+                obj.evaluate_accuracy(obj.cluster_est, cluster_true, i);
             end
             
             %final clustering
             final_selection = obj.signal_entry_est;
-            obj.entries_survived(obj.n_iter + 1, :) = final_selection;
+ 
             X_sub_final = obj.X(final_selection, :);
-            obj.cluster_est_dict(obj.n_iter + 1) = obj.get_cluster(X_sub_final, obj.K);
-            obj.evaluate_accuracy(cluster_true, obj.n_iter + 1);
+            obj.cluster_est = obj.get_cluster(X_sub_final, obj.K);
+            obj.evaluate_accuracy(obj.cluster_est, cluster_true, obj.n_iter + 1);
         end
         
-        function evaluate_accuracy(obj, cluster_true, iter)
-            cluster_est_now = obj.cluster_est_dict(iter);
-            obj.acc_dict(iter) = cluster_est_now.evaluate_accuracy(cluster_true);
+        function evaluate_accuracy(obj, cluster_est, cluster_true, iter)
+             obj.acc_dict(iter) = get_bicluster_accuracy(cluster_est, cluster_true);
             obj.acc_dict(iter)
         end % end of method evaluate_accuracy
         function initialize_saving_matrix(obj)
-            obj.x_tilde_est       = zeros(obj.p, obj.n, obj.n_iter);
-            obj.omega_est_time    = zeros(obj.n_iter, 1);
+             obj.omega_est_time    = zeros(obj.n_iter, 1);
             obj.sdp_solve_time    = zeros(obj.n_iter, 1);
-            obj.entries_survived  = zeros(obj.n_iter+1, obj.p);
-            obj.obj_val_prim      = zeros(obj.n_iter, 1);
+             obj.obj_val_prim      = zeros(obj.n_iter, 1);
             obj.obj_val_dual      = zeros(obj.n_iter, 1);
             obj.obj_val_original  = zeros(obj.n_iter, 1);
         end
-        function cluster_est_obj = fetch_cluster_est(obj,iter)
-            cluster_est_obj = obj.cluster_est_dict(iter);
-        end
+      
         function database_subtable = get_database_subtable(obj, rep, Delta, support)
             s = length(support);
             current_time = get_current_time();
@@ -106,14 +101,7 @@ classdef sdp_kmeans_bandit_simul  < sdp_kmeans_bandit
                 survived_indices(i) = get_num2str_with_mark( find(positive_vec), ',');
             end
         end % end of evaluate_discovery
-        function cluster_string_vec = get_cluster_string_dict(obj)
-            cluster_string_vec = containers.Map(1:(obj.n_iter+1), repelem("", obj.n_iter+1));     
-            for iter = 1:(obj.n_iter+1)
-                cluster_est_now = obj.fetch_cluster_est(iter);
-                cluster_string_vec(iter) = cluster_est_now.cluster_info_string;
-            end % end of for loop
-        end% end of cluster_string_vec   
-     
+  
     
     end % end of method
 end % end of class

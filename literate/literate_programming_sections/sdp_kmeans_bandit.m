@@ -11,9 +11,9 @@ classdef sdp_kmeans_bandit < handle
         beta        % Beta parameters of Beta prior
         pi
         acc_dict
-        cluster_est_dict
         signal_entry_est
         n_iter
+        cluster_est
         x_tilde_est       
         omega_est_time    
         sdp_solve_time    
@@ -50,7 +50,7 @@ classdef sdp_kmeans_bandit < handle
             fprintf("initialization done\n")
             for i = 1:n_iter
                 variable_subset_now = obj.choose();
-                disp(['Iteration ', num2str(i), ' - arms pulled: ', mat2str(find(variable_subset_now)), '\n']);
+                %disp(['Iteration ', num2str(i), ' - arms pulled: ', mat2str(find(variable_subset_now)), '\n']);
                 disp(['number of arms pulled: ', mat2str(sum(variable_subset_now)), '\n']);
                 reward_now = obj.reward(variable_subset_now, i);
                 obj.update(variable_subset_now, reward_now);
@@ -58,7 +58,7 @@ classdef sdp_kmeans_bandit < handle
             %final clustering
             final_selection = obj.signal_entry_est;
             X_sub_final = obj.X(final_selection, :);
-            obj.cluster_est_dict(obj.n_iter + 1) = obj.get_cluster(X_sub_final, obj.K);
+            obj.cluster_est = obj.get_cluster(X_sub_final, obj.K);
             % ... all existing code ...
         total_fit_predict_time = toc; % End timing for the entire fit_predict method            
         fprintf('Total fit_predict time: %.4f seconds\n', total_fit_predict_time);
@@ -68,9 +68,7 @@ classdef sdp_kmeans_bandit < handle
             cluster_est = get_cluster_by_sdp(X, K);
         end
         function initialize_cluster_est(obj)
-            cluster_est_dummy   = cluster_est( repelem(1,obj.n) );
-            obj.cluster_est_dict = repelem(cluster_est_dummy, obj.n_iter+1); %dummy
-            obj.acc_dict = containers.Map(1:(obj.n_iter+1), repelem(0, obj.n_iter+1)); 
+              obj.acc_dict = containers.Map(1:(obj.n_iter+1), repelem(0, obj.n_iter+1)); 
         end
         function variable_subset = choose(obj)
             theta = betarnd(obj.alpha, obj.beta);
@@ -80,10 +78,10 @@ classdef sdp_kmeans_bandit < handle
         function reward_vec = reward(obj, variable_subset, iter)
             % Use only selected variables
             X_sub = obj.X(variable_subset, :);
-            obj.cluster_est_dict(iter) = obj.get_cluster(X_sub, obj.K);
+            obj.cluster_est  = obj.get_cluster(X_sub, obj.K);
             % Assume K = 2
-            sample_cluster_1 = X_sub(:, obj.cluster_est_dict(iter).cluster_info_vec == 1);
-            sample_cluster_2 = X_sub(:, obj.cluster_est_dict(iter).cluster_info_vec == 2);
+            sample_cluster_1 = X_sub(:, obj.cluster_est == 1);
+            sample_cluster_2 = X_sub(:, obj.cluster_est == 2);
             %size(sample_cluster_1, 2)
             %size(sample_cluster_2, 2)
             reward_vec = zeros(1, obj.p);
@@ -98,6 +96,7 @@ classdef sdp_kmeans_bandit < handle
                 ); % 
                 reward_vec(i) = pval < 0.01;
             end
+            disp(['number of rewarded pulls: ', mat2str(sum(reward_vec))]);
             
      
         end % end of method reward
