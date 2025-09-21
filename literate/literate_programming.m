@@ -3325,7 +3325,7 @@ CREATE TABLE table_test(
 % 
 %% get_database_subtable
 % @export
-function database_subtable = get_database_subtable(rep, Delta, support, obj, acc, time)
+function database_subtable = get_database_subtable(rep, Delta, support, p, n, acc, time)
             s = length(support);
           
             
@@ -3337,8 +3337,8 @@ function database_subtable = get_database_subtable(rep, Delta, support, obj, acc
                 repelem(rep, n_row+1)',...                      % 01 replication number
                 (1:(n_row+1))',...                              % 02 step iteration number
                 repelem(Delta, n_row+1)',...                    % 03 separation
-                repelem(obj.p, n_row+1)',...                    % 04 data dimension
-                repelem(obj.n, n_row+1)',...                      % 05 sample size
+                repelem(p, n_row+1)',...                    % 04 data dimension
+                repelem(n, n_row+1)',...                      % 05 sample size
                 repelem(s, n_row+1)',...                        % 06 model
                 ...
                 repelem(acc, n_row+1)',...             % 07 accuracy
