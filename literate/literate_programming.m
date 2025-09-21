@@ -574,7 +574,7 @@ function [intercept, residual] = get_intercept_residual_lasso_adaptive(response,
   
 model_lasso = glm_gaussian(response, predictor); 
     
-    fit = penalized(model,@p_adaptive, "gamma", 1:-0.2:0.01, "adaptivewt",  {beta_ols}); % Fit adaptive lasso
+    fit = penalized(model_lasso, @p_adaptive, "gamma", 1:-0.2:0.01, "adaptivewt",  {beta_ols}); % Fit adaptive lasso
     
     % Select model with minimum AIC
     AIC = goodness_of_fit('aic', fit);
