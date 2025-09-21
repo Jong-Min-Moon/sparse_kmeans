@@ -1,4 +1,4 @@
-%% ISEE_kmeans_clean
+%% ISEE_kmeans_clean_adaptive
 % @export
 % 
 % 
@@ -31,7 +31,7 @@
 % %   cluster_estimate - Final cluster assignment (1 × n)
 % 
 % 
-function cluster_estimate = ISEE_kmeans_clean(x, k, n_iter, is_parallel, loop_detect_start, window_size, min_delta)
+function cluster_estimate = ISEE_kmeans_clean_adaptive(x, k, n_iter, is_parallel, loop_detect_start, window_size, min_delta)
     % Initialize tracking vectors
     obj_sdp = nan(1, n_iter);
     obj_lik = nan(1, n_iter);
@@ -39,7 +39,7 @@ function cluster_estimate = ISEE_kmeans_clean(x, k, n_iter, is_parallel, loop_de
     cluster_estimate = cluster_spectral(x, k);
     for iter = 1:n_iter
         % One step of ISEE-based k-means refinement
-        [cluster_estimate, s_hat,  obj_sdp(iter), obj_lik(iter)]  = ISEE_kmeans_clean_onestep(x, k, cluster_estimate, is_parallel);
+        [cluster_estimate, s_hat,  obj_sdp(iter), obj_lik(iter)]  = ISEE_kmeans_clean_onestep_adaptive(x, k, cluster_estimate, is_parallel);
         fprintf('Iteration %d | SDP obj: %.4f | Likelihood obj: %.4f\n', iter, obj_sdp(iter), obj_lik(iter));
         % Compute objective values
         
@@ -50,5 +50,4 @@ function cluster_estimate = ISEE_kmeans_clean(x, k, n_iter, is_parallel, loop_de
         end
     end
 end
-%% 
 %% 

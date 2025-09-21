@@ -550,6 +550,42 @@ model_lasso = glm_gaussian(response, predictor);
 end
 %% 
 % 
+%% get_intercept_residual_lasso_adaptive
+% @export
+% 
+% Computes the intercept and residuals from a Lasso-penalized linear regression. 
+% Given a response vector and a predictor matrix, the predictor matrix is automatically 
+% standardized before fitting. This function fits a Lasso with many values of 
+% $\lambda$, selects the model with the lowest AIC, extracts the intercept and 
+% slope coefficients, and returns the residuals.
+% 
+% 
+% 
+% INPUTS:
+%% 
+% * response  - An n-by-1 vector of response values.
+% * predictor - An n-by-p matrix of predictor variables.
+%% 
+% OUTPUTS:
+%% 
+% * Intercept - The scalar intercept term from the selected Lasso model.
+% * residual  - An n-by-1 vector of residuals from the fitted model.
+function [intercept, residual] = get_intercept_residual_lasso_adaptive(response, predictor)                 
+  
+model_lasso = glm_gaussian(response, predictor); 
+    
+    fit = penalized(model,@p_adaptive, "gamma", 1:-0.2:0.01, "adaptivewt",  {beta_ols}); % Fit adaptive lasso
+    
+    % Select model with minimum AIC
+    AIC = goodness_of_fit('aic', fit);
+    [~, min_aic_idx] = min(AIC);
+    beta = fit.beta(:,min_aic_idx);
+    % Extract intercept and slope
+    intercept = beta(1);
+    slope = beta(2:end);
+    % Compute residual
+    residual = response - intercept - predictor * slope;
+end
 %% test_get_intercept_residual_lasso
 % @export
 function test_get_intercept_residual_lasso()
@@ -673,8 +709,90 @@ function [mean_vec, noise_mat, Omega_diag_hat, mean_mat] = ISEE_bicluster_parall
 end
 %% 
 % 
+%% ISEE_bicluster_parallel_adaptive
+% @export
 % 
+% Inputs
+%% 
+% * x: $p\times n$ data matrix, where $p$ is the data dimension and $n$ is the 
+% sample size
+% * cluster_est_now: $n$ array of positive integers, where n is the sample size. 
+% ex. [1 2 1 2 3 4 2 ]
+%% 
+% Outputs
+%% 
+% * mean_now: $p\times n$ matrix of  cluster center part of the innovated data 
+% matrix (pre-multiplied by precision matrix), where $p$ is the data dimension 
+% and $n$ is the sample size
+% * noise_now: $p\times n$ matrix of Gaussian noise part of the data matrix 
+% (pre-multiplied by precision matrix), where $p$ is the data dimension and $n$ 
+% is the sample size
+% * Omega_diag_hat: $p$ vector of diagonal entries of precision matrix 
+%% 
 % 
+function [mean_vec, noise_mat, Omega_diag_hat, mean_mat] = ISEE_bicluster_parallel_adaptive(x, cluster_est_now)
+%ISEE_BICLUSTER_PARALLEL Estimates means and noise using blockwise Lasso regressions.
+% 
+% INPUT:
+%   x               - p × n data matrix
+%   cluster_est_now - 1 × n vector of cluster labels (must be 1 or 2)
+%
+% OUTPUT:
+%   mean_vec        - p × 2 matrix; each column is the estimated mean vector for one cluster
+%   noise_mat       - p × n matrix of estimated noise values
+%   Omega_diag_hat  - p × 1 vector of estimated diagonals of precision matrix
+%   mean_mat        - p × n matrix of cluster-wise sample means
+    [p, n] = size(x);
+    n_regression = floor(p / 2);
+    mean_vec = zeros(p, 2);
+    noise_mat = zeros(p, n);
+    Omega_diag_hat = zeros(p, 1);
+    % Preallocate output pieces for parfor
+    mean_vec_parts = cell(n_regression, 1);
+    noise_mat_parts = cell(n_regression, 1);
+    Omega_diag_parts = cell(n_regression, 1);
+    parfor i = 1:n_regression
+        rows_idx = [2*i - 1, 2*i];
+        predictors_idx = true(1, p);
+        predictors_idx(rows_idx) = false;
+        E_Al = zeros(2, n);
+        alpha_Al = zeros(2, 2);
+        for c = 1:2
+            cluster_mask = (cluster_est_now == c);
+            x_cluster = x(:, cluster_mask);
+            predictor_now = x_cluster(predictors_idx, :)';
+            for j = 1:2
+                row_idx = rows_idx(j);
+                response_now = x_cluster(row_idx, :)';
+                [intercept, residual] = get_intercept_residual_lasso_adaptive(response_now, predictor_now);
+                E_Al(j, cluster_mask) = residual;
+                alpha_Al(j, c) = intercept;
+            end
+        end
+        Omega_hat_Al = inv(E_Al * E_Al') * n;
+        % Store only the 2-row results
+        mean_local = Omega_hat_Al * alpha_Al;  % 2 × 2
+        noise_local = Omega_hat_Al * E_Al;     % 2 × n
+        diag_local = diag(Omega_hat_Al);       % 2 × 1
+        % Store using structs
+        mean_vec_parts{i} = struct('idx', rows_idx, 'val', mean_local);
+        noise_mat_parts{i} = struct('idx', rows_idx, 'val', noise_local);
+        Omega_diag_parts{i} = struct('idx', rows_idx, 'val', diag_local);
+    end
+    % Aggregate results after parfor
+    for i = 1:n_regression
+        idx = mean_vec_parts{i}.idx;
+        mean_vec(idx, :) = mean_vec_parts{i}.val;
+        noise_mat(idx, :) = noise_mat_parts{i}.val;
+        Omega_diag_hat(idx) = Omega_diag_parts{i}.val;
+    end
+    % Construct sample-wise mean matrix
+    mean_mat = zeros(p, n);
+    for c = 1:2
+        cluster_mask = (cluster_est_now == c);
+        mean_mat(:, cluster_mask) = repmat(mean_vec(:, c), 1, sum(cluster_mask));
+    end
+end
 %% 
 %% select_variable_ISEE_noisy
 % @export
@@ -802,95 +920,7 @@ function test_variable_selection_noisy()
     end
     fprintf('\n✓ Full variable selection robustness evaluation completed.\n');
 end
-%% test_variable_selection_clean
-% @export
-function test_variable_selection_clean()
-%TEST_ISEE_VARIABLE_SELECTION_VS_FLIP
-%   Evaluates variable selection robustness to clustering error at flip ratios 0.1, 0.2, 0.3
-    rng(1);
-    % Parameters
-    p = 800;
-    n = 200;
-    s = 10;
-    n_trials = 20;
-    flip_ratios = [0.2, 0.3, 0.4];
-    [X, label_true, mu1, mu2, sep, ~, beta_star]  = generate_gaussian_data(n, p, 4, 'chain45', 1, 1/2);
-    % Selection threshold
-    % Header
-    fprintf('%10s  %5s  %5s  %5s  %6s  %6s\n', 'FlipRatio', 'TP', 'FN', 'FP', 'TPR', 'FPR');
-    fprintf('%s\n', repmat('-', 1, 40));
-    % Loop over flip ratios
-    for flip_ratio = flip_ratios
-        TPs = zeros(n_trials, 1);
-        FNs = zeros(n_trials, 1);
-        FPs = zeros(n_trials, 1);
-        for t = 1:n_trials
-            % Perturb cluster labels
-            cluster_estimate = label_true';
-            flip_idx = randperm(n, round(flip_ratio * n));
-            cluster_estimate(flip_idx) = 3 - cluster_estimate(flip_idx);
-            get_bicluster_accuracy(cluster_estimate,label_true')
-            % Run estimator
-            [mean_vec, ~, ~, ~] = ISEE_bicluster_parallel(X', cluster_estimate);
-            selected = select_variable_ISEE_clean(mean_vec, n);
-            TP = sum(selected(1:s));
-            FN = s - TP;
-            FP = sum(selected(s+1:end));
-            TPs(t) = TP;
-            FNs(t) = FN;
-            FPs(t) = FP;
-        end
-        % Aggregate
-        avg_TP = mean(TPs);
-        avg_FN = mean(FNs);
-        avg_FP = mean(FPs);
-        TPR = avg_TP / s;
-        FPR = avg_FP / (p - s);
-        % Report
-        fprintf('%10.1f  %5.2f  %5.2f  %5.2f  %6.2f  %6.2f\n', ...
-            flip_ratio, avg_TP, avg_FN, avg_FP, TPR, FPR);
-    end
-    fprintf('\n✓ Full variable selection robustness evaluation completed.\n');
-end
 %% 
-% 
-% 
-% 
-%% test_variable_selection_clean_spectral
-% @export
-function test_variable_selection_clean_spectral()
-%TEST_ISEE_VARIABLE_SELECTION_VS_FLIP
-%   Evaluates variable selection robustness to clustering error at flip ratios 0.1, 0.2, 0.3
-    rng(1);
-    % Parameters
-    p = 800;
-    n = 200;
-    s = 10;
-    rho = 0.5;
- 
-    % Generate true precision matrix (tridiagonal)
-    [X, label_true, mu1, mu2, sep, ~, beta_star]  = generate_gaussian_data(n, p, 4, 'ER', 1, 1/2);
-    % Selection threshold
-    threshold = sqrt(log(p) * log(n) / n);
-    fprintf('Selection threshold: %.4f\n\n', threshold);
-    % Header
-    fprintf('%10s  %5s  %5s  %5s  %6s  %6s\n', 'FlipRatio', 'TP', 'FN', 'FP', 'TPR', 'FPR');
-    fprintf('%s\n', repmat('-', 1, 40));
-    % Loop over flip ratios
-            % Perturb cluster labels
-            cluster_est = cluster_spectral(X', 2);
-            % Run estimator
-            [mean_vec, ~, ~, ~] = ISEE_bicluster_parallel(X', cluster_est);
-            selected = select_variable_ISEE_clean(mean_vec, n);
-            TP = sum(selected(1:s));
-            FN = s - TP;
-            FP = sum(selected(s+1:end));
-     
-        % Report
-        fprintf('  %5.2f  %5.2f  \n', ...
-             TP , FN, FP);
-    fprintf('\n✓ Full variable selection robustness evaluation completed.\n');
-end
 %% SDP clustering
 % 
 % 
@@ -1065,6 +1095,35 @@ function [cluster_est_new, s_hat, obj_sdp, obj_lik]  = ISEE_kmeans_clean_onestep
     [cluster_est_new, obj_sdp, obj_lik]  = cluster_SDP_noniso(x, K, mean_mat, noise_mat, cluster_est_prev, s_hat);
 end
 %% 
+%% ISEE_kmeans_clean_onestep_adaptive
+% @export
+% 
+% inputs
+%% 
+% * x: $p\times n$ data matrix, where $p$ is the data dimension and $n$ is the 
+% sample size
+% * K: positive integer. number of clusters.
+% * cluster_est_prev: $n$ array of positive integers, where n is the sample 
+% size. Cluster estimate from the prevous step. ex. [1 2 1 2 3 4 2 ]
+% * is_parallel : boolean. true if using parallel computing in matlab.
+%% 
+% outputs
+%% 
+% * cluster_est_new: $n$ array of positive integers, where n is the sample size. 
+% News cluster estimate. ex. [1 2 1 2 3 4 2 ]
+function [cluster_est_new, s_hat, obj_sdp, obj_lik]  = ISEE_kmeans_clean_onestep_adaptive(x, K, cluster_est_prev, is_parallel)
+%estimation
+    if is_parallel
+        [mean_vec, noise_mat, Omega_diag_hat, mean_mat]  = ISEE_bicluster_parallel_adaptive(x, cluster_est_prev);
+    else
+        [mean_vec, noise_mat, Omega_diag_hat, mean_mat]  = ISEE_bicluster_parallel_adaptive(x, cluster_est_prev);
+    end
+%variable selection
+    n= size(x,2);
+    s_hat = select_variable_ISEE_clean(mean_vec, n);
+%clustering
+    [cluster_est_new, obj_sdp, obj_lik]  = cluster_SDP_noniso(x, K, mean_mat, noise_mat, cluster_est_prev, s_hat);
+end
 %% ISEE_kmeans_clean
 % @export
 % 
@@ -1117,6 +1176,61 @@ function cluster_estimate = ISEE_kmeans_clean(x, k, n_iter, is_parallel, loop_de
         end
     end
 end
+%% 
+%% 
+%% ISEE_kmeans_clean_adaptive
+% @export
+% 
+% 
+% 
+% % ISEE_kmeans_clean - Iterative clustering using ISEE-based refinement and 
+% early stopping
+% 
+% %
+% 
+% % Inputs:
+% 
+% %   x                - Data matrix (p × n)
+% 
+% %   k                - Number of clusters
+% 
+% %   n_iter           - Maximum number of iterations
+% 
+% %   is_parallel      - Logical flag for parallel execution
+% 
+% %   loop_detect_start - Iteration to start loop detection
+% 
+% %   window_size      - Number of steps used for stagnation detection
+% 
+% %   min_delta        - Minimum improvement required to continue iterating
+% 
+% %
+% 
+% % Output:
+% 
+% %   cluster_estimate - Final cluster assignment (1 × n)
+% 
+% 
+function cluster_estimate = ISEE_kmeans_clean_adaptive(x, k, n_iter, is_parallel, loop_detect_start, window_size, min_delta)
+    % Initialize tracking vectors
+    obj_sdp = nan(1, n_iter);
+    obj_lik = nan(1, n_iter);
+    % Initial cluster assignment using spectral clustering
+    cluster_estimate = cluster_spectral(x, k);
+    for iter = 1:n_iter
+        % One step of ISEE-based k-means refinement
+        [cluster_estimate, s_hat,  obj_sdp(iter), obj_lik(iter)]  = ISEE_kmeans_clean_onestep_adaptive(x, k, cluster_estimate, is_parallel);
+        fprintf('Iteration %d | SDP obj: %.4f | Likelihood obj: %.4f\n', iter, obj_sdp(iter), obj_lik(iter));
+        % Compute objective values
+        
+        % Early stopping condition
+        is_stop = decide_stop(obj_sdp, obj_lik, loop_detect_start, window_size, min_delta);
+        if is_stop
+            break;
+        end
+    end
+end
+%% 
 %% Algorithm - stopping criterion
 % 
 %% get_sdp_objective
@@ -2825,6 +2939,64 @@ fprintf('Iteration %d | SDP obj: %.4f | Likelihood obj: %.4f | TP: %d | FP: %d |
 end
 %% 
 % 
+%% ISEE_kmeans_clean_simul_adaptive
+% @export
+function cluster_estimate = ISEE_kmeans_clean_simul_adaptive(x, k, n_iter, is_parallel, loop_detect_start, window_size, min_delta, db_dir, table_name, rep, model, sep, cluster_true)
+% ISEE_kmeans_clean - Runs iterative clustering with early stopping and logs results to SQLite DB
+    [p, n] = size(x);  % Get dimensions
+    obj_sdp = nan(1, n_iter);
+    obj_lik = nan(1, n_iter);
+    % Initialize cluster assignment
+    cluster_estimate = sdp_kmeans(x, k);
+    for iter = 1:n_iter
+        [cluster_estimate, s_hat, obj_sdp(iter), obj_lik(iter)] = ISEE_kmeans_clean_onestep_adaptive(x, k, cluster_estimate, is_parallel);
+       %%%%%%%%%%%%%%%% simul part starts
+        TP = sum(s_hat(1:10));
+        FP = sum(s_hat) - TP;
+        FN = 10 - TP;
+acc = get_bicluster_accuracy(cluster_estimate, cluster_true);  % define this if needed
+fprintf('Iteration %d | SDP obj: %.4f | Likelihood obj: %.4f | TP: %d | FP: %d | FN: %d | Acc: %.4f\n', ...
+    iter, obj_sdp(iter), obj_lik(iter), TP, FP, FN, acc);
+    
+    % === Insert into SQLite database ===
+    jobdate = datetime('now', 'Format', 'yyyy-MM-dd HH:mm:ss');
+    max_attempts = 10;
+    pause_time = 5;
+    attempt = 1;
+    
+    while attempt <= max_attempts
+        try
+            conn = sqlite(db_dir, 'connect');
+            insert_query = sprintf([ ...
+                'INSERT INTO %s (rep, iter, sep, dim, n, model, acc, obj_sdp, obj_lik, true_pos, false_pos, false_neg, jobdate) ' ...
+                'VALUES (%d, %d, %d, %d, %d, "%s", %.6f, %.6f, %.6f, %d, %d, %d, "%s")'], ...
+                table_name, rep, iter, sep, p, n, model, acc, obj_sdp(iter), obj_lik(iter), TP, FP, FN, char(jobdate));
+            exec(conn, insert_query);
+            close(conn);
+            fprintf('Inserted result successfully on attempt %d.\n', attempt);
+            break;
+        catch ME
+            if contains(ME.message, 'database is locked')
+                fprintf('Database locked. Attempt %d/%d. Retrying in %d seconds...\n', ...
+                        attempt, max_attempts, pause_time);
+                pause(pause_time);
+                attempt = attempt + 1;
+            else
+                rethrow(ME);
+            end
+        end
+    end
+    if attempt > max_attempts
+        error('Failed to insert after %d attempts due to persistent database lock.', max_attempts);
+    end
+    %%%%%%%%%%%%% simul part ends
+       % Early stopping condition
+        is_stop = decide_stop(obj_sdp, obj_lik, loop_detect_start, window_size, min_delta);
+        if is_stop
+            break;
+        end
+    end
+end
 %% Baseline methods
 %% ifpca
 % @export
