@@ -20,7 +20,7 @@
 % * residual  - An n-by-1 vector of residuals from the fitted model.
 function [intercept, residual] = get_intercept_residual_lasso_adaptive(response, predictor)                 
   
-[intercept, slope] = fit_elasticNet(X,y);
+[intercept, slope] = fit_elasticNet(predictor,response);
  
  
     % Compute residual
