@@ -21,7 +21,8 @@
 function [intercept, residual] = get_intercept_residual_lasso_adaptive(response, predictor)                 
   size(predictor)
   size(response)
-[intercept, slope] = fit_elasticNet_tune(predictor,response);
+[slope, intercept] = fit_elasticNet_tune(predictor,response);
+slope = slope';
  
  
     % Compute residual
