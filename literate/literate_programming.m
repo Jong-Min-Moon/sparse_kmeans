@@ -550,9 +550,9 @@ model_lasso = glm_gaussian(response, predictor);
 end
 %% 
 % 
-%% fit_elasticNet
+%% fit_elasticNet_tune
 % @export
-function [bestBeta, bestIntercept] = fit_elasticNet(X, y)
+function [bestBeta, bestIntercept] = fit_elasticNet_tune(X, y)
 %TUNELASSO Fit LASSO models over a grid of alpha values and select best by CV MSE
 %
 %   [bestBeta, bestIntercept, bestAlpha, bestMSE] = tuneLasso(X, y)
@@ -609,8 +609,9 @@ end
 % * Intercept - The scalar intercept term from the selected Lasso model.
 % * residual  - An n-by-1 vector of residuals from the fitted model.
 function [intercept, residual] = get_intercept_residual_lasso_adaptive(response, predictor)                 
-  
-[intercept, slope] = fit_elasticNet(predictor,response);
+  predictor
+  response
+[intercept, slope] = fit_elasticNet_tune(predictor,response);
  
  
     % Compute residual
