@@ -1,6 +1,6 @@
 %% fit_elasticNet
 % @export
-function [bestBeta, bestIntercept, bestAlpha, bestMSE] = fit_elasticNet(X, y)
+function [bestBeta, bestIntercept] = fit_elasticNet(X, y)
 %TUNELASSO Fit LASSO models over a grid of alpha values and select best by CV MSE
 %
 %   [bestBeta, bestIntercept, bestAlpha, bestMSE] = tuneLasso(X, y)
