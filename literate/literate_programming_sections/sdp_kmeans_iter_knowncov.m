@@ -32,16 +32,17 @@ classdef sdp_kmeans_iter_knowncov < handle
         function cluster_est = get_initial_cluster(obj, X, K)
             cluster_est = get_cluster_by_sdp(X, K);
         end
-        function cluster_est_now = fit_predict(obj, n_iter)     
+        function cluster_est_now = fit_predict(obj, n_iter, loop_detect_start, window_size, min_delta)     
              % written 01/11/2024
              tic
              cluster_est_now = obj.get_initial_cluster(obj.X, obj.K); % initial clustering             
              obj.set_cutoff();
              toc
             % iterate
-            rand_score = 0;
+            is_stop = 0;
             iternum=0;
-            while rand_score <1
+            rand_vec = nan(1, n_iter);
+            while (~is_stop) && (iternum < n_iter)
                 iternum = iternum+1;
                 fprintf("\n%i th iteration\n\n", iternum)
                 n_g1_now = sum(cluster_est_now == 1);
@@ -76,9 +77,10 @@ classdef sdp_kmeans_iter_knowncov < handle
                 cluster_est_new = obj.get_cluster(x_sub_now, obj.K); 
                 %4 stopping criteria
                 rand_score = RandIndex(cluster_est_new, cluster_est_now)
-          
+                rand_vec(iternum) = rand_score;
+                 is_stop = decide_stop_rand(rand_vec, loop_detect_start, window_size, min_delta)
                cluster_est_now = cluster_est_new;
-                end
+            end
             obj.time = toc
         end % end of fit_predict
     end % end of methods

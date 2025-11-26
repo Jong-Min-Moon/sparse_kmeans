@@ -109,5 +109,3 @@ RI=A/t1;			%Rand 1971		%Probability of agreement
 MI=D/t1;			%Mirkin 1970	%p(disagreement)
 HI=(A-D)/t1;	%Hubert 1977	%p(agree)-p(disagree)
 %% 
-%% 
-%% 
