@@ -8,18 +8,17 @@ BASE_DIR="/home1/jongminm/sparse_kmeans/experiment/33_11_25_2025/${TABLE_NAME}"
 DB_DIR="/home1/jongminm/sparse_kmeans/sparse_kmeans.db"
 
 # Define delta parameter
-delta=0
 
 # Loop through different P values
 #for P in 100 200 300 400; do
-    for rep in $(seq 1 200); do
+    for rep in $(seq 1 100); do
 for P in   400 300 200 100; do
     # Loop through repetitions
 
         # Define filenames for .m, .sh, and .out files
-        MFILE="$BASE_DIR/${TABLE_NAME}_rep_${rep}_p${P}.m"
-        JOBFILE="$BASE_DIR/${TABLE_NAME}_rep_${rep}_p${P}.sh"
-        OUTFILE="$BASE_DIR/${TABLE_NAME}_rep_${rep}_p${P}.out"
+        MFILE="$BASE_DIR/${TABLE_NAME}_rep_${rep}_p${P}_3.m"
+        JOBFILE="$BASE_DIR/${TABLE_NAME}_rep_${rep}_p${P}_3.sh"
+        OUTFILE="$BASE_DIR/${TABLE_NAME}_rep_${rep}_p${P}_3.out"
 
         # Create base directory if it doesn't exist
         mkdir -p "$BASE_DIR"
@@ -44,8 +43,7 @@ pool = parpool(pc, ncores);
 s = 10;
 p = ${P};
 rep = ${rep};
-sep = 4;
-delta = ${delta};
+sep = 3;
 n = 500;
 
 % Add sparse_kmeans path
@@ -59,7 +57,7 @@ db_dir = '${DB_DIR}';
 cluster_1_ratio = 0.5;
 % Note: Semicolon added to suppress output
 generator = data_generator_correlated_approximately_sparse_mean(n, p, s, sep, rep, 0.5);
-[data, label_true] = generator.get_data(delta);
+[data, label_true] = generator.get_data(0);
 
 % Run ISEE_kmeans_clean_simul
 model = 'chain45'
@@ -92,7 +90,7 @@ module load matlab/2022a
 cd "$BASE_DIR"
 
 # Run MATLAB script in batch mode
-matlab -batch ${TABLE_NAME}_rep_${rep}_p${P}
+matlab -batch ${TABLE_NAME}_rep_${rep}_p${P}_3
 
 # Echo job finish time
 echo "Finished job for rep=${rep} at \$(date)"

@@ -6,7 +6,7 @@ set -e
 # --- Configuration Variables ---
 # Base directory for experiments, MATLAB scripts, job files, and output files
 TABLE_NAME="iso_rand"
-BASE_DIR="/home1/jongminm/sparse_kmeans/experiment/32_11_25_2025/${TABLE_NAME}"
+BASE_DIR="/home1/jongminm/sparse_kmeans/experiment/33_11_25_2025/${TABLE_NAME}"
 # Path to the SQLite database
 DB_DIR="/home1/jongminm/sparse_kmeans/sparse_kmeans.db"
 # Table name within the SQLite database
