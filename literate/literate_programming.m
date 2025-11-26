@@ -3410,10 +3410,10 @@ function cluster_estimate = ISEE_kmeans_clean_simul_rand(x, k, n_iter, is_parall
     % Initialize cluster assignment
     cluster_estimate_now = sdp_kmeans(x, k);
     is_stop = 0;
-       iternum=0;
+       iter=0;
             rand_vec = nan(1, n_iter);
-    while (~is_stop) && (iternum < n_iter)
-        iternum= iternum+1;
+    while (~is_stop) && (iter < n_iter)
+        iter= iter+1;
         [cluster_estimate, s_hat, obj_sdp(iter), obj_lik(iter)] = ISEE_kmeans_clean_onestep(x, k, cluster_estimate_now, is_parallel);
        %%%%%%%%%%%%%%%% simul part starts
         TP = sum(s_hat(1:10));
