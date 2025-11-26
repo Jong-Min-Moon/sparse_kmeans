@@ -6,6 +6,79 @@
 % adjusted Rand index". [AR,RI,MI,HI]=RANDINDEX(c1,c2) returns the adjusted Rand 
 % index, the unadjusted Rand index, "Mirkin's" index and "Hubert's" index.
 % 
+% 
+% 
+% |Function Signature|
+% 
+% [AR, RI, MI, HI] = RandIndex(c1, c2)
+% 
+% |*Description*|
+% 
+% Calculates four common cluster similarity indices (Adjusted Rand, Rand, Mirkin, 
+% and Hubert) between two sets of cluster assignments, c1 and c2.
+% 
+% |*Input Arguments*|
+%% 
+% *Argument*
+%% 
+% *Description*
+%% 
+% *Required Format*
+%% 
+% c1
+%% 
+% Vector of cluster assignments for the N data points (Clustering 1).
+%% 
+% Vector (Row or Column) of equal length to c2. Values must be positive integers 
+% representing cluster labels.
+%% 
+% c2
+%% 
+% Vector of cluster assignments for the N data points (Clustering 2).
+%% 
+% Vector (Row or Column) of equal length to c1. Values must be positive integers 
+% representing cluster labels.
+%% 
+% |*Output Arguments*|
+%% 
+% *Output*
+%% 
+% *Index Name*
+%% 
+% *Description*
+%% 
+% AR
+%% 
+% Adjusted Rand Index
+%% 
+% Normalized measure corrected for chance (Hubert & Arabie, 1985). Range: $[-1, 
+% 1]$.
+%% 
+% RI
+%% 
+% Rand Index
+%% 
+% Probability of agreement between the two clusterings (Rand, 1971). Range: 
+% $[0, 1]$.
+%% 
+% MI
+%% 
+% Mirkin Index
+%% 
+% Probability of disagreement between the two clusterings (Mirkin, 1970). Range: 
+% $[0, 1]$. MI = 1 - RI.
+%% 
+% HI
+%% 
+% Hubert Index
+%% 
+% Probability of agreement minus probability of disagreement (Hubert, 1977). 
+% Range: $[-1, 1]$. HI = RI - MI.
+%% 
+% |*Requirements*|
+% 
+% Requires the helper function Contingency to be on the MATLAB path.
+% 
 % See L. Hubert and P. Arabie (1985) "Comparing Partitions" Journal of Classification 
 % 2:193-218
 % 
@@ -35,3 +108,6 @@ end
 RI=A/t1;			%Rand 1971		%Probability of agreement
 MI=D/t1;			%Mirkin 1970	%p(disagreement)
 HI=(A-D)/t1;	%Hubert 1977	%p(agree)-p(disagree)
+%% 
+%% 
+%% 

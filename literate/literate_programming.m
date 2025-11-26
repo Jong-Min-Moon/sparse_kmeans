@@ -332,8 +332,11 @@ classdef sdp_kmeans_iter_knowncov < handle
              obj.set_cutoff();
              toc
             % iterate
-            for iter = 1:n_iter
-                fprintf("\n%i th iteration\n\n", iter)
+            rand_score = 0;
+            iternum=0;
+            while rand_score <1
+                iternum = iternum+1;
+                fprintf("\n%i th iteration\n\n", iternum)
                 n_g1_now = sum(cluster_est_now == 1);
                 n_g2_now = obj.n-n_g1_now;
                 % 1. estimate cluster means
@@ -363,8 +366,12 @@ classdef sdp_kmeans_iter_knowncov < handle
                 end
                 x_sub_now = obj.X(thresholder_vec,:);
                     % 3. apply SDP k-means   
-                cluster_est_now = obj.get_cluster(x_sub_now, obj.K); 
-            end
+                cluster_est_new = obj.get_cluster(x_sub_now, obj.K); 
+                %4 stopping criteria
+                rand_score = RandIndex(cluster_est_new, cluster_est_now)
+          
+               cluster_est_now = cluster_est_new;
+                end
             obj.time = toc
         end % end of fit_predict
     end % end of methods
@@ -1723,6 +1730,203 @@ sequence_2 = [1 2 3 4 5 6 7 8 9 10 NaN NaN NaN];
             is_stop = true;
         end
  end
+%% 
+%% 
+% 
+%% Contingency
+% @export
+% 
+% 
+% 
+% Function Signature
+% 
+% C = Contingency(c1, c2)
+% 
+% *Description*
+% 
+% Computes the contingency matrix C for two clusterings, which is the foundational 
+% matrix for calculating various cluster similarity indices. This function is 
+% automatically called by RandIndex.
+% 
+% |*Input Arguments*|
+%% 
+% *Argument*
+%% 
+% *Description*
+%% 
+% *Required Format*
+%% 
+% c1
+%% 
+% Vector of cluster assignments (intergers) for N points.
+%% 
+% Vector (Row or Column) of equal length to c2.
+%% 
+% c2
+%% 
+% Vector of cluster assignments (intergers) for N points.
+%% 
+% Vector (Row or Column) of equal length to c1.
+%% 
+% |*Output Arguments*|
+%% 
+% *Output*
+%% 
+% *Description*
+%% 
+% *Format*
+%% 
+% C
+%% 
+% The Contingency matrix. C(i, j) is the count of data points assigned to the 
+% i-th unique cluster in c1 and the j-th unique cluster in c2.
+%% 
+% K1 x K2 matrix, where K1 and K2 are the number of unique clusters in c1 and 
+% c2, respectively.
+%% 
+% |*Implementation Note*|
+% 
+% This implementation uses unique() to map the original cluster labels (which 
+% can be arbitrary integers) to sequential 1-based indices for the matrix rows 
+% and columns, ensuring the matrix size is exactly (# unique clusters in c1) x 
+% (# unique clusters in c2)
+% 
+% 
+% 
+% (C) David Corney (2000)   		D.Corney@cs.ucl.ac.uk
+% 
+% This code is taken directly from https://github.com/drjingma/gmm and has not 
+% been modified. 
+% 
+% 
+function Cont=Contingency(Mem1,Mem2)
+if nargin < 2 || min(size(Mem1)) > 1 || min(size(Mem2)) > 1
+   error('Contingency: Requires two vector arguments')
+end
+Cont=zeros(max(Mem1),max(Mem2));
+for i = 1:length(Mem1);
+   Cont(Mem1(i),Mem2(i))=Cont(Mem1(i),Mem2(i))+1;
+end
+%% 
+% 
+% 
+% 
+%% 
+%% 
+% 
+%% RandIndex
+% @export
+% 
+% Calculates Rand Indices to compare two partitions. ARI=RANDINDEX(c1,c2), where 
+% c1,c2 are vectors listing the class membership, returns the "Hubert & Arabie 
+% adjusted Rand index". [AR,RI,MI,HI]=RANDINDEX(c1,c2) returns the adjusted Rand 
+% index, the unadjusted Rand index, "Mirkin's" index and "Hubert's" index.
+% 
+% 
+% 
+% |Function Signature|
+% 
+% [AR, RI, MI, HI] = RandIndex(c1, c2)
+% 
+% |*Description*|
+% 
+% Calculates four common cluster similarity indices (Adjusted Rand, Rand, Mirkin, 
+% and Hubert) between two sets of cluster assignments, c1 and c2.
+% 
+% |*Input Arguments*|
+%% 
+% *Argument*
+%% 
+% *Description*
+%% 
+% *Required Format*
+%% 
+% c1
+%% 
+% Vector of cluster assignments for the N data points (Clustering 1).
+%% 
+% Vector (Row or Column) of equal length to c2. Values must be positive integers 
+% representing cluster labels.
+%% 
+% c2
+%% 
+% Vector of cluster assignments for the N data points (Clustering 2).
+%% 
+% Vector (Row or Column) of equal length to c1. Values must be positive integers 
+% representing cluster labels.
+%% 
+% |*Output Arguments*|
+%% 
+% *Output*
+%% 
+% *Index Name*
+%% 
+% *Description*
+%% 
+% AR
+%% 
+% Adjusted Rand Index
+%% 
+% Normalized measure corrected for chance (Hubert & Arabie, 1985). Range: $[-1, 
+% 1]$.
+%% 
+% RI
+%% 
+% Rand Index
+%% 
+% Probability of agreement between the two clusterings (Rand, 1971). Range: 
+% $[0, 1]$.
+%% 
+% MI
+%% 
+% Mirkin Index
+%% 
+% Probability of disagreement between the two clusterings (Mirkin, 1970). Range: 
+% $[0, 1]$. MI = 1 - RI.
+%% 
+% HI
+%% 
+% Hubert Index
+%% 
+% Probability of agreement minus probability of disagreement (Hubert, 1977). 
+% Range: $[-1, 1]$. HI = RI - MI.
+%% 
+% |*Requirements*|
+% 
+% Requires the helper function Contingency to be on the MATLAB path.
+% 
+% See L. Hubert and P. Arabie (1985) "Comparing Partitions" Journal of Classification 
+% 2:193-218
+% 
+% C) David Corney (2000)   		D.Corney@cs.ucl.ac.uk
+% 
+% 
+function [AR,RI,MI,HI]=RandIndex(c1,c2)
+if nargin < 2 || min(size(c1)) > 1 || min(size(c2)) > 1
+   error('RandIndex: Requires two vector arguments');
+end
+C=Contingency(c1,c2);	%form contingency matrix
+n=sum(sum(C));
+nis=sum(sum(C,2).^2);		%sum of squares of sums of rows
+njs=sum(sum(C,1).^2);		%sum of squares of sums of columns
+t1=nchoosek(n,2);		%total number of pairs of entities
+t2=sum(sum(C.^2));	%sum over rows & columnns of nij^2
+t3=.5*(nis+njs);
+%Expected index (for adjustment)
+nc=(n*(n^2+1)-(n+1)*nis-(n+1)*njs+2*(nis*njs)/n)/(2*(n-1));
+A=t1+t2-t3;		%no. agreements
+D=  -t2+t3;		%no. disagreements
+if t1==nc
+   AR=0;			%avoid division by zero; if k=1, define Rand = 0
+else
+   AR=(A-nc)/(t1-nc);		%adjusted Rand - Hubert & Arabie 1985
+end
+RI=A/t1;			%Rand 1971		%Probability of agreement
+MI=D/t1;			%Mirkin 1970	%p(disagreement)
+HI=(A-D)/t1;	%Hubert 1977	%p(agree)-p(disagree)
+%% 
+%% 
+%% 
 %% Thompson sampling algorithm
 %% sdp_kmeans_bandit
 % @export
@@ -4036,69 +4240,7 @@ while (~done)
 end
 %% 
 % 
-%% Contingency
-% @export
-% 
-% Form contigency matrix for two vectors
-% 
-% C=Contingency(Mem1,Mem2) returns contingency matrix for two column vectors 
-% Mem1, Mem2. These define which cluster each entity has been assigned to.
-% 
-% See also RANDINDEX.
-% 
-% (C) David Corney (2000)   		D.Corney@cs.ucl.ac.uk
-% 
-% This code is taken directly from https://github.com/drjingma/gmm and has not 
-% been modified. 
-% 
-% 
-function Cont=Contingency(Mem1,Mem2)
-if nargin < 2 || min(size(Mem1)) > 1 || min(size(Mem2)) > 1
-   error('Contingency: Requires two vector arguments')
-end
-Cont=zeros(max(Mem1),max(Mem2));
-for i = 1:length(Mem1);
-   Cont(Mem1(i),Mem2(i))=Cont(Mem1(i),Mem2(i))+1;
-end
 %% 
-% 
-%% RandIndex
-% @export
-% 
-% Calculates Rand Indices to compare two partitions. ARI=RANDINDEX(c1,c2), where 
-% c1,c2 are vectors listing the class membership, returns the "Hubert & Arabie 
-% adjusted Rand index". [AR,RI,MI,HI]=RANDINDEX(c1,c2) returns the adjusted Rand 
-% index, the unadjusted Rand index, "Mirkin's" index and "Hubert's" index.
-% 
-% See L. Hubert and P. Arabie (1985) "Comparing Partitions" Journal of Classification 
-% 2:193-218
-% 
-% C) David Corney (2000)   		D.Corney@cs.ucl.ac.uk
-% 
-% 
-function [AR,RI,MI,HI]=RandIndex(c1,c2)
-if nargin < 2 || min(size(c1)) > 1 || min(size(c2)) > 1
-   error('RandIndex: Requires two vector arguments');
-end
-C=Contingency(c1,c2);	%form contingency matrix
-n=sum(sum(C));
-nis=sum(sum(C,2).^2);		%sum of squares of sums of rows
-njs=sum(sum(C,1).^2);		%sum of squares of sums of columns
-t1=nchoosek(n,2);		%total number of pairs of entities
-t2=sum(sum(C.^2));	%sum over rows & columnns of nij^2
-t3=.5*(nis+njs);
-%Expected index (for adjustment)
-nc=(n*(n^2+1)-(n+1)*nis-(n+1)*njs+2*(nis*njs)/n)/(2*(n-1));
-A=t1+t2-t3;		%no. agreements
-D=  -t2+t3;		%no. disagreements
-if t1==nc
-   AR=0;			%avoid division by zero; if k=1, define Rand = 0
-else
-   AR=(A-nc)/(t1-nc);		%adjusted Rand - Hubert & Arabie 1985
-end
-RI=A/t1;			%Rand 1971		%Probability of agreement
-MI=D/t1;			%Mirkin 1970	%p(disagreement)
-HI=(A-D)/t1;	%Hubert 1977	%p(agree)-p(disagree)
 %% Miscelleonus
 % 
 %% get_num2str_with_mark

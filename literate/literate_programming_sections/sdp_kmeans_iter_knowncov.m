@@ -39,8 +39,11 @@ classdef sdp_kmeans_iter_knowncov < handle
              obj.set_cutoff();
              toc
             % iterate
-            for iter = 1:n_iter
-                fprintf("\n%i th iteration\n\n", iter)
+            rand_score = 0;
+            iternum=0;
+            while rand_score <1
+                iternum = iternum+1;
+                fprintf("\n%i th iteration\n\n", iternum)
                 n_g1_now = sum(cluster_est_now == 1);
                 n_g2_now = obj.n-n_g1_now;
                 % 1. estimate cluster means
@@ -70,8 +73,12 @@ classdef sdp_kmeans_iter_knowncov < handle
                 end
                 x_sub_now = obj.X(thresholder_vec,:);
                     % 3. apply SDP k-means   
-                cluster_est_now = obj.get_cluster(x_sub_now, obj.K); 
-            end
+                cluster_est_new = obj.get_cluster(x_sub_now, obj.K); 
+                %4 stopping criteria
+                rand_score = RandIndex(cluster_est_new, cluster_est_now)
+          
+               cluster_est_now = cluster_est_new;
+                end
             obj.time = toc
         end % end of fit_predict
     end % end of methods
