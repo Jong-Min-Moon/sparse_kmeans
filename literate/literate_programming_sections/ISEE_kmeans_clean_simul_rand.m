@@ -12,7 +12,7 @@ function cluster_estimate = ISEE_kmeans_clean_simul_rand(x, k, n_iter, is_parall
             rand_vec = nan(1, n_iter);
     while (~is_stop) && (iternum < n_iter)
         iternum= iternum+1;
-        [cluster_estimate, s_hat, obj_sdp(iter), obj_lik(iter)] = ISEE_kmeans_clean_onestep(x, k, cluster_estimate, is_parallel);
+        [cluster_estimate, s_hat, obj_sdp(iter), obj_lik(iter)] = ISEE_kmeans_clean_onestep(x, k, cluster_estimate_now, is_parallel);
        %%%%%%%%%%%%%%%% simul part starts
         TP = sum(s_hat(1:10));
         FP = sum(s_hat) - TP;
@@ -54,9 +54,10 @@ fprintf('Iteration %d | SDP obj: %.4f | Likelihood obj: %.4f | TP: %d | FP: %d |
     end
     %%%%%%%%%%%%% simul part ends
        % Early stopping condition
-       rand_score = RandIndex(cluster_est_new, cluster_est_now)
+       rand_score = RandIndex(cluster_estimate_now, cluster_estimate)
        rand_vec(iternum) = rand_score;
         is_stop = decide_stop_rand(rand_vec, loop_detect_start, window_size, min_delta);
+        cluster_estimate = cluster_estimate_now;
         if is_stop
             break;
         end
