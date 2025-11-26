@@ -31,7 +31,7 @@ gen = data_generator_subsample(selected_data', selected_integer_labels);
 
 % Run ISEE_kmeans_clean_simul
 model = 'chain45'
-ISEE_kmeans_clean_simul(data, 2, n_iter, true, 10, 5, 0.01, db_dir, table_name, rep, model, 0, label_true);
+ISEE_kmeans_clean_simul_adaptive(data, 2, n_iter, true, 10, 5, 0.01, db_dir, table_name, rep, model, 0, label_true);
 
 % Delete parallel pool
 delete(pool);
