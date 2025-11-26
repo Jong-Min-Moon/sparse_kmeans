@@ -42,8 +42,7 @@ function [mean_vec, noise_mat, Omega_diag_hat, mean_mat] = ISEE_bicluster_parall
     Omega_diag_parts = cell(n_regression, 1);
    % parfor i = 1:n_regression
    for i = 1:n_regression
-       i
-        rows_idx = [2*i - 1, 2*i];
+         rows_idx = [2*i - 1, 2*i];
         predictors_idx = true(1, p);
         predictors_idx(rows_idx) = false;
         E_Al = zeros(2, n);

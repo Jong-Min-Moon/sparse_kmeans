@@ -19,8 +19,6 @@
 % * Intercept - The scalar intercept term from the selected Lasso model.
 % * residual  - An n-by-1 vector of residuals from the fitted model.
 function [intercept, residual] = get_intercept_residual_lasso_adaptive(response, predictor)                 
-  size(predictor)
-  size(response)
 [slope, intercept] = fit_elasticNet_tune(predictor,response);
 slope = slope';
  
