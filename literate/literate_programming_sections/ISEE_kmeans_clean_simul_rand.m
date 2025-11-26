@@ -1,13 +1,17 @@
-%% ISEE_kmeans_clean_simul
+%% ISEE_kmeans_clean_simul_rand
 % @export
-function cluster_estimate = ISEE_kmeans_clean_simul(x, k, n_iter, is_parallel, loop_detect_start, window_size, min_delta, db_dir, table_name, rep, model, sep, cluster_true)
+function cluster_estimate = ISEE_kmeans_clean_simul_rand(x, k, n_iter, is_parallel, loop_detect_start, window_size, min_delta, db_dir, table_name, rep, model, sep, cluster_true)
 % ISEE_kmeans_clean - Runs iterative clustering with early stopping and logs results to SQLite DB
     [p, n] = size(x);  % Get dimensions
     obj_sdp = nan(1, n_iter);
     obj_lik = nan(1, n_iter);
     % Initialize cluster assignment
-    cluster_estimate = sdp_kmeans(x, k);
-    for iter = 1:n_iter
+    cluster_estimate_now = sdp_kmeans(x, k);
+    is_stop == 0;
+       iternum=0;
+            rand_vec = nan(1, n_iter);
+    while (~is_stop) && (iternum < n_iter)
+        iternum= iternum+1;
         [cluster_estimate, s_hat, obj_sdp(iter), obj_lik(iter)] = ISEE_kmeans_clean_onestep(x, k, cluster_estimate, is_parallel);
        %%%%%%%%%%%%%%%% simul part starts
         TP = sum(s_hat(1:10));
@@ -50,12 +54,12 @@ fprintf('Iteration %d | SDP obj: %.4f | Likelihood obj: %.4f | TP: %d | FP: %d |
     end
     %%%%%%%%%%%%% simul part ends
        % Early stopping condition
-        is_stop = decide_stop(obj_sdp, obj_lik, loop_detect_start, window_size, min_delta);
+       rand_score = RandIndex(cluster_est_new, cluster_est_now)
+       rand_vec(iternum) = rand_score;
+        is_stop = decide_stop_rand(rand_vec, loop_detect_start, window_size, min_delta);
         if is_stop
             break;
         end
     end
 end
-%% 
-% 
 %% 
