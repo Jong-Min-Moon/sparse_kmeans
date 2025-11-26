@@ -11,11 +11,11 @@ DB_DIR="/home1/jongminm/sparse_kmeans/sparse_kmeans.db"
 
 for rep in $(seq 1 100); do
     # Loop through repetitions
-
+        FILENAME_BASE="${BASE_DIR}/${TABLE_NAME}_rep_${rep}"
         # Define filenames for .m, .sh, and .out files
-        MFILE="$BASE_DIR/${TABLE_NAME}_rep_${rep}.m"
-        JOBFILE="$BASE_DIR/${TABLE_NAME}_rep_${rep}.sh"
-        OUTFILE="$BASE_DIR/${TABLE_NAME}_rep_${rep}.out"
+        MFILE="${FILENAME_BASE}.m"
+        JOBFILE="${FILENAME_BASE}.sh"
+        OUTFILE="${FILENAME_BASE}.out"
 
         # Create base directory if it doesn't exist
         mkdir -p "$BASE_DIR"
@@ -40,8 +40,8 @@ pool = parpool(pc, ncores);
 
 rep = ${rep};
 n_subsample = 1000;
-n_iter = 20;
-load('../29_08_11_2025/R_mnist/matlab_data.mat');
+n_iter = 2;
+load('/home1/jongminm/sparse_kmeans/experiment/31_09_22_2025/matlab_data.mat');
 % Add sparse_kmeans path
 addpath(genpath('/home1/jongminm/sparse_kmeans'));
 
@@ -55,7 +55,7 @@ gen = data_generator_subsample(selected_data', selected_integer_labels);
 
 % Run ISEE_kmeans_clean_simul
 model = 'chain45'
-ISEE_kmeans_clean_simul(data, 2, n_iter, true, 10, 5, 0.01, db_dir, table_name, rep, model, 0, label_true);
+ISEE_kmeans_clean_simul_adaptive(data, 2, n_iter, true, 10, 5, 0.01, db_dir, table_name, rep, model, 0, label_true);
 
 % Delete parallel pool
 delete(pool);
@@ -68,9 +68,10 @@ EOF
 #SBATCH --partition=main
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=4
-#SBATCH --mem=8G
-#SBATCH --time=3:59:59
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=20G
+
+%#SBATCH --time=4:59:59
 
 # Echo job start time and host
 echo "Starting job for rep=${rep} on \$(hostname) at \$(date)"
@@ -84,7 +85,7 @@ module load matlab/2022a
 cd "$BASE_DIR"
 
 # Run MATLAB script in batch mode
-matlab -batch ${TABLE_NAME}_rep_${rep}_p${P}
+matlab -batch ${TABLE_NAME}_rep_${rep}
 
 # Echo job finish time
 echo "Finished job for rep=${rep} at \$(date)"

@@ -5,7 +5,7 @@ set -e
 
 # --- Configuration Variables ---
 # Base directory for experiments, MATLAB scripts, job files, and output files
-BASE_DIR="/home1/jongminm/sparse_kmeans/experiment/28_08_11_2025/bandit_thinning"
+BASE_DIR="/home1/jongminm/sparse_kmeans/experiment/29_08_11_2025/bandit_thinning"
 # Path to the SQLite database
 DB_DIR="/home1/jongminm/sparse_kmeans/sparse_kmeans.db"
 # Table name within the SQLite database
@@ -17,7 +17,7 @@ MODEL='iso'
 CLUSTER_1_RATIO=0.5
 SEP=5
 N=200
-T=500
+T=2000
 # --- Ensure Base Directory Exists ---
 # Create the base directory if it doesn't already exist
 mkdir -p "$BASE_DIR"
@@ -65,7 +65,7 @@ sep = ${SEP}; % Separation parameter
 n = ${N};     % Number of samples
 p = ${P};     % Number of features/dimensions (current loop variable)
 rep = ${REP}; % Repetition number (current loop variable)
-
+n_iter = ${T};
 fprintf('--- Starting MATLAB simulation for p=%d, rep=%d ---\\n', p, rep);
 
 % --- Data Generation ---
@@ -76,16 +76,28 @@ data = data';
 label_true = label_true';
 
 
+tic;
 % --- Run sdp_kmeans_bandit_even_simul ---
 % Initialize and run the bandit k-means simulation
 bandit = sdp_kmeans_bandit_thinning_nmf_simul(data, 2);
-bandit.fit_predict(${T}, label_true);
-
+cluster_est = bandit.fit_predict(n_iter, label_true);
+acc = get_bicluster_accuracy(cluster_est, label_true)
 % --- Insert Results into SQLite Database ---
 % Insert the results from the bandit simulation into the specified SQLite table
 % The '1:10' is assumed to be a placeholder for a specific range or set of values.
-insertTableIntoSQLite(db_dir, table_name, bandit, rep, sep, 1:10);
 
+time = toc
+rep
+sep
+bandit
+acc
+time
+table = get_database_subtable(rep, sep, 1:10,  p, n,  acc, time);
+ % --- Insert Results into SQLite Database ---
+% Insert the results from the bandit simulation into the specified SQLite table
+% The '1:10' is assumed to be a placeholder for a specific range or set of values.
+insertTableIntoSQLite(db_dir, table_name, table, rep, sep, 1:10);
+ 
 fprintf('--- Finished MATLAB simulation for p=%d, rep=%d ---\\n', p, rep);
 
 % Exit MATLAB cleanly after script execution
@@ -101,9 +113,9 @@ EOF
 #SBATCH --partition=main                   # Specify the partition to use
 #SBATCH --nodes=1                          # Request 1 node
 #SBATCH --ntasks=1                         # Request 1 task (process)
-#SBATCH --cpus-per-task=3                  # Request 8 CPUs per task (for MATLAB's multi-threading)
+#SBATCH --cpus-per-task=4                  # Request 8 CPUs per task (for MATLAB's multi-threading)
 #SBATCH --mem=4G                           # Request 6 GB of memory
-#SBATCH --time=3:59:59                    # Set maximum job run time (HH:MM:SS)
+#SBATCH --time=4:59:59                    # Set maximum job run time (HH:MM:SS)
 
 # Echo start time and hostname for logging
 echo "Starting job for p=${P}, rep=${REP} on \$(hostname) at \$(date)"
