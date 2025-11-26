@@ -32,7 +32,7 @@ classdef sdp_kmeans_iter_knowncov < handle
         function cluster_est = get_initial_cluster(obj, X, K)
             cluster_est = get_cluster_by_sdp(X, K);
         end
-        function cluster_est_now = fit_predict(obj, n_iter, loop_detect_start, window_size, min_delta)     
+        function [iternum, cluster_est_now] = fit_predict(obj, n_iter, loop_detect_start, window_size, min_delta)     
              % written 01/11/2024
              tic
              cluster_est_now = obj.get_initial_cluster(obj.X, obj.K); % initial clustering             

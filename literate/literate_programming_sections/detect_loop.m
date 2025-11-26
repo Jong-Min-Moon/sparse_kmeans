@@ -47,7 +47,7 @@ function is_loop = detect_loop(obj_val_vec, loop_detect_start, window_size, min_
     % Compute relative change
     relative_change = abs(global_best - window_best) / max(abs(global_best), eps);
     % Determine if loop (stagnation) is happening
-    if relative_change < min_delta
+    if relative_change <= min_delta
         is_loop = true;
     end
 end
