@@ -1,6 +1,6 @@
-%% get_database_subtable
+%% get_database_subtable_rand
 % @export
-function database_subtable = get_database_subtable(rep, Delta, support, p, n, acc, time)
+    function database_subtable = get_database_subtable_rand(rep, Delta, support, p, n, acc, stopiter)
             s = length(support);
           
             
@@ -10,7 +10,7 @@ function database_subtable = get_database_subtable(rep, Delta, support, p, n, ac
             dummy = repelem(0, n_row+1)';
             database_subtable = table(...
                 repelem(rep, n_row+1)',...                      % 01 replication number
-                (1:(n_row+1))',...                              % 02 step iteration number
+                repelem(stopiter, n_row+1)',...                              % 02 step iteration number
                 repelem(Delta, n_row+1)',...                    % 03 separation
                 repelem(p, n_row+1)',...                    % 04 data dimension
                 repelem(n, n_row+1)',...                      % 05 sample size
@@ -25,7 +25,7 @@ function database_subtable = get_database_subtable(rep, Delta, support, p, n, ac
                 dummy,...                          % 11 false positive
                 dummy,...                          % 12 false negative
                 ...
-                repelem(time, n_row+1)', ...            % 13 timestamp
+                repelem(0, n_row+1)', ...            % 13 timestamp
                 'VariableNames', ...
                 ...  %1      2       3      4      5        6         
                 ["rep", "iter", "sep", "dim", "n", "model", ...
@@ -36,4 +36,3 @@ function database_subtable = get_database_subtable(rep, Delta, support, p, n, ac
                 ...  13
                      "jobdate"]);
         end % end of get_database_subtable
-%% 
