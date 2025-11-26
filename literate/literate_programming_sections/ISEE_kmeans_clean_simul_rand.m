@@ -7,7 +7,7 @@ function cluster_estimate = ISEE_kmeans_clean_simul_rand(x, k, n_iter, is_parall
     obj_lik = nan(1, n_iter);
     % Initialize cluster assignment
     cluster_estimate_now = sdp_kmeans(x, k);
-    is_stop == 0;
+    is_stop = 0;
        iternum=0;
             rand_vec = nan(1, n_iter);
     while (~is_stop) && (iternum < n_iter)
