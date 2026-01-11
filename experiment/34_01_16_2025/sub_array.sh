@@ -8,7 +8,7 @@
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=6G
 #SBATCH --time=23:59:59
-#SBATCH --array=1-125%50
+#SBATCH --array=1-1200%50
 
 module load legacy/CentOS7
 module load matlab/2022a
