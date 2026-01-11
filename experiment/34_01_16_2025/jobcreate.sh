@@ -3,7 +3,7 @@
 # --- 1. Configuration ---
 BASE_DIR="/home1/jongminm/sparse_kmeans/experiment/34_01_16_2025"
 DB_PATH="/home1/jongminm/sparse_kmeans/sparse_kmeans.db"
-TABLE_NAME="bandit_C"
+TABLE_NAME="bandit_C_streamlined"
 
 PARAM_FILE="$BASE_DIR/param_list.txt"
 RESULTS_DIR="$BASE_DIR/results_mat"
