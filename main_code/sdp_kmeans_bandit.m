@@ -20,15 +20,16 @@ classdef sdp_kmeans_bandit < handle
         entries_survived  
         obj_val_prim     
         obj_val_dual      
-        obj_val_original  
+        obj_val_original 
+        C
     end
     methods
-        function obj = sdp_kmeans_bandit(X, K)
+        function obj = sdp_kmeans_bandit(X, K, C)
             obj.X = X;
             obj.K = K;
             obj.n = size(X, 2);
             obj.p = size(X, 1);
-            C = 0.5;
+            obj.C = C;
             obj.cutoff = log(1 / C) / log((1 + C) / C);
             obj.n_iter = NaN;
             

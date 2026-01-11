@@ -2,11 +2,11 @@ classdef sdp_kmeans_bandit_simul  < sdp_kmeans_bandit
 %% sdp_kmeans_bandit_simul
 % @export
     methods
-        function obj = sdp_kmeans_bandit_simul(X, number_cluster)
+        function obj = sdp_kmeans_bandit_simul(X, number_cluster, C)
             % Call the superclass constructor first
             % This initializes X, K, n, p, cutoff, and n_iter properties from the superclass
             
-            obj = obj@sdp_kmeans_bandit(X, number_cluster);
+            obj = obj@sdp_kmeans_bandit(X, number_cluster, C);
             
         end
         function cluster_est_final = fit_predict(obj, n_iter, cluster_true)
@@ -64,7 +64,7 @@ classdef sdp_kmeans_bandit_simul  < sdp_kmeans_bandit
                 repelem(Delta, n_row+1)',...                    % 03 separation
                 repelem(obj.p, n_row+1)',...                    % 04 data dimension
                 repelem(obj.n, n_row+1)',...                      % 05 sample size
-                repelem(s, n_row+1)',...                        % 06 model
+                repelem(obj.C, n_row+1)',...                        % 06 model
                 ...
                 cell2mat(values(obj.acc_dict))',...             % 07 accuracy
                 ...
@@ -103,6 +103,19 @@ classdef sdp_kmeans_bandit_simul  < sdp_kmeans_bandit
             end
         end % end of evaluate_discovery
   
-    
+% New Method: Saves the table result to a unique .mat file
+        function save_results(obj, output_dir, rep, Delta, support)
+            if ~exist(output_dir, 'dir'), mkdir(output_dir); end
+            
+            % Generate the table
+            results_table = obj.get_database_subtable(rep, Delta, support);
+            
+            % Create a unique filename
+            fname = sprintf('res_C%0.1f_p%d_rep%d.mat', obj.C, obj.p, rep);
+            savepath = fullfile(output_dir, fname);
+            
+            save(savepath, 'results_table');
+            fprintf('Saved results to %s\n', savepath);
+        end    
     end % end of method
 end % end of class
