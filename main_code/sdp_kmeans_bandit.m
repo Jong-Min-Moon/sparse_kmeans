@@ -167,11 +167,24 @@ classdef sdp_kmeans_bandit < handle
             end
         end
 
-        function save_results(obj, output_dir, rep, Delta, support)
-            if ~exist(output_dir, 'dir'), mkdir(output_dir); end
-            results_table = obj.get_database_subtable(rep, Delta, support);
-            fname = sprintf('res_C%0.1f_p%d_rep%d.mat', obj.C, obj.p, rep);
-            save(fullfile(output_dir, fname), 'results_table');
-        end
+function save_results(obj, output_dir, rep, Delta, support)
+    % Ensure the directory exists
+    if ~exist(output_dir, 'dir')
+        mkdir(output_dir);
+    end
+
+    % Generate the standard results table
+    results_table = obj.get_database_subtable(rep, Delta, support);
+
+    % Prepare filename
+    fname = sprintf('res_C%0.1f_p%d_rep%d.mat', obj.C, obj.p, rep);
+
+    % Save results table AND final Beta parameters
+    alpha_final = obj.alpha;
+    beta_final  = obj.beta;
+    pi_final    = obj.pi;
+
+    save(fullfile(output_dir, fname), 'results_table', 'alpha_final', 'beta_final', 'pi_final');
+end
     end
 end

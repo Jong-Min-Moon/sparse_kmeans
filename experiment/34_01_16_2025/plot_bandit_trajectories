@@ -1,0 +1,86 @@
+function plot_bandit_trajectories(C_val, results_dir)
+    % PLOT_BANDIT_TRAJECTORIES
+    %   Plots alpha/beta trajectories, TP/FP, and accuracy for all reps at a given C value.
+    %
+    %   Inputs:
+    %       C_val       - C value to plot (e.g., 0.2, 0.4, 0.6, 0.8)
+    %       results_dir - Directory where .mat files are saved
+
+    % List all .mat files for this C
+    mat_files = dir(fullfile(results_dir, sprintf('res_C%0.1f_*.mat', C_val)));
+
+    if isempty(mat_files)
+        error('No files found for C=%.1f in %s', C_val, results_dir);
+    end
+
+    fprintf('Found %d files for C=%.1f\n', length(mat_files), C_val);
+
+    % Initialize accumulators
+    alpha_traj = [];
+    beta_traj  = [];
+    tp_traj    = [];
+    fp_traj    = [];
+    acc_traj   = [];
+
+    % Load all files
+    for i = 1:length(mat_files)
+        data = load(fullfile(results_dir, mat_files(i).name));
+
+        % Concatenate trajectories (average across reps later)
+        alpha_traj = cat(3, alpha_traj, data.alpha_trajectory);  % p x n_iter x reps
+        beta_traj  = cat(3, beta_traj, data.beta_trajectory);
+        tp_traj    = cat(2, tp_traj, data.tp_trajectory);       % n_iter x reps
+        fp_traj    = cat(2, fp_traj, data.fp_trajectory);
+        acc_traj   = cat(2, acc_traj, data.acc_trajectory);
+    end
+
+    % Average across reps
+    alpha_mean = mean(alpha_traj, 3);
+    beta_mean  = mean(beta_traj, 3);
+    tp_mean    = mean(tp_traj, 2);
+    fp_mean    = mean(fp_traj, 2);
+    acc_mean   = mean(acc_traj, 2);
+
+    n_iter = size(tp_mean,1);
+
+    % ----------------------------
+    % Plot Alpha & Beta Trajectories
+    % ----------------------------
+    figure('Name', sprintf('Alpha/Beta Trajectories C=%.1f', C_val));
+    subplot(2,1,1);
+    plot(alpha_mean');
+    title('Alpha Trajectories (mean over reps)');
+    xlabel('Iteration');
+    ylabel('Alpha');
+    grid on;
+
+    subplot(2,1,2);
+    plot(beta_mean');
+    title('Beta Trajectories (mean over reps)');
+    xlabel('Iteration');
+    ylabel('Beta');
+    grid on;
+
+    % ----------------------------
+    % Plot TP, FP, Accuracy
+    % ----------------------------
+    figure('Name', sprintf('TP/FP/Accuracy Trajectories C=%.1f', C_val));
+    plot(1:n_iter, tp_mean, '-g', 'LineWidth',1.5); hold on;
+    plot(1:n_iter, fp_mean, '-r', 'LineWidth',1.5);
+    plot(1:n_iter, acc_mean, '-b', 'LineWidth',1.5);
+    xlabel('Iteration');
+    ylabel('Value');
+    title(sprintf('TP / FP / Accuracy Trajectories (C=%.1f)', C_val));
+    legend('TP', 'FP', 'Accuracy');
+    grid on;
+
+end
+
+%how to use
+%results_dir = '/home1/jongminm/sparse_kmeans/experiment/34_01_16_2025/results_mat';
+
+% Plot for C = 0.2
+%plot_bandit_trajectories(0.2, results_dir);
+
+% Plot for C = 0.4
+%plot_bandit_trajectories(0.4, results_dir);

@@ -12,8 +12,8 @@ LOG_DIR="$BASE_DIR/logs"
 mkdir -p "$RESULTS_DIR" "$LOG_DIR"
 
 # --- 2. Generate Parameter Map ---
-C_VALS=(0.2 0.4 0.6 0.8)
-P_VALS=(6000 8000 10000)
+C_VALS=(0.1 0.01)
+P_VALS=(8000)
 REPS=$(seq 1 100)
 
 echo "Generating parameter map..."
