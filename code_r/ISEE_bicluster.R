@@ -1,6 +1,6 @@
 # ISEE Bicluster Algorithm for Unknown Covariance
 
-source("get_intercept_residual_lasso.R")
+# source("get_intercept_residual_lasso.R") # Sourced by driver script
 
 #' ISEE Bicluster Algorithm
 #' 

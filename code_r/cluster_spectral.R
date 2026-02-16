@@ -1,6 +1,4 @@
 # Spectral Clustering Helper
-
-if (!require(RSpectra)) install.packages("RSpectra", repos = "http://cran.us.r-project.org")
 library(RSpectra)
 
 #' Spectral Clustering (Matching MATLAB implementation)

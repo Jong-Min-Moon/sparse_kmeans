@@ -1,18 +1,19 @@
-# Thompson Sampling K-Means (Bandit Approach) - Known Covariance
+# Helper functions for Block Coordinate Optimization with Thompson Sampling (Known Covariance)
 
-source("sdp_kmeans.R")
-source("utils.R")
-source("clustering_block_knowncov.R")
-source("selection_block_greedy_screening.R")
-source("cluster_spectral.R")
-if (!require(mclust)) install.packages("mclust")
-if (!require(CVXR)) install.packages("CVXR")
-if (!require(MASS)) install.packages("MASS")
-library(mclust)
-library(CVXR)
-library(MASS)
+# Dependencies should be loaded by the driver script
+# source("sdp_kmeans.R")
+# source("utils.R")
+# source("clustering_block_knowncov.R")
+# source("selection_block_greedy_screening.R")
+# source("cluster_spectral.R")
+# if (!require(mclust)) install.packages("mclust")
+# if (!require(CVXR)) install.packages("CVXR")
+# if (!require(MASS)) install.packages("MASS")
+# library(mclust)
+# library(CVXR)
+# library(MASS)
 
-#' Thompson Sampling K-Means Algorithm (Known Covariance)
+#' Block Coordinate Optimization with Thompson Sampling (Known Covariance)
 #' 
 #' Implements the block coordinate ascent with Thompson Sampling for feature selection.
 #' Uses clustering_block_knowncov for the clustering step.
@@ -26,7 +27,7 @@ library(MASS)
 #' @param covariance Covariance matrix (p x p). If NULL, assumes Identity.
 #' @return List containing cluster assignments, selected features, and metrics
 #' @export
-sdp_kmeans_bandit_knowncov <- function(X, K, n_iter = 10, C = 0.5, FDR_level = 0.4, n_perms = 10000, covariance = NULL) {
+block_coordinate_optim_thompson <- function(X, K, n_iter = 100, C = 0.5, n_perms = 200, covariance = NULL) {
   
   if (!is.matrix(X)) stop("X must be a matrix")
   
@@ -46,6 +47,7 @@ sdp_kmeans_bandit_knowncov <- function(X, K, n_iter = 10, C = 0.5, FDR_level = 0
   
   # Metrics
   rand_vec <- numeric(n_iter)
+  obj_vec <- numeric(n_iter) # Track Objective Function
   selected_history <- list()
   reward_history <- list()
   
@@ -62,12 +64,30 @@ sdp_kmeans_bandit_knowncov <- function(X, K, n_iter = 10, C = 0.5, FDR_level = 0
   # =========================================================
   # 1. INITIALIZATION BLOCK
   # =========================================================
-  # Spectral Clustering on all features
-  cat("Running initial spectral clustering...\n")
-  cluster_est_now <- cluster_spectral(X, K) 
+  # Initialization: Sample from Prior (Beta(1,1))
+  cat("Running initial sampling from prior (Beta(1,1))...\n")
+  # Sample theta ~ Beta(1,1) (which is Uniform(0,1))
+  # alpha_vec and beta_vec are initialized to 1s.
+  theta_init <- rbeta(p, alpha_vec, beta_vec)
+  S_hat_now <- which(theta_init > cutoff)
+  
+  if (length(S_hat_now) == 0) {
+      warning("Initialization selected 0 features. Forcing random selection of 10 features.")
+      S_hat_now <- sample(1:p, 10, replace = FALSE)
+  }
+  
+  cat(sprintf("Initial subset size: %d. Running initial clustering on subset...\n", length(S_hat_now)))
+  
+  # Create logical vector for clustering function
+  current_selection_logical_init <- rep(FALSE, p)
+  current_selection_logical_init[S_hat_now] <- TRUE
+  
+  # Run Clustering on this initial subset
+  # We pass cluster_est_prev = NULL as there is no previous estimate
+  clustering_result_init <- run_clustering_block_knowncov(X_tilde, current_selection_logical_init, K, cluster_est_prev = numeric(n), covariance = covariance)
+  cluster_est_now <- clustering_result_init$cluster 
   
   # Start with all features selected for the first reward assessment
-  S_hat_now <- 1:p # S_hat is Index Vector
   
   for (iternum in 1:n_iter) {
     cat(sprintf("\n--- Iteration %d (Thompson Sampling) ---\n", iternum))
@@ -84,7 +104,7 @@ sdp_kmeans_bandit_knowncov <- function(X, K, n_iter = 10, C = 0.5, FDR_level = 0
     
     # Run Greedy Screening (Permutation Test) on the subset
     # rewards_sub is a LOGICAL vector of length length(S_hat_now)
-    rewards_sub <- selection_block_greedy_screening(X_tilde_sub, cluster_est_now, fdr_level = FDR_level, n_perms = n_perms)
+    rewards_sub <- selection_block_greedy_screening(X_tilde_sub, cluster_est_now, fdr_level = NULL, n_perms = n_perms)
     
     # -------------------------------------------------------
     # B. Update Step
@@ -99,6 +119,14 @@ sdp_kmeans_bandit_knowncov <- function(X, K, n_iter = 10, C = 0.5, FDR_level = 0
     beta_vec[current_indices] <- beta_vec[current_indices] + (1 - as.numeric(rewards_sub))
     
     cat(sprintf("Rewarded arms: %d / %d selected in this subset\n", sum(rewards_sub), length(current_indices)))
+
+    # --- Logging Top 10 Features ---
+    post_mean_temp <- alpha_vec / (alpha_vec + beta_vec)
+    top10_indices <- order(post_mean_temp, decreasing = TRUE)[1:10]
+    top10_probs <- post_mean_temp[top10_indices]
+    cat("Top 10 Features (Posterior Mean):\n")
+    print(setNames(top10_probs, top10_indices))
+    # -------------------------------
     
     # Store rewards history (creating full vector for logging)
     rewards_full <- rep(0, p)
@@ -135,7 +163,14 @@ sdp_kmeans_bandit_knowncov <- function(X, K, n_iter = 10, C = 0.5, FDR_level = 0
     # Run Clustering on the NEW logical selection
     # clustering_block_knowncov uses X_tilde and logical vector
     
-    cluster_est_new <- run_clustering_block_knowncov(X_tilde, current_selection_logical, K, cluster_est_now, covariance = covariance)
+    # Clustering Block returns list(cluster, value)
+    clustering_result <- run_clustering_block_knowncov(X_tilde, current_selection_logical, K, cluster_est_now, covariance = covariance)
+    cluster_est_new <- clustering_result$cluster
+    obj_val <- clustering_result$value
+    
+    # Store Objective Value
+    obj_vec[iternum] <- obj_val
+    cat(sprintf("SDP Objective Value: %.4f\n", obj_val))
     
     # Compute Rand Index
     ri <- adjustedRandIndex(cluster_est_new, cluster_est_now)
@@ -159,6 +194,7 @@ sdp_kmeans_bandit_knowncov <- function(X, K, n_iter = 10, C = 0.5, FDR_level = 0
     cluster = cluster_est_now,
     selected = final_selection,
     alpha = alpha_vec,
-    beta = beta_vec
+    beta = beta_vec,
+    objective = obj_vec
   ))
 }

@@ -1,7 +1,7 @@
 # Clustering Block for Unknown Covariance
 
-source("sdp_kmeans.R")
-source("get_cov_small.R")
+# source("sdp_kmeans.R")
+# source("get_cov_small.R")
 
 #' Clustering Block for Unknown Covariance
 #' 
@@ -50,7 +50,7 @@ run_clustering_block_unknowncov <- function(x, K, mean_now, noise_now, cluster_e
   # If G is scaled by n, objective is scaled.
   # Let's follow MATLAB scaling to be safe.
   
-  cluster_est_new <- sdp_kmeans(affinity_matrix / n, K)
+  cluster_res <- sdp_kmeans(affinity_matrix / n, K)
   
-  return(cluster_est_new)
+  return(cluster_res$cluster) # Keeping original behavior (returning vector) for now
 }

@@ -1,6 +1,6 @@
 # Clustering Block for Known Covariance
 
-source("sdp_kmeans.R")
+# source("sdp_kmeans.R") # Sourced by driver script
 
 #' Clustering Block for Known Covariance
 #' 
@@ -40,11 +40,16 @@ run_clustering_block_knowncov <- function(X_tilde, selected_features, K, cluster
     }
     
     # Clustering Step (SDP)
-    cluster_est_new <- sdp_kmeans(G, K)
+    sdp_res <- sdp_kmeans(G, K)
+    cluster_est_new <- sdp_res$cluster
+    # We return the full result to access the objective value in bandit algorithm
+    return(sdp_res)
   } else {
     warning("No features selected. Keeping previous clustering.")
-    cluster_est_new <- cluster_est_prev
+    # Return previous with NA value
+    return(list(
+        cluster = cluster_est_prev,
+        value = NA
+    ))
   }
-  
-  return(cluster_est_new)
 }

@@ -1,10 +1,10 @@
 # ISEE K-Means for Unknown Covariance (Noisy Case)
 
-source("ISEE_bicluster.R")
-source("select_variable_ISEE_noisy.R")
-source("clustering_block_unknowncov.R")
-source("sdp_kmeans.R")
-if (!require("mclust")) install.packages("mclust") # For Rand Index
+# source("ISEE_bicluster.R")
+# source("select_variable_ISEE_noisy.R")
+# source("clustering_block_unknowncov.R")
+# source("sdp_kmeans.R")
+# library(mclust) is already handled in the functions using it or by the driver.
 library(mclust)
 
 #' ISEE K-Means Algorithm (Unknown Covariance, Noisy)

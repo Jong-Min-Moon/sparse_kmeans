@@ -82,12 +82,20 @@ selection_block_greedy_screening <- function(X_tilde, cluster_est, fdr_level = 0
   # 4. BH Adjustment
   adj_p_values <- p.adjust(p_values, method = "BH")
   
-  # 5. Application of FDR threshold
-  selected <- adj_p_values <= fdr_level
-  n_selected <- sum(selected)
-  
-  cat(sprintf("%d entries survived (FDR: %.2f) | Min adj-p: %.4e | P-val method: Permutation (%d)\n", 
-              n_selected, fdr_level, min(adj_p_values), n_perms))
+  # 5. Application of FDR threshold or Raw P-value
+  if (!is.null(fdr_level)) {
+    # FDR Control (BH)
+    selected <- adj_p_values <= fdr_level
+    n_selected <- sum(selected)
+    cat(sprintf("%d entries survived (FDR: %.2f) | Min adj-p: %.4e | P-val method: Permutation (%d)\n", 
+                n_selected, fdr_level, min(adj_p_values), n_perms))
+  } else {
+    # Raw P-value Threshold (0.01) matches MATLAB
+    selected <- p_values <= 0.01
+    n_selected <- sum(selected)
+    cat(sprintf("%d entries survived (P-val < 0.01) | Min raw-p: %.4e | P-val method: Permutation (%d)\n", 
+                n_selected, min(p_values), n_perms))
+  }
   
   # Fallback
   if (n_selected == 0) {

@@ -11,9 +11,9 @@
 #' @param K Number of clusters
 #' @param n_iter Maximum number of iterations
 #' @param stable_iter Number of consecutive iterations with ARI=1 to stop (default 10)
-#' @param fdr_level FDR level for selection block (default 0.4)
+#' @param fdr_level FDR level for selection block (default 0.1)
 #' @return List containing cluster assignments, iteration history, and timing
-sdp_kmeans_iter_knowncov <- function(X_tilde, K, n_iter = 10, stable_iter = 10, fdr_level = 0.4) {
+block_coordinate_optim_greedy <- function(X_tilde, K, n_iter = 10, stable_iter = 10, fdr_level = 0.1) {
   
   if (!is.matrix(X_tilde)) stop("X_tilde must be a matrix")
   p <- nrow(X_tilde)

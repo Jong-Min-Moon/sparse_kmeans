@@ -1,6 +1,6 @@
-# Test Thompson Sampling K-Means (Known Covariance)
+# Test Block Coordinate Optimization with Thompson Sampling (Known Covariance)
 
-source("sdp_kmeans_bandit_knowncov.R")
+source("block_coordinate_optim_thompson.R")
 
 # Generate Synthetic Data (Small scale for quick test)
 set.seed(123)
@@ -24,10 +24,10 @@ cat("Data Summary:\n")
 cat(sprintf("n=%d, p=%d, Signal on features 1-5\n", n, p))
 
 # Run Bandit Algorithm (Known Covariance version)
-cat("\nRunning sdp_kmeans_bandit_knowncov...\n")
+cat("\nRunning block_coordinate_optim_thompson...\n")
 # Assuming Diagonal Covariance for testing solve(cov, X)
 diag_cov <- diag(p)
-res <- sdp_kmeans_bandit_knowncov(X, K, n_iter = 100, C = 0.5, FDR_level = 0.4, n_perms = 50, covariance = diag_cov)
+res <- block_coordinate_optim_thompson(X, K, n_iter = 100, C = 0.5, FDR_level = 0.4, n_perms = 50, covariance = diag_cov)
 
 # Evaluate
 cat("\n--- Results ---\n")

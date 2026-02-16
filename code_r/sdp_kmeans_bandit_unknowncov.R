@@ -1,20 +1,21 @@
 # Thompson Sampling K-Means (Bandit Approach) - Unknown Covariance
 
-source("sdp_kmeans.R")
-source("utils.R")
-source("clustering_block_unknowncov.R")
-source("selection_block_greedy_screening.R")
-source("cluster_spectral.R")
-source("ISEE_bicluster.R") 
-source("get_cov_small.R") # Needed for clustering block unknown
-# select_variable_ISEE_noisy is replaced by Bandit logic
+# Thompson Sampling K-Means (Bandit Approach) - Unknown Covariance
 
-if (!require(mclust)) install.packages("mclust")
-if (!require(CVXR)) install.packages("CVXR")
-if (!require(MASS)) install.packages("MASS")
-library(mclust)
-library(CVXR)
-library(MASS)
+# Dependencies should be loaded by the driver script
+# source("sdp_kmeans.R")
+# source("utils.R")
+# source("clustering_block_unknowncov.R")
+# source("selection_block_greedy_screening.R")
+# source("cluster_spectral.R")
+# source("ISEE_bicluster.R") 
+# source("get_cov_small.R") 
+# if (!require(mclust)) install.packages("mclust")
+# if (!require(CVXR)) install.packages("CVXR")
+# if (!require(MASS)) install.packages("MASS")
+# library(mclust)
+# library(CVXR)
+# library(MASS)
 
 #' Thompson Sampling K-Means Algorithm (Unknown Covariance)
 #' 
