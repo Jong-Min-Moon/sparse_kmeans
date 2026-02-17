@@ -68,6 +68,7 @@ runtime <- as.numeric(difftime(t_end, t_start, units = "secs"))
 
 # Calculate Metrics
 ari <- mclust::adjustedRandIndex(res$cluster, true_labels)
+# Clustering accuracy for K=2: max of matching or mismatching labels
 acc <- max(mean(res$cluster == true_labels), mean(res$cluster != true_labels))
 
 # Prepare Result List (mirroring existing simulation patterns)

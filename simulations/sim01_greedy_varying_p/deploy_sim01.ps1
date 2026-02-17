@@ -35,19 +35,20 @@ Write-Host "Creating remote directories..." -ForegroundColor Cyan
 # SSH command to create directories (-p ensures no error if exists)
 ssh "${Username}@${Hostname}" "mkdir -p ${RemoteBase}/simulations/sim01_greedy_varying_p && mkdir -p ${RemoteBase}/code_r"
 
-# 2. Transfer Simulation Files
-Write-Host "Transferring simulation files..." -ForegroundColor Cyan
-scp -r "${SimDir}\*" "${Username}@${Hostname}:${RemoteBase}/simulations/sim01_greedy_varying_p/"
+# 2. Transfer Simulation Files (Exclude .rds, .o, .so, .dll, .out, .err)
+Write-Host "Transferring simulation files (selective)..." -ForegroundColor Cyan
+# Copy only necessary scripts/configs
+scp "${SimDir}\*.R" "${SimDir}\*.sh" "${Username}@${Hostname}:${RemoteBase}/simulations/sim01_greedy_varying_p/"
 
 # 3. Transfer Library Files
 Write-Host "Transferring library files..." -ForegroundColor Cyan
-scp -r "${CodeDir}\*" "${Username}@${Hostname}:${RemoteBase}/code_r/"
+scp "${CodeDir}\*.R" "${CodeDir}\*.cpp" "${Username}@${Hostname}:${RemoteBase}/code_r/"
 
 # 4. Convert Line Endings & Submit
 Write-Host "Submitting multi-parameter job suite..." -ForegroundColor Cyan
-# Clean existing binaries on remote to ensure fresh compilation
+# Clean existing binaries, old results, and logs on remote to ensure fresh run
 # Convert endings for R scripts and shell scripts, then run submit_all.sh
-$submitCmd = "cd ${RemoteBase}/code_r && rm -f *.o *.so *.dll && cd ${RemoteBase}/simulations/sim01_greedy_varying_p && dos2unix submit.sh compile_solver.R run_sim01.R submit_all.sh submit_template.sh && chmod +x submit_all.sh && ./submit_all.sh"
+$submitCmd = "cd ${RemoteBase}/code_r && rm -f *.o *.so *.dll && cd ${RemoteBase}/simulations/sim01_greedy_varying_p && rm -rf output_p* logs *.rds *.out *.err && dos2unix *.sh *.R && chmod +x *.sh && ./submit_all.sh"
 
 ssh "${Username}@${Hostname}" $submitCmd
 

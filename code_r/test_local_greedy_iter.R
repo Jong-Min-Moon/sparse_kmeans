@@ -34,7 +34,9 @@ res <- block_coordinate_optim_greedy(X, K, n_iter = 1, stable_iter = 100, fdr_le
 
 cat("\n--- Finished 1 Iteration ---\n")
 cat(sprintf("Iterations run: %d\n", res$iter))
-cat(sprintf("Initial Adjusted Rand Index: %.4f\n", mclust::adjustedRandIndex(res$cluster, true_labels)))
+# Compute Accuracy (not ARI) as max matching percentage
+cat(sprintf("Final Clustering Accuracy: %.4f\n", max(mean(res$cluster == true_labels), mean(res$cluster != true_labels))))
+cat(sprintf("Final Adjusted Rand Index: %.4f\n", mclust::adjustedRandIndex(res$cluster, true_labels)))
 
 # Check if selected features in that iteration were reasonable
 selected <- selection_block_greedy_screening(X, res$cluster, fdr_level = 0.4, n_perms = 1000)

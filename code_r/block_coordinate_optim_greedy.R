@@ -12,7 +12,6 @@
 #' @param n_iter Maximum number of iterations
 #' @param stable_iter Number of consecutive iterations with ARI=1 to stop (default 10)
 #' @param fdr_level FDR level for selection block (default 0.4)
-#' @return List containing cluster assignments, iteration history, and timing
 block_coordinate_optim_greedy <- function(X_tilde, K, n_iter = 10, stable_iter = 10, fdr_level = 0.4) {
   if (!is.matrix(X_tilde)) stop("X_tilde must be a matrix")
   p <- nrow(X_tilde)
@@ -76,6 +75,7 @@ block_coordinate_optim_greedy <- function(X_tilde, K, n_iter = 10, stable_iter =
     iter_duration <- as.numeric(difftime(iter_end_time, iter_start_time, units = "secs"))
     cat(sprintf("Iteration %d Duration: %.2f seconds\n", iternum, iter_duration))
     cat(sprintf("Adjusted Rand Index change: %.4f\n", rand_score))
+
 
     # Stopping logic: Stop if Rand Score is perfectly 1 for 'stable_iter' consecutive times
     if (rand_score == 1) {

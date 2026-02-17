@@ -18,6 +18,10 @@ fi
 
 for p in "${P_VALUES[@]}"
 do
+    echo "Preparing for p=$p..."
+    mkdir -p output_p${p}
+    mkdir -p logs
+    
     echo "Submitting job array for p=$p..."
     
     # Create a temporary job script for this P
