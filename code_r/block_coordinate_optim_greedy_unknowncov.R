@@ -57,6 +57,10 @@ block_coordinate_optim_greedy_unknowncov <- function(X, K, n_iter = 10, stable_i
     # Now uses BH procedure with fdr_level
     selected_features <- selection_block_greedy_screening(X_tilde, cluster_est_now, fdr_level)
 
+    selected_indices <- which(selected_features)
+    cat(sprintf("Iteration %d: Selected %d features: ", iternum, length(selected_indices)))
+    cat(paste(selected_indices, collapse = ", "), "\n")
+
 
     # 2. Sub-matrix Extraction
     # Subset X_tilde using selected_features
@@ -127,6 +131,8 @@ block_coordinate_optim_greedy_unknowncov <- function(X, K, n_iter = 10, stable_i
     cluster = cluster_est_now,
     iter = iternum,
     rand_vec = rand_vec,
-    time = total_time
+    rand_vec = rand_vec,
+    time = total_time,
+    selected_features = selected_features
   ))
 }

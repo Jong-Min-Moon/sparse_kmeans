@@ -3,7 +3,7 @@
 #SBATCH --partition=main
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=2
+#SBATCH --cpus-per-task=8
 #SBATCH --mem=4G
 #SBATCH --time=23:59:59
 #SBATCH --output=logs/sim_p%P%_%a.out
