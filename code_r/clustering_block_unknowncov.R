@@ -1,56 +1,59 @@
-# Clustering Block for Unknown Covariance
+# Clustering Block for Unknown Covariance (ISEE)
 
-# source("sdp_kmeans.R")
-# source("get_cov_small.R")
+# source("ISEE_bicluster.R") # Sourced by driver
+# source("sdp_kmeans.R")     # Sourced by driver
 
 #' Clustering Block for Unknown Covariance
-#' 
-#' Corresponds to cluster_SDP_noniso in MATLAB.
-#' Uses estimated covariance on selected features to construct affinity matrix.
-#' 
-#' @param x Original data matrix (p x n)
+#'
+#' @param x Raw data matrix (p x n)
+#' @param selected_features Logical vector of selected features
 #' @param K Number of clusters
-#' @param mean_now Innovated mean matrix (p x n)
-#' @param noise_now Innovated noise matrix (p x n)
-#' @param cluster_est_prev Previous cluster assignments (n vector)
-#' @param s_hat Logical vector of selected features (p vector)
-#' @return New cluster assignments (n vector)
-#' @export
-run_clustering_block_unknowncov <- function(x, K, mean_now, noise_now, cluster_est_prev, s_hat) {
-  
-  n <- ncol(x)
-  
-  # Check if any features selected
-  if (sum(s_hat) == 0) {
-      warning("No features selected in unknown covariance clustering. Returning previous.")
-      return(cluster_est_prev)
-  }
-  
-  # Estimate Sigma_hat on selected features
-  # get_cov_small returns s x s matrix
-  Sigma_hat_s_hat_now <- get_cov_small(x, cluster_est_prev, s_hat)
-  
-  # Compute x_tilde (innovated data)
-  x_tilde_now <- mean_now + noise_now
-  
-  # Subset x_tilde to s_hat
-  x_tilde_now_s <- x_tilde_now[s_hat, , drop = FALSE]
-  
-  # Construct Affinity Matrix
-  # G = X_tilde_s' * Sigma_hat_s * X_tilde_s
-  # Dimension: (n x s) * (s x s) * (s x n) -> n x n
-  affinity_matrix <- crossprod(x_tilde_now_s, Sigma_hat_s_hat_now) %*% x_tilde_now_s
-  
-  # Run SDP K-Means
-  # Normalize by n as per MATLAB code?
-  # MATLAB: kmeans_sdp_pengwei( affinity_matrix/ n, K);
-  # My sdp_kmeans usually takes G. Scaling by 1/n might affect lambda in SDP?
-  # In sdp_kmeans.R, do I scale?
-  # The constraint is diag(Z) <= 1/n? No, Z 1 = 1.
-  # If G is scaled by n, objective is scaled.
-  # Let's follow MATLAB scaling to be safe.
-  
-  cluster_res <- sdp_kmeans(affinity_matrix / n, K)
-  
-  return(cluster_res$cluster) # Keeping original behavior (returning vector) for now
+#' @param cluster_est_prev Previous cluster assignments (used for ISEE initialization)
+#' @return New cluster assignments (vector of length n)
+run_clustering_block_unknowncov <- function(x, selected_features, K, cluster_est_prev) {
+    # 1. ISEE Estimation (The Handshake)
+    # Estimate denoised matrix X_tilde based on previous clusters
+    cat("Running ISEE in Clustering Block...\n")
+    isee_res <- ISEE_bicluster(x, cluster_est_prev)
+    X_tilde <- isee_res$X_tilde
+
+    # 2. Sub-matrix Extraction
+    # Subset X_tilde using selected_features
+    X_tilde_sub <- X_tilde[selected_features, , drop = FALSE]
+
+    # 3. Covariance Calculation (Crucial Step)
+    # Calculate sample covariance of original x using selected_features
+    x_sub <- x[selected_features, , drop = FALSE]
+
+    # Demean per cluster to remove cluster effect (Pooled Covariance estimation)
+    x_sub_centered <- x_sub
+    unique_clusters <- unique(cluster_est_prev)
+    for (k in unique_clusters) {
+        cluster_idx <- (cluster_est_prev == k)
+        if (sum(cluster_idx) > 0) {
+            cluster_data <- x_sub[, cluster_idx, drop = FALSE]
+            cluster_mean <- rowMeans(cluster_data)
+            # Subtract cluster mean from each column in that cluster
+            x_sub_centered[, cluster_idx] <- sweep(cluster_data, 1, cluster_mean, "-")
+        }
+    }
+
+    # Calculate covariance of centered data
+    cov_sub <- cov(t(x_sub_centered))
+
+    # 4. The Handshake (Delegation)
+    # Call run_clustering_block_knowncov
+    # x: X_tilde_sub
+    # selected_features: all rows of X_tilde_sub (indices 1:nrow)
+    # covariance: cov_sub
+
+    res <- run_clustering_block_knowncov(
+        X_tilde = X_tilde_sub,
+        selected_features = seq_len(nrow(X_tilde_sub)),
+        K = K,
+        cluster_est_prev = cluster_est_prev,
+        covariance = cov_sub
+    )
+
+    return(res)
 }

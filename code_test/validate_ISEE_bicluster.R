@@ -18,8 +18,8 @@ if (file.exists("code_r/ISEE_bicluster.R")) {
 cat("1. Generating Ground Truth Data...\n")
 set.seed(2025)
 
-p <- 10
-n <- 1000
+p <- 200
+n <- 500
 n_c <- n / 2
 
 # Sparse Precision Matrix (Omega) - Tridiagonal
