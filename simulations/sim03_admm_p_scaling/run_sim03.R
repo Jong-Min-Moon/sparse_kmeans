@@ -6,7 +6,7 @@ library(stats)
 library(mclust)
 
 # Source ADMM solver
-source("code_r/sdp_kmeans_admm.R")
+source("code_r/sdp_kmeans.R")
 
 # Parameters
 n <- 200
@@ -52,7 +52,7 @@ for (p in p_values) {
 
         # Run ADMM
         t_start <- Sys.time()
-        res <- sdp_kmeans_admm(G, K, max_iter = 1000, tol = 1e-4, verbose = FALSE)
+        res <- sdp_kmeans(G, K, max_iter = 1000, tol = 1e-4, verbose = FALSE)
         t_end <- Sys.time()
         runtime <- as.numeric(difftime(t_end, t_start, units = "secs"))
 

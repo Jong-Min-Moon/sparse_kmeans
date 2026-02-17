@@ -5,8 +5,9 @@ library(stats)
 library(mclust) # For ARI
 
 # Source both
+# Source both
 source("code_r/sdp_kmeans.R")
-source("code_r/sdp_kmeans_admm.R")
+
 
 n_iter <- 10
 results <- data.frame(
@@ -61,7 +62,7 @@ for (i in 1:n_iter) {
     cat("Running ADMM...\n")
     t3 <- Sys.time()
     # Use defaults (optimized)
-    res_admm <- sdp_kmeans_admm(G, K, max_iter = 1000, tol = 1e-4, verbose = FALSE)
+    res_admm <- sdp_kmeans(G, K, max_iter = 1000, tol = 1e-4, verbose = FALSE)
     t4 <- Sys.time()
     time_admm <- as.numeric(difftime(t4, t3, units = "secs"))
 

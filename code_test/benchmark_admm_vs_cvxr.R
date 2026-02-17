@@ -5,7 +5,7 @@ library(mclust) # For ARI
 
 # Source both
 source("code_r/sdp_kmeans.R")
-source("code_r/sdp_kmeans_admm.R")
+
 
 set.seed(123)
 n <- 500
@@ -41,7 +41,7 @@ true_labels <- c(rep(1, n1), rep(2, n2))
 # 1. Run ADMM (Fast)
 cat("\n--- Running ADMM Solver (n=500) ---\n")
 start_admm <- Sys.time()
-res_admm <- sdp_kmeans_admm(G, K, max_iter = 200, tol = 1e-4, verbose = TRUE)
+res_admm <- sdp_kmeans(G, K, max_iter = 200, tol = 1e-4, verbose = TRUE)
 end_admm <- Sys.time()
 time_admm <- as.numeric(difftime(end_admm, start_admm, units = "secs"))
 
@@ -79,7 +79,7 @@ cat(sprintf(
 
 cat("Running ADMM (n=200)...\n")
 t3 <- Sys.time()
-res_admm_small <- sdp_kmeans_admm(G_small, K, max_iter = 500, tol = 1e-5)
+res_admm_small <- sdp_kmeans(G_small, K, max_iter = 500, tol = 1e-5)
 t4 <- Sys.time()
 ari_admm_small <- adjustedRandIndex(res_admm_small$cluster, true_labels_small)
 cat(sprintf(
