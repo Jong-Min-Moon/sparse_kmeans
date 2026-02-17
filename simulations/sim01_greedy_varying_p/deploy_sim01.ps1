@@ -45,9 +45,9 @@ scp -r "${CodeDir}\*" "${Username}@${Hostname}:${RemoteBase}/code_r/"
 
 # 4. Convert Line Endings & Submit
 Write-Host "Submitting multi-parameter job suite..." -ForegroundColor Cyan
+# Clean existing binaries on remote to ensure fresh compilation
 # Convert endings for R scripts and shell scripts, then run submit_all.sh
-$submitCmd = "cd ${RemoteBase}/simulations/sim01_greedy_varying_p && dos2unix submit.sh compile_solver.R run_sim01.R submit_all.sh submit_template.sh && chmod +x submit_all.sh && ./submit_all.sh"
-
+$submitCmd = "cd ${RemoteBase}/code_r && rm -f *.o *.so *.dll && cd ${RemoteBase}/simulations/sim01_greedy_varying_p && dos2unix submit.sh compile_solver.R run_sim01.R submit_all.sh submit_template.sh && chmod +x submit_all.sh && ./submit_all.sh"
 
 ssh "${Username}@${Hostname}" $submitCmd
 

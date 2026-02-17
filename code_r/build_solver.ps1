@@ -42,19 +42,28 @@ Write-Host "OpenMP Flags: $OmpFlags"
 $env:PKG_CXXFLAGS = "$RcppFlags $OmpFlags"
 $env:PKG_LIBS = "$OmpFlags"
 
-# 4. Compile
+# 4. Compile Proj Simplex
 Write-Host "Compiling proj_simplex.cpp..."
-# Assuming script is run from code_r or root, but let's be safe. 
-# If run from code_r:
 if (Test-Path "proj_simplex.cpp") {
     & $Rcmd CMD SHLIB -o proj_simplex.dll proj_simplex.cpp
 }
-# If run from root:
 elseif (Test-Path "code_r/proj_simplex.cpp") {
     & $Rcmd CMD SHLIB -o code_r/proj_simplex.dll code_r/proj_simplex.cpp
 }
 else {
-    Write-Error "Could not find proj_simplex.cpp"
+    Write-Warning "Could not find proj_simplex.cpp"
+}
+
+# 5. Compile Selection Utils
+Write-Host "Compiling selection_utils.cpp..."
+if (Test-Path "selection_utils.cpp") {
+    & $Rcmd CMD SHLIB -o selection_utils.dll selection_utils.cpp
+}
+elseif (Test-Path "code_r/selection_utils.cpp") {
+    & $Rcmd CMD SHLIB -o code_r/selection_utils.dll code_r/selection_utils.cpp
+}
+else {
+    Write-Warning "Could not find selection_utils.cpp"
 }
 
 if ($LASTEXITCODE -eq 0) {

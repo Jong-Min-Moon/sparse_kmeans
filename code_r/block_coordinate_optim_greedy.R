@@ -22,10 +22,13 @@ block_coordinate_optim_greedy <- function(X_tilde, K, n_iter = 10, stable_iter =
 
   # Initial Clustering (Initialization Block)
   cat("Running initial clustering...\n")
+  t_init_start <- Sys.time()
   # Use all features and identity covariance for initialization
   G_init <- crossprod(X_tilde)
   sdp_init <- sdp_kmeans(G_init, K)
   cluster_est_now <- sdp_init$cluster
+  t_init_end <- Sys.time()
+  cat(sprintf("Initial Clustering took: %.4f seconds\n", as.numeric(difftime(t_init_end, t_init_start, units = "secs"))))
 
   # Iteration
   is_stop <- FALSE
@@ -50,12 +53,18 @@ block_coordinate_optim_greedy <- function(X_tilde, K, n_iter = 10, stable_iter =
 
     # --- Selection Block ---
     # Now uses BH procedure with fdr_level
+    t_sel_start <- Sys.time()
     selected_features <- selection_block_greedy_screening(X_tilde, cluster_est_now, fdr_level)
+    t_sel_end <- Sys.time()
+    cat(sprintf("Selection Block took: %.4f seconds\n", as.numeric(difftime(t_sel_end, t_sel_start, units = "secs"))))
 
     # --- Clustering Block ---
     # Using NULL for covariance implies Identity (efficient path)
+    t_clus_start <- Sys.time()
     res_clustering <- run_clustering_block_knowncov(X_tilde, selected_features, K, cluster_est_now, covariance = NULL)
     cluster_est_new <- res_clustering$cluster
+    t_clus_end <- Sys.time()
+    cat(sprintf("Clustering Block took: %.4f seconds\n", as.numeric(difftime(t_clus_end, t_clus_start, units = "secs"))))
 
     # --- Stopping Criteria ---
     # Compare new clustering with old clustering using Adjusted Rand Index

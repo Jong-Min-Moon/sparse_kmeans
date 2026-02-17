@@ -13,6 +13,9 @@ source("../../code_r/selection_block_greedy_screening.R")
 source("../../code_r/clustering_block_knowncov.R")
 source("../../code_r/block_coordinate_optim_greedy.R")
 
+# Use parallel threads for the solver (matching --cpus-per-task=4)
+Sys.setenv(OMP_NUM_THREADS = 4)
+
 # Parse arguments manually for better compatibility
 args <- commandArgs(trailingOnly = TRUE)
 

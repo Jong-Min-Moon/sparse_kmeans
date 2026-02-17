@@ -19,7 +19,8 @@
 #' @import Rcpp
 #' @import RSpectra
 #' @import stats
-sdp_kmeans <- function(G, K, rho = 1.0, max_iter = 10000, tol = 1e-4, verbose = FALSE, k_prime_factor = 3, mu = 10.0, tau = 2.0, report_interval = 10) {
+sdp_kmeans <- function(G, K, rho = 1.0, max_iter = 2000, tol = 1e-3, verbose = TRUE, k_prime_factor = 3, mu = 10.0, tau = 2.0, report_interval = 500) {
+  start_time <- Sys.time()
   # Load the pre-compiled library
   # Windows: code_r/proj_simplex.dll
   # Linux/Unix: code_r/proj_simplex.so (needs to be compiled)
@@ -178,7 +179,7 @@ sdp_kmeans <- function(G, K, rho = 1.0, max_iter = 10000, tol = 1e-4, verbose = 
     # 2. Y Update (Linear - Pre-compiled Rcpp)
     N_mat <- Z_new + Lambda / rho
     # Using as.matrix to ensure SEXP compatibility
-    Y_new <- proj_simplex_rows_cpp(as.matrix(N_mat), as.double(K))
+    Y_new <- proj_simplex_rows_cpp(as.matrix(N_mat))
 
     # 3. Lambda Update
     resid <- Z_new - Y_new
@@ -216,6 +217,8 @@ sdp_kmeans <- function(G, K, rho = 1.0, max_iter = 10000, tol = 1e-4, verbose = 
   eig_Z <- RSpectra::eigs_sym(Z, K, which = "LA")
   V <- eig_Z$vectors
   km <- kmeans(V, centers = K, nstart = 20)
+
+  cat(sprintf("sdp_kmeans finished: %d iterations in %.2f seconds\n", iter, as.numeric(difftime(Sys.time(), start_time, units = "secs"))))
 
   return(list(
     cluster = km$cluster,

@@ -16,7 +16,7 @@ p <- 3000 # Focusing on P=3000 as per recent context
 n_reps <- 100
 mu_val <- sqrt(4 / s)
 
-cat("Starting Simulation 03: 100 Reps (Tol=1e-3, MaxIter=1000, Sum=K)\n")
+cat("Starting Simulation 03: 100 Reps (Tol=1e-3, MaxIter=1000, Sum=1)\n")
 cat(sprintf("N=%d, P=%d, K=%d, s=%d, Reps=%d\n", n, p, K, s, n_reps))
 
 # Use parallel threads for the solver itself
@@ -81,5 +81,5 @@ cat(sprintf("Mean Accuracy: %.4f (SD: %.4f)\n", mean_acc, sd_acc))
 cat(sprintf("Mean Time: %.2fs\n", mean_time))
 cat(sprintf("Mean Iterations: %.1f\n", mean_iter))
 
-write.csv(results, "simulations/sim03_admm_p_scaling/results_sim03_100reps_tol_1e3.csv", row.names = FALSE)
-cat("Detailed results saved to simulations/sim03_admm_p_scaling/results_sim03_100reps_tol_1e3.csv\n")
+write.csv(results, "simulations/sim03_admm_p_scaling/results_sim03_100reps_tol_1e3_sum1.csv", row.names = FALSE)
+cat("Detailed results saved to simulations/sim03_admm_p_scaling/results_sim03_100reps_tol_1e3_sum1.csv\n")

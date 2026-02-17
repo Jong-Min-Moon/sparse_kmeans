@@ -42,7 +42,12 @@ scp -r "${SimDir}\*" "${Username}@${Hostname}:${RemoteBase}/simulations/sim01_va
 Write-Host "Transferring library files..." -ForegroundColor Cyan
 scp -r "${CodeDir}\*" "${Username}@${Hostname}:${RemoteBase}/code_r/"
 
-# 4. Convert Line Endings & Submit
+# 4. Compile C++ Code (Important for O(N) optimization)
+Write-Host "Compiling C++ code..." -ForegroundColor Cyan
+$compileCmd = "module load rstats/4.5.1 && cd ${RemoteBase}/code_r && Rscript ../simulations/sim01_varying_p/compile_solver.R"
+ssh "${Username}@${Hostname}" $compileCmd
+
+# 5. Convert Line Endings & Submit
 Write-Host "Submitting jobs..." -ForegroundColor Cyan
 $submitCmd = "cd ${RemoteBase}/simulations/sim01_varying_p && dos2unix submit_template.sh submit_all.sh driver.R && bash submit_all.sh"
 
