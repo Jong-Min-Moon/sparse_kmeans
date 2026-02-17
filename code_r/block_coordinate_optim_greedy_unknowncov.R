@@ -13,7 +13,7 @@
 #' @param stable_iter Number of consecutive iterations with ARI=1 to stop (default 10)
 #' @param fdr_level FDR level for selection block (default 0.1)
 #' @return List containing cluster assignments, iteration history, and timing
-block_coordinate_optim_greedy <- function(X, K, n_iter = 10, stable_iter = 10, fdr_level = 0.1) {
+block_coordinate_optim_greedy_unknowncov <- function(X, K, n_iter = 10, stable_iter = 10, fdr_level = 0.4) {
   if (!is.matrix(X)) stop("X must be a matrix")
   p <- nrow(X)
   n <- ncol(X)
@@ -24,7 +24,8 @@ block_coordinate_optim_greedy <- function(X, K, n_iter = 10, stable_iter = 10, f
   cat("Running initial clustering...\n")
   # Use all features and identity covariance for initialization
   G_init <- crossprod(X)
-  cluster_est_now <- sdp_kmeans(G_init, K)
+  res_init <- sdp_kmeans(G_init, K)
+  cluster_est_now <- res_init$cluster
 
   # Iteration
   is_stop <- FALSE
@@ -63,13 +64,13 @@ block_coordinate_optim_greedy <- function(X, K, n_iter = 10, stable_iter = 10, f
 
     # 3. Covariance Calculation (Crucial Step)
     # Calculate sample covariance of original x using selected_features
-    x_sub <- x[selected_features, , drop = FALSE]
+    x_sub <- X[selected_features, , drop = FALSE]
 
     # Demean per cluster to remove cluster effect (Pooled Covariance estimation)
     x_sub_centered <- x_sub
-    unique_clusters <- unique(cluster_est_prev)
+    unique_clusters <- unique(cluster_est_now)
     for (k in unique_clusters) {
-      cluster_idx <- (cluster_est_prev == k)
+      cluster_idx <- (cluster_est_now == k)
       if (sum(cluster_idx) > 0) {
         cluster_data <- x_sub[, cluster_idx, drop = FALSE]
         cluster_mean <- rowMeans(cluster_data)
@@ -83,13 +84,14 @@ block_coordinate_optim_greedy <- function(X, K, n_iter = 10, stable_iter = 10, f
 
     # --- Clustering Block ---
     # Using NULL for covariance implies Identity (efficient path)
-    cluster_est_new <- run_clustering_block_knowncov(
+    res_blocking <- run_clustering_block_knowncov(
       X_tilde = X_tilde_sub,
       selected_features = seq_len(nrow(X_tilde_sub)),
       K = K,
       cluster_est_prev = cluster_est_now,
       covariance = cov_sub
     )
+    cluster_est_new <- res_blocking$cluster
 
     # --- Stopping Criteria ---
     # Compare new clustering with old clustering using Adjusted Rand Index
