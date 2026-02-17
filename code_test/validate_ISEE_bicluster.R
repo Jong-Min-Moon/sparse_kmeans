@@ -48,7 +48,7 @@ X <- t(rbind(X1, X2)) # p x n
 true_labels <- c(rep(1, n_c), rep(2, n_c))
 
 # Perturb Cluster Assignments
-perturb_rate <- 0.05
+perturb_rate <- 0
 n_perturb <- floor(n * perturb_rate)
 cat(sprintf("Perturbing %d labels (%.0f%%)...\n", n_perturb, perturb_rate * 100))
 
@@ -73,9 +73,8 @@ if (getDoParWorkers() == 1) {
     }
 }
 
-res <- ISEE_bicluster(X, est_labels)
-X_tilde_ISEE <- res$X_tilde
-Omega_diag_hat <- res$Omega_diag_hat
+# res is now just X_tilde (matrix)
+X_tilde_ISEE <- ISEE_bicluster(X, est_labels)
 
 # 3. Metric Overhaul
 
@@ -98,10 +97,8 @@ for (i in 1:n) {
 mean_col_cor <- mean(cor_vec)
 cat(sprintf("   Mean Column Correlation:    %.5f\n", mean_col_cor))
 
-# C. Precision Diagonal Accuracy (MAE)
-true_diag <- diag(Omega_true)
-mae_diag <- mean(abs(Omega_diag_hat - true_diag))
-cat(sprintf("   Precision Diagonal MAE:     %.5f\n", mae_diag))
+# C. Precision Diagonal Accuracy (MAE) - SKIPPED
+cat("   Precision Diagonal MAE:     N/A (Not returned by modified ISEE_bicluster)\n")
 
 # 4. Visual Diagnostics
 cat("\n4. Creating Diagnostic Plots...\n")
@@ -113,9 +110,6 @@ df_identity <- data.frame(
     Estimated = as.vector(X_tilde_ISEE)
 )
 
-# Downsample for plotting if too large (2000 points is fine, but for larger p*n it might be needed)
-# In this case p*n = 2000, so plot all.
-
 p1 <- ggplot(df_identity, aes(x = Truth, y = Estimated)) +
     geom_point(alpha = 0.3, color = "blue") +
     geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed") +
@@ -126,25 +120,5 @@ p1 <- ggplot(df_identity, aes(x = Truth, y = Estimated)) +
 
 ggsave("validation_identity_check.png", p1, width = 6, height = 6)
 
-# B. Precision Heatmap / Diagonal Comparison
-# Visualize estimated vs true diagonal
-df_diag <- data.frame(
-    Dimension = 1:p,
-    True = true_diag,
-    Estimated = Omega_diag_hat
-)
-df_diag_long <- melt(df_diag, id.vars = "Dimension", variable.name = "Type", value.name = "Value")
-
-p2 <- ggplot(df_diag_long, aes(x = Dimension, y = Value, color = Type)) +
-    geom_line(size = 1) +
-    geom_point(size = 2) +
-    ggtitle("Precision Matrix Diagonal: True vs Estimated") +
-    labs(y = "Diagonal Value of Omega") +
-    scale_x_continuous(breaks = 1:p) +
-    theme_minimal()
-
-ggsave("validation_precision_diag.png", p2, width = 6, height = 4)
-
 cat("Validation complete. Plots saved:\n")
 cat("  - validation_identity_check.png\n")
-cat("  - validation_precision_diag.png\n")

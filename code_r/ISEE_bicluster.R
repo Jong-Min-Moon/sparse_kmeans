@@ -158,8 +158,5 @@ ISEE_bicluster <- function(x, cluster_est_now) {
     Omega_diag_hat[rows_idx] <- Omega_hat_Al
   }
 
-  return(list(
-    X_tilde = X_tilde,
-    Omega_diag_hat = Omega_diag_hat
-  ))
+  return(X_tilde)
 }
