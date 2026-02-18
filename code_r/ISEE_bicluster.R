@@ -161,11 +161,8 @@ ISEE_bicluster_stacked <- function(x, cluster_est_now) {
   }
 
   n_regression <- floor(p / 2)
-  cat(sprintf("Running ISEE Bicluster Stacked on %d blocks (Parallel)...\n", n_regression))
+  cat(sprintf("Running ISEE Bicluster Stacked (EBIC) on %d blocks (Parallel)...\n", n_regression))
 
-  # Pre-calculate foldid for consistent CV across blocks and tasks
-  set.seed(42)
-  fold_id <- sample(rep(seq(10), length.out = n))
   # Pre-construct design matrix base
   D_full <- cbind(Z, x_t)
 
@@ -187,13 +184,12 @@ ISEE_bicluster_stacked <- function(x, cluster_est_now) {
     # Penalty Factor: 0 for indicators (unpenalized), 1 for variables
     p_fac <- c(rep(0, K), rep(1, p - 2))
 
-    # Fit mgaussian Lasso (shared B across response variables)
-    cv_fit <- tryCatch(
+    # Fit mgaussian Lasso with EBIC lambda selection
+    lasso_fit <- tryCatch(
       {
-        glmnet::cv.glmnet(
+        glmnet::glmnet(
           x = D_mat, y = Y_Al, family = "mgaussian",
-          penalty.factor = p_fac, intercept = FALSE,
-          parallel = FALSE, foldid = fold_id
+          penalty.factor = p_fac, intercept = FALSE
         )
       },
       error = function(e) {
@@ -201,7 +197,7 @@ ISEE_bicluster_stacked <- function(x, cluster_est_now) {
       }
     )
 
-    if (is.null(cv_fit)) {
+    if (is.null(lasso_fit)) {
       # Fallback to mean imputation if Lasso fails
       alpha_Al <- matrix(0, 2, K)
       for (k in 1:K) {
@@ -210,21 +206,31 @@ ISEE_bicluster_stacked <- function(x, cluster_est_now) {
       }
       E_Al_t <- Y_Al - Z %*% t(alpha_Al)
     } else {
-      # Extract coefficients at lambda.1se
-      coef_list <- glmnet::coef.glmnet(cv_fit, s = "lambda.1se")
+      # Select lambda via EBIC (gamma = 1)
+      n_samples <- nrow(D_mat)
+      gamma <- 1
+      dev_vals <- lasso_fit$dev.ratio * lasso_fit$nulldev
+      df_vals <- lasso_fit$df
+      bic_vals <- n_samples * log(dev_vals / n_samples) + log(n_samples) * df_vals
+      p_total <- p - 2
+      ebic_penalty <- 2 * gamma * lchoose(p_total, pmax(df_vals, 1))
+      ebic_vals <- bic_vals + ebic_penalty
+      best_idx <- which.min(ebic_vals)
+      best_lambda <- lasso_fit$lambda[best_idx]
+
+      # Extract coefficients at best EBIC lambda
+      coef_list <- glmnet::coef.glmnet(lasso_fit, s = best_lambda)
       # Extract intercepts alpha (K x 2)
       alpha_Al_t <- matrix(0, K, 2)
       # shared beta across y1, y2
       beta_Al_t <- matrix(0, (p - 2), 2)
 
       for (j in 1:2) {
-        # coefs[[j]] is (K + p - 2 + 1) x 1. Row 1 is global intercept (0).
         alpha_Al_t[, j] <- as.numeric(coef_list[[j]][2:(K + 1)])
         beta_Al_t[, j] <- as.numeric(coef_list[[j]][(K + 2):(K + p - 1)])
       }
 
       # Residuals: E_Al (n x 2) = Y - (Z*alpha + X_Ac*beta)
-      # Predictor_Ac columns in D_mat start after first K columns
       E_Al_t <- Y_Al - (Z %*% alpha_Al_t + D_mat[, (K + 1):(K + p - 2)] %*% beta_Al_t)
       alpha_Al <- t(alpha_Al_t) # 2 x K
     }
@@ -264,12 +270,11 @@ ISEE_bicluster_stacked <- function(x, cluster_est_now) {
     D_mat <- D_full[, -(K + last_idx), drop = FALSE]
     p_fac <- c(rep(0, K), rep(1, p - 1))
 
-    cv_fit <- tryCatch(
+    lasso_fit <- tryCatch(
       {
-        glmnet::cv.glmnet(
+        glmnet::glmnet(
           x = D_mat, y = Y_Al, family = "gaussian",
-          penalty.factor = p_fac, intercept = FALSE,
-          parallel = FALSE, foldid = fold_id
+          penalty.factor = p_fac, intercept = FALSE
         )
       },
       error = function(e) {
@@ -277,7 +282,7 @@ ISEE_bicluster_stacked <- function(x, cluster_est_now) {
       }
     )
 
-    if (is.null(cv_fit)) {
+    if (is.null(lasso_fit)) {
       alpha_Al <- numeric(K)
       for (k in 1:K) {
         mask <- (cluster_est_now == k)
@@ -285,7 +290,19 @@ ISEE_bicluster_stacked <- function(x, cluster_est_now) {
       }
       E_Al <- Y_Al - Z %*% alpha_Al
     } else {
-      coefs <- glmnet::coef.glmnet(cv_fit, s = "lambda.1se")
+      # Select lambda via EBIC (gamma = 1)
+      n_samples <- nrow(D_mat)
+      gamma <- 1
+      dev_vals <- lasso_fit$dev.ratio * lasso_fit$nulldev
+      df_vals <- lasso_fit$df
+      bic_vals <- n_samples * log(dev_vals / n_samples) + log(n_samples) * df_vals
+      p_total <- p - 1
+      ebic_penalty <- 2 * gamma * lchoose(p_total, pmax(df_vals, 1))
+      ebic_vals <- bic_vals + ebic_penalty
+      best_idx <- which.min(ebic_vals)
+      best_lambda <- lasso_fit$lambda[best_idx]
+
+      coefs <- glmnet::coef.glmnet(lasso_fit, s = best_lambda)
       alpha_Al <- as.numeric(coefs[2:(K + 1)])
       beta_Al <- as.numeric(coefs[(K + 2):(K + p)])
       E_Al <- Y_Al - (Z %*% alpha_Al + D_mat[, (K + 1):(K + p - 1)] %*% beta_Al)
@@ -325,12 +342,9 @@ ISEE_bicluster_postlasso <- function(x, cluster_est_now) {
     Z[cluster_est_now == k, k] <- 1
   }
 
+  # Number of variable pairs to process
   n_regression <- floor(p / 2)
-  cat(sprintf("Running ISEE Bicluster Post-Lasso on %d blocks (Parallel)...\n", n_regression))
-
-  # Pre-calculate foldid for consistent CV
-  set.seed(42)
-  fold_id <- sample(rep(seq(10), length.out = n))
+  cat(sprintf("Running ISEE Bicluster Stacked Lasso (EBIC) on %d blocks (Parallel)...\n", n_regression))
 
   # Pre-construct design matrix base
   D_full <- cbind(Z, x_t)
@@ -352,24 +366,48 @@ ISEE_bicluster_postlasso <- function(x, cluster_est_now) {
     # Penalty Factor: 0 for indicators, 1 for variables
     p_fac <- c(rep(0, K), rep(1, p - 2))
 
-    # === STAGE 1: Lasso for Support Selection ===
-    cv_fit <- tryCatch({
-      glmnet::cv.glmnet(x = D_mat, y = Y_Al, family = "mgaussian", 
-                        penalty.factor = p_fac, intercept = FALSE, 
-                        parallel = FALSE, foldid = fold_id)
+    # === STAGE 1: Lasso for Support Selection (EBIC) ===
+    if (pair_idx %% 10 == 1) cat(sprintf("  Pair %d/%d: Running Lasso with EBIC...\n", pair_idx, num_pairs))
+    
+    lasso_fit <- tryCatch({
+      glmnet::glmnet(x = D_mat, y = Y_Al, family = "mgaussian", 
+                     penalty.factor = p_fac, intercept = FALSE)
     }, error = function(e) return(NULL))
 
-    if (is.null(cv_fit)) {
+    if (is.null(lasso_fit)) {
       # Fallback: Use all variables
       support <- 1:(p-2)
     } else {
-      # Extract support from first response variable
-      coef_list <- glmnet::coef.glmnet(cv_fit, s = "lambda.1se")
+      # Calculate EBIC (Extended BIC) for each lambda
+      # EBIC = BIC + 2*gamma*log(choose(p, df))
+      n_samples <- nrow(D_mat)
+      gamma <- 1  # Recommended for high-dimensional settings
+      
+      # Get deviance and df for each lambda
+      dev_vals <- lasso_fit$dev.ratio * lasso_fit$nulldev
+      df_vals <- lasso_fit$df
+      
+      # BIC = n*log(RSS/n) + log(n)*df
+      bic_vals <- n_samples * log(dev_vals / n_samples) + log(n_samples) * df_vals
+      
+      # Add EBIC penalty: 2*gamma*log(C(p, df))
+      # Use lchoose for numerical stability: log(choose(p, df))
+      p_total <- p - 2  # Number of candidate variables
+      ebic_penalty <- 2 * gamma * lchoose(p_total, pmax(df_vals, 1))
+      ebic_vals <- bic_vals + ebic_penalty
+      
+      # Select lambda with minimum EBIC
+      best_idx <- which.min(ebic_vals)
+      best_lambda <- lasso_fit$lambda[best_idx]
+      
+      # Extract support from first response variable at best lambda
+      coef_list <- glmnet::coef.glmnet(lasso_fit, s = best_lambda)
       beta_lasso <- as.numeric(coef_list[[1]][(K+2):(K+p-1)])
       support <- which(beta_lasso != 0)
     }
 
     # === STAGE 2: OLS Refit on Selected Support ===
+    if (pair_idx %% 10 == 1 && length(support) > 0) cat(sprintf("  Pair %d: Refitting with %d selected variables...\n", pair_idx, length(support)))
     if (length(support) == 0) {
       # No variables selected, use cluster means only
       alpha_Al <- matrix(0, 2, K)
@@ -421,6 +459,7 @@ ISEE_bicluster_postlasso <- function(x, cluster_est_now) {
   X_tilde <- matrix(0, nrow = p, ncol = n)
   Omega_diag_hat <- numeric(p)
 
+  cat("ISEE: Assembling final X_tilde matrix...\n")
   for (res in results_list) {
     X_tilde[res$rows_idx, ] <- res$X_tilde_local
     Omega_diag_hat[res$rows_idx] <- res$diag_local
@@ -433,17 +472,32 @@ ISEE_bicluster_postlasso <- function(x, cluster_est_now) {
     D_mat <- D_full[, -(K + last_idx), drop = FALSE]
     p_fac <- c(rep(0, K), rep(1, p - 1))
     
-    # Stage 1: Lasso
-    cv_fit <- tryCatch({
-      glmnet::cv.glmnet(x = D_mat, y = Y_Al, family = "gaussian", 
-                        penalty.factor = p_fac, intercept = FALSE, 
-                        parallel = FALSE, foldid = fold_id)
+    # Stage 1: Lasso with EBIC
+    cat(sprintf("ISEE: Processing final odd variable (p=%d) with EBIC...\n", p))
+    lasso_fit <- tryCatch({
+      glmnet::glmnet(x = D_mat, y = Y_Al, family = "gaussian", 
+                     penalty.factor = p_fac, intercept = FALSE)
     }, error = function(e) return(NULL))
     
-    if (is.null(cv_fit)) {
+    if (is.null(lasso_fit)) {
       support <- 1:(p-1)
     } else {
-      coefs <- glmnet::coef.glmnet(cv_fit, s = "lambda.1se")
+      # Calculate EBIC
+      n_samples <- nrow(D_mat)
+      gamma <- 1
+      dev_vals <- lasso_fit$dev.ratio * lasso_fit$nulldev
+      df_vals <- lasso_fit$df
+      bic_vals <- n_samples * log(dev_vals / n_samples) + log(n_samples) * df_vals
+      
+      # Add EBIC penalty
+      p_total <- p - 1  # Number of candidate variables
+      ebic_penalty <- 2 * gamma * lchoose(p_total, pmax(df_vals, 1))
+      ebic_vals <- bic_vals + ebic_penalty
+      
+      best_idx <- which.min(ebic_vals)
+      best_lambda <- lasso_fit$lambda[best_idx]
+      
+      coefs <- glmnet::coef.glmnet(lasso_fit, s = best_lambda)
       beta_lasso <- as.numeric(coefs[(K+2):(K+p)])
       support <- which(beta_lasso != 0)
     }
@@ -473,4 +527,18 @@ ISEE_bicluster_postlasso <- function(x, cluster_est_now) {
   }
 
   return(list(X_tilde = X_tilde, Omega_diag_hat = Omega_diag_hat))
+}
+
+#' ISEE Bicluster (Default: Stacked Lasso Implementation)
+#'
+#' This is the recommended ISEE implementation using Stacked Lasso.
+#' Based on empirical comparisons, Stacked Lasso achieves the best X_tilde 
+#' recovery (Frobenius norm) for full signal matrix reconstruction.
+#'
+#' @param x Data matrix (p x n)
+#' @param cluster_est_now Cluster assignments (vector of length n)
+#' @return List containing X_tilde and Omega_diag_hat
+#' @export
+ISEE_bicluster <- function(x, cluster_est_now) {
+  ISEE_bicluster_stacked(x, cluster_est_now)
 }

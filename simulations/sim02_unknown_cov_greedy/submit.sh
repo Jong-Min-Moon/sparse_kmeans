@@ -8,7 +8,7 @@
 #SBATCH --time=04:00:00
 #SBATCH --output=logs/sim_id%a.out
 #SBATCH --error=logs/sim_id%a.err
-#SBATCH --array=1-1
+#SBATCH --array=1-100
 
 module purge
 module load rstats/4.5.1

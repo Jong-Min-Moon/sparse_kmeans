@@ -51,7 +51,8 @@ block_coordinate_optim_greedy_unknowncov <- function(X, K, n_iter = 10, stable_i
     # --- ISEE Estimation ---
     # Estimate denoised matrix X_tilde based on previous clusters
     cat("Running ISEE in Clustering Block...\n")
-    X_tilde <- ISEE_bicluster(X, cluster_est_now)
+    res_isee <- ISEE_bicluster(X, cluster_est_now)
+    X_tilde <- res_isee$X_tilde
 
     # --- Selection Block ---
     # Now uses BH procedure with fdr_level
@@ -93,14 +94,14 @@ block_coordinate_optim_greedy_unknowncov <- function(X, K, n_iter = 10, stable_i
       selected_features = seq_len(nrow(X_tilde_sub)),
       K = K,
       cluster_est_prev = cluster_est_now,
-      covariance = cov_sub
+      covariance = cov_sub,
+      max_iter = 4000
     )
     cluster_est_new <- res_blocking$cluster
 
     # --- Stopping Criteria ---
     # Compare new clustering with old clustering using Adjusted Rand Index
-    ri_result <- RandIndex(cluster_est_new, cluster_est_now)
-    rand_score <- ri_result$AR
+    rand_score <- mclust::adjustedRandIndex(cluster_est_new, cluster_est_now)
     rand_vec[iternum] <- rand_score
 
     iter_end_time <- Sys.time()

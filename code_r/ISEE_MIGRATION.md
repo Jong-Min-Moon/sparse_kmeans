@@ -5,23 +5,23 @@ The default `ISEE_bicluster()` function has been **replaced** with the Post-Lass
 
 ## Available Implementations
 
-1. **`ISEE_bicluster()`** (NEW DEFAULT) → Post-Lasso (Two-Stage)
-   - Uses Post-Lasso: Lasso selection + OLS refit
-   - Best theoretical recovery (shared slopes, unbiased)
-   - 63% better residual recovery vs original
-   - Robust to heavy-tailed distributions
+1. **`ISEE_bicluster()`** (NEW DEFAULT) → Stacked Lasso
+   - Uses Stacked Lasso: shared slopes with Lasso estimation
+   - Best X_tilde (full matrix) recovery performance
+   - Faster than Post-Lasso
 
 2. **`ISEE_bicluster_original()`** (DEPRECATED)
    - Separate slopes per cluster (theoretically incorrect)
    - Kept for backward compatibility
 
-3. **`ISEE_bicluster_stacked()`** (ALTERNATIVE)
-   - Shared slopes with Lasso estimation
-   - Good but biased by Lasso shrinkage
-
-4. **`ISEE_bicluster_postlasso()`** (EXPLICIT)
+3. **`ISEE_bicluster_stacked()`** (EXPLICIT)
    - Same as new default `ISEE_bicluster()`
    - Use this if you want to be explicit about method
+
+4. **`ISEE_bicluster_postlasso()`** (ALTERNATIVE)
+   - Two-stage: Lasso selection + OLS refit
+   - Better for residual/covariance recovery
+   - Use when debiasing is critical
 
 ## Migration Guide
 

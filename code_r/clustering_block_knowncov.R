@@ -10,7 +10,7 @@
 #' @param cluster_est_prev Previous cluster assignments (for fallback)
 #' @param covariance Covariance structure (matrix). If NULL, assumes Identity.
 #' @return New cluster assignments (vector of length n)
-run_clustering_block_knowncov <- function(X_tilde, selected_features, K, cluster_est_prev, covariance = NULL) {
+run_clustering_block_knowncov <- function(X_tilde, selected_features, K, cluster_est_prev, covariance = NULL, max_iter = 2000) {
   n_selected <- sum(selected_features)
 
   if (n_selected > 0) {
@@ -44,7 +44,7 @@ run_clustering_block_knowncov <- function(X_tilde, selected_features, K, cluster
 
     # Clustering Step (SDP)
     t_sdp_start <- Sys.time()
-    sdp_res <- sdp_kmeans(G, K)
+    sdp_res <- sdp_kmeans(G, K, max_iter = max_iter)
     cluster_est_new <- sdp_res$cluster
     t_sdp_end <- Sys.time()
     cat(sprintf("  SDP K-Means step took: %.4f seconds\n", as.numeric(difftime(t_sdp_end, t_sdp_start, units = "secs"))))

@@ -101,7 +101,7 @@ if (getDoParWorkers() == 1) {
 }
 
 start_time <- Sys.time()
-res <- block_coordinate_optim_greedy_unknowncov(X, K = 2, n_iter = 10, stable_iter = 3, fdr_level = 0.1)
+res <- block_coordinate_optim_greedy_unknowncov(X, K = 2, n_iter = 200, stable_iter = 10, fdr_level = 0.4)
 end_time <- Sys.time()
 
 # ---------------------------------------------------------
