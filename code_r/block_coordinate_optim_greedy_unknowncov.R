@@ -13,7 +13,7 @@
 #' @param stable_iter Number of consecutive iterations with ARI=1 to stop (default 10)
 #' @param fdr_level FDR level for selection block (default 0.1)
 #' @return List containing cluster assignments, iteration history, and timing
-block_coordinate_optim_greedy_unknowncov <- function(X, K, n_iter = 10, stable_iter = 10, fdr_level = 0.4) {
+block_coordinate_optim_greedy_unknowncov <- function(X, K, n_iter = 10, stable_iter = 10, fdr_level = 0.4, max_iter_sdp = 2000) {
   if (!is.matrix(X)) stop("X must be a matrix")
   p <- nrow(X)
   n <- ncol(X)
@@ -24,7 +24,7 @@ block_coordinate_optim_greedy_unknowncov <- function(X, K, n_iter = 10, stable_i
   cat("Running initial clustering...\n")
   # Use all features and identity covariance for initialization
   G_init <- crossprod(X)
-  res_init <- sdp_kmeans(G_init, K)
+  res_init <- sdp_kmeans(G_init, K, max_iter = max_iter_sdp)
   cluster_est_now <- res_init$cluster
 
   # Iteration
@@ -95,7 +95,7 @@ block_coordinate_optim_greedy_unknowncov <- function(X, K, n_iter = 10, stable_i
       K = K,
       cluster_est_prev = cluster_est_now,
       covariance = cov_sub,
-      max_iter = 4000
+      max_iter = max_iter_sdp
     )
     cluster_est_new <- res_blocking$cluster
 

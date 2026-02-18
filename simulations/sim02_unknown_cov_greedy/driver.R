@@ -60,16 +60,19 @@ S_0 <- 1:10
 cat("Generating Signal...\n")
 
 # Target: || Omega * (mu1 - mu2) ||^2 = 9 (3^2)
+# We want Omega * mu_diff to be a sparse vector 's'.
+# So mu_diff = Sigma * s.
+# Then || Omega * mu_diff ||^2 = || s ||^2.
 v <- rep(0, p)
 v[S_0] <- 1
+norm_sq_v <- sum(v^2)
+delta <- sqrt(9 / norm_sq_v)
 
-Omega_v <- Omega %*% v
-norm_sq_Omega_v <- sum(Omega_v^2)
-delta <- sqrt(9 / norm_sq_Omega_v)
+cat(sprintf("Calculated delta per active feature in Omega*mu_diff: %.4f\n", delta))
 
-cat(sprintf("Calculated delta per active feature: %.4f\n", delta))
+# Set s = v * delta, then mu_diff = Sigma %*% s
+mu_diff <- as.numeric(Sigma %*% (v * delta))
 
-mu_diff <- v * delta
 # Centered around 0
 mu1 <- mu_diff / 2
 mu2 <- -mu_diff / 2
@@ -101,7 +104,7 @@ if (getDoParWorkers() == 1) {
 }
 
 start_time <- Sys.time()
-res <- block_coordinate_optim_greedy_unknowncov(X, K = 2, n_iter = 200, stable_iter = 10, fdr_level = 0.4)
+res <- block_coordinate_optim_greedy_unknowncov(X, K = 2, n_iter = 200, stable_iter = 10, fdr_level = 0.2, max_iter_sdp = 6000)
 end_time <- Sys.time()
 
 # ---------------------------------------------------------
