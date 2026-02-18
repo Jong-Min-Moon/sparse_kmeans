@@ -161,7 +161,7 @@ ISEE_bicluster_stacked <- function(x, cluster_est_now) {
   }
 
   n_regression <- floor(p / 2)
-  cat(sprintf("Running ISEE Bicluster Stacked (EBIC) on %d blocks (Parallel)...\n", n_regression))
+  cat(sprintf("Running ISEE Bicluster Stacked (BIC) on %d blocks (Parallel)...\n", n_regression))
 
   # Pre-construct design matrix base
   D_full <- cbind(Z, x_t)
@@ -206,9 +206,9 @@ ISEE_bicluster_stacked <- function(x, cluster_est_now) {
       }
       E_Al_t <- Y_Al - Z %*% t(alpha_Al)
     } else {
-      # Select lambda via EBIC (gamma = 1)
+      # Select lambda via BIC (gamma = 0)
       n_samples <- nrow(D_mat)
-      gamma <- 1
+      gamma <- 0
       dev_vals <- lasso_fit$dev.ratio * lasso_fit$nulldev
       df_vals <- lasso_fit$df
       bic_vals <- n_samples * log(dev_vals / n_samples) + log(n_samples) * df_vals
@@ -290,9 +290,9 @@ ISEE_bicluster_stacked <- function(x, cluster_est_now) {
       }
       E_Al <- Y_Al - Z %*% alpha_Al
     } else {
-      # Select lambda via EBIC (gamma = 1)
+      # Select lambda via BIC (gamma = 0)
       n_samples <- nrow(D_mat)
-      gamma <- 1
+      gamma <- 0
       dev_vals <- lasso_fit$dev.ratio * lasso_fit$nulldev
       df_vals <- lasso_fit$df
       bic_vals <- n_samples * log(dev_vals / n_samples) + log(n_samples) * df_vals
@@ -344,7 +344,7 @@ ISEE_bicluster_postlasso <- function(x, cluster_est_now) {
 
   # Number of variable pairs to process
   n_regression <- floor(p / 2)
-  cat(sprintf("Running ISEE Bicluster Stacked Lasso (EBIC) on %d blocks (Parallel)...\n", n_regression))
+  cat(sprintf("Running ISEE Bicluster Stacked Lasso (BIC) on %d blocks (Parallel)...\n", n_regression))
 
   # Pre-construct design matrix base
   D_full <- cbind(Z, x_t)
@@ -366,8 +366,8 @@ ISEE_bicluster_postlasso <- function(x, cluster_est_now) {
     # Penalty Factor: 0 for indicators, 1 for variables
     p_fac <- c(rep(0, K), rep(1, p - 2))
 
-    # === STAGE 1: Lasso for Support Selection (EBIC) ===
-    if (pair_idx %% 10 == 1) cat(sprintf("  Pair %d/%d: Running Lasso with EBIC...\n", pair_idx, num_pairs))
+    # === STAGE 1: Lasso for Support Selection (BIC) ===
+    if (pair_idx %% 10 == 1) cat(sprintf("  Pair %d/%d: Running Lasso with BIC...\n", pair_idx, num_pairs))
     
     lasso_fit <- tryCatch({
       glmnet::glmnet(x = D_mat, y = Y_Al, family = "mgaussian", 
@@ -378,10 +378,10 @@ ISEE_bicluster_postlasso <- function(x, cluster_est_now) {
       # Fallback: Use all variables
       support <- 1:(p-2)
     } else {
-      # Calculate EBIC (Extended BIC) for each lambda
-      # EBIC = BIC + 2*gamma*log(choose(p, df))
+      # Calculate BIC (gamma = 0)
+      # BIC = RSS + log(n) * df
       n_samples <- nrow(D_mat)
-      gamma <- 1  # Recommended for high-dimensional settings
+      gamma <- 0  # Regular BIC for better whitening support selection
       
       # Get deviance and df for each lambda
       dev_vals <- lasso_fit$dev.ratio * lasso_fit$nulldev
@@ -472,8 +472,8 @@ ISEE_bicluster_postlasso <- function(x, cluster_est_now) {
     D_mat <- D_full[, -(K + last_idx), drop = FALSE]
     p_fac <- c(rep(0, K), rep(1, p - 1))
     
-    # Stage 1: Lasso with EBIC
-    cat(sprintf("ISEE: Processing final odd variable (p=%d) with EBIC...\n", p))
+    # Stage 1: Lasso with BIC
+    cat(sprintf("ISEE: Processing final odd variable (p=%d) with BIC...\n", p))
     lasso_fit <- tryCatch({
       glmnet::glmnet(x = D_mat, y = Y_Al, family = "gaussian", 
                      penalty.factor = p_fac, intercept = FALSE)
@@ -482,9 +482,9 @@ ISEE_bicluster_postlasso <- function(x, cluster_est_now) {
     if (is.null(lasso_fit)) {
       support <- 1:(p-1)
     } else {
-      # Calculate EBIC
+      # Calculate BIC
       n_samples <- nrow(D_mat)
-      gamma <- 1
+      gamma <- 0
       dev_vals <- lasso_fit$dev.ratio * lasso_fit$nulldev
       df_vals <- lasso_fit$df
       bic_vals <- n_samples * log(dev_vals / n_samples) + log(n_samples) * df_vals

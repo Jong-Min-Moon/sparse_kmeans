@@ -26,9 +26,17 @@ sdp_kmeans <- function(G, K, rho = 1.0, max_iter = 2000, tol = 1e-3, verbose = T
   # Linux/Unix: code_r/proj_simplex.so (needs to be compiled)
 
   if (.Platform$OS.type == "windows") {
-    lib_path <- "code_r/proj_simplex.dll"
-    if (!file.exists(lib_path)) {
-      stop("Pre-compiled library 'code_r/proj_simplex.dll' not found. Please run 'code_r/build_solver.ps1'.")
+    possibilities <- c("code_r/proj_simplex.dll", "../../code_r/proj_simplex.dll", "../code_r/proj_simplex.dll")
+    lib_path <- NULL
+    for (path_try in possibilities) {
+      if (length(path_try) > 0 && !is.na(path_try) && nzchar(path_try) && file.exists(path_try)) {
+        lib_path <- path_try
+        break
+      }
+    }
+
+    if (is.null(lib_path) || !nzchar(lib_path)) {
+      stop("Pre-compiled library 'proj_simplex.dll' not found. Please run 'code_r/build_solver.ps1'.")
     }
     if (!("proj_simplex" %in% names(getLoadedDLLs()))) dyn.load(lib_path)
   } else {
@@ -36,9 +44,9 @@ sdp_kmeans <- function(G, K, rho = 1.0, max_iter = 2000, tol = 1e-3, verbose = T
     # Check potential locations
     possibilities <- c("code_r/proj_simplex.so", "../../code_r/proj_simplex.so", "../code_r/proj_simplex.so")
     lib_path <- NULL
-    for (p in possibilities) {
-      if (file.exists(p)) {
-        lib_path <- p
+    for (path_try in possibilities) {
+      if (length(path_try) > 0 && !is.na(path_try) && nzchar(path_try) && file.exists(path_try)) {
+        lib_path <- path_try
         break
       }
     }
@@ -80,6 +88,7 @@ sdp_kmeans <- function(G, K, rho = 1.0, max_iter = 2000, tol = 1e-3, verbose = T
 
           if (res != 0 || !file.exists(target_lib)) stop("Compilation failed.")
           lib_path <- target_lib
+          if (!is.null(lib_path) && length(lib_path) == 1 && nzchar(lib_path) && !("proj_simplex" %in% names(getLoadedDLLs()))) dyn.load(lib_path)
         },
         error = function(e) {
           stop(paste("Failed to compile Rcpp module:", e$message))
@@ -89,9 +98,33 @@ sdp_kmeans <- function(G, K, rho = 1.0, max_iter = 2000, tol = 1e-3, verbose = T
     if (!("proj_simplex" %in% names(getLoadedDLLs()))) dyn.load(lib_path)
   }
 
-  # Wrapper for the C++ function
-  proj_simplex_rows_cpp <- function(Mat, target_sum = 1.0) {
-    .Call("proj_simplex_rows_wrapper", Mat, target_sum)
+  # Check if C++ backend is loaded
+  use_cpp <- !is.null(lib_path) && length(lib_path) == 1 && nzchar(lib_path) && ("proj_simplex" %in% names(getLoadedDLLs()))
+
+  # Implementation of Simplex Projection (Pure R Fallback)
+  proj_simplex_pure_r <- function(y, target_sum = 1.0) {
+    # Condat's algorithm or similar sort-based projection
+    n <- length(y)
+    u <- sort(y, decreasing = TRUE)
+    cssv <- cumsum(u)
+    vec_cond <- u + (target_sum - cssv) / seq_along(u)
+    rho_idx <- max(which(vec_cond > 0))
+    theta <- (target_sum - cssv[rho_idx]) / rho_idx
+    return(pmax(y + theta, 0))
+  }
+
+  # Wrapper for the projection (chooses between C++ and R)
+  proj_simplex_rows <- function(Mat, target_sum = 1.0) {
+    if (use_cpp) {
+      return(.Call("proj_simplex_rows_wrapper", as.matrix(Mat), target_sum))
+    } else {
+      # Apply pure R version row-wise
+      return(t(apply(Mat, 1, proj_simplex_pure_r, target_sum = target_sum)))
+    }
+  }
+
+  if (!use_cpp) {
+    warning("C++ backend for simplex projection not found. Falling back to (slow) R implementation.")
   }
 
   n <- nrow(G)
@@ -176,10 +209,10 @@ sdp_kmeans <- function(G, K, rho = 1.0, max_iter = 2000, tol = 1e-3, verbose = T
     Z_new <- res_z$Z
     prev_vectors <- res_z$V
 
-    # 2. Y Update (Linear - Pre-compiled Rcpp)
+    # 2. Y Update (Linear - Pre-compiled Rcpp or R Fallback)
     N_mat <- Z_new + Lambda / rho
-    # Using as.matrix to ensure SEXP compatibility
-    Y_new <- proj_simplex_rows_cpp(as.matrix(N_mat))
+    # Using as.matrix to ensure SEXP compatibility if using C++
+    Y_new <- proj_simplex_rows(N_mat)
 
     # 3. Lambda Update
     resid <- Z_new - Y_new

@@ -13,7 +13,7 @@
 #' @param stable_iter Number of consecutive iterations with ARI=1 to stop (default 10)
 #' @param fdr_level FDR level for selection block (default 0.1)
 #' @return List containing cluster assignments, iteration history, and timing
-block_coordinate_optim_greedy_unknowncov <- function(X, K, n_iter = 10, stable_iter = 10, fdr_level = 0.4, max_iter_sdp = 2000) {
+block_coordinate_optim_greedy_unknowncov <- function(X, K, n_iter = 200, stable_iter = 10, fdr_level = 0.4, max_iter_sdp = 4000) {
   if (!is.matrix(X)) stop("X must be a matrix")
   p <- nrow(X)
   n <- ncol(X)

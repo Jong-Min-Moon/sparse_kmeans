@@ -41,31 +41,32 @@ selection_block_greedy_screening <- function(X_tilde, cluster_est, fdr_level = 0
   cat(sprintf("Running permutation test (%d permutations) using C++ backend...\n", n_perms))
 
   # Ensure the C++ library is loaded
-  # Similar to sdp_kmeans.R, we check for the library
   lib_name <- "selection_utils"
-  if (.Platform$OS.type == "windows") {
-    lib_path <- paste0("code_r/", lib_name, ".dll")
-  } else {
-    lib_path <- paste0("code_r/", lib_name, ".so")
-  }
-
-  if (!file.exists(lib_path)) {
-    # Try relative paths
-    alt_paths <- c(paste0("../../", lib_path), paste0("../", lib_path))
-    for (ap in alt_paths) {
-      if (file.exists(ap)) {
-        lib_path <- ap
-        break
-      }
+  ext <- if (.Platform$OS.type == "windows") ".dll" else ".so"
+  
+  possibilities <- c(
+    paste0("code_r/", lib_name, ext),
+    paste0("../../code_r/", lib_name, ext),
+    paste0("../code_r/", lib_name, ext)
+  )
+  
+  lib_path <- NULL
+  for (path_try in possibilities) {
+    if (length(path_try) > 0 && !is.na(path_try) && nzchar(path_try) && file.exists(path_try)) {
+      lib_path <- path_try
+      break
     }
   }
 
-  if (file.exists(lib_path)) {
-    if (!(lib_name %in% names(getLoadedDLLs()))) dyn.load(lib_path)
+  if (!is.null(lib_path) && length(lib_path) == 1 && nzchar(lib_path) && file.exists(lib_path)) {
+    cat(sprintf("Found C++ backend at: %s\n", lib_path))
+    if (!(lib_name %in% names(getLoadedDLLs()))) {
+      cat(sprintf("Loading DLL: %s\n", lib_path))
+      dyn.load(lib_path)
+    }
   } else {
-    warning("C++ backend for screening not found. Falling back to (slow) R implementation.")
-    # Fallback R implementation (simplified for brevity here, or just keep original)
-    # [Original R logic would go here if we wanted robust fallback]
+    warning(sprintf("C++ backend for screening ('%s') not found in [%s]. Falling back to R implementation.", 
+                    lib_name, paste(possibilities, collapse=", ")))
   }
 
   sum_total <- rowSums(X_tilde)
@@ -77,7 +78,9 @@ selection_block_greedy_screening <- function(X_tilde, cluster_est, fdr_level = 0
   base_indicator <- as.integer(c(rep(1, n_g1), rep(0, n_g2)))
 
   # Call C++: returns vector of counts (length p)
-  if (file.exists(lib_path)) {
+  use_cpp <- !is.null(lib_path) && length(lib_path) == 1 && nzchar(lib_path) && file.exists(lib_path)
+  
+  if (use_cpp) {
     counts <- .Call(
       "fast_perm_test_wrapper", as.matrix(X_tilde), as.numeric(obs_stat),
       base_indicator, as.numeric(factor1), as.numeric(factor2), as.integer(n_perms)
