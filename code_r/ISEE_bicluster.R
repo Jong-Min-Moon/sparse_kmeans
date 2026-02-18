@@ -1,14 +1,18 @@
-#' ISEE Bicluster Algorithm
+#' ISEE Bicluster (Original - Separate Slopes per Cluster)
 #'
-#' Estimates means and noise using blockwise Lasso regressions.
+#' NOTE: This is the original implementation kept for reference.
+#' For best performance, use ISEE_bicluster() which now uses Post-Lasso.
+#'
+#' This function estimates the inverse covariance matrix and signal assuming
+#' SEPARATE slopes for each cluster (theoretically incorrect).
 #'
 #' @param x Data matrix (p x n)
-#' @param cluster_est_now Cluster assignments (vector of length n)
+#' @param cluster_est_now Cluster assignments (length n vector)
 #' @return List containing:
-#'   \item{X_tilde}{Estimated X_tilde matrix (p x n)}
-#'   \item{Omega_diag_hat}{Estimated diagonal of precision matrix (p x 1)}
+#'   \item{X_tilde}{Estimated X_tilde (p x n)}
+#'   \item{Omega_diag_hat}{Diagonal of precision matrix (p x 1)}
 #' @export
-ISEE_bicluster <- function(x, cluster_est_now) {
+ISEE_bicluster_original <- function(x, cluster_est_now) {
   # Ensure foreach is available
   if (!requireNamespace("foreach", quietly = TRUE)) {
     stop("ISEE_bicluster requires the 'foreach' package.")
