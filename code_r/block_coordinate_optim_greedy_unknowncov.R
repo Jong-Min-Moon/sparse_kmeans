@@ -1,9 +1,6 @@
 # Iterative SDP K-Means with Known Covariance (Refactored)
 
-# source("sdp_kmeans.R")
-# source("utils.R")
-# source("selection_block_greedy_screening.R")
-# source("clustering_block_knowncov.R")
+library(kernlab)
 
 #' Iterative SDP K-Means with Known Covariance
 #'
@@ -11,9 +8,9 @@
 #' @param K Number of clusters
 #' @param n_iter Maximum number of iterations
 #' @param stable_iter Number of consecutive iterations with ARI=1 to stop (default 10)
-#' @param fdr_level FDR level for selection block (default 0.1)
+#' @param true_labels True cluster assignments (optional, if provided ARI will be logged)
 #' @return List containing cluster assignments, iteration history, and timing
-block_coordinate_optim_greedy_unknowncov <- function(X, K, n_iter = 200, stable_iter = 10, fdr_level = 0.4, max_iter_sdp = 4000) {
+block_coordinate_optim_greedy_unknowncov <- function(X, K, n_iter = 200, stable_iter = 10, fdr_level = 0.2, max_iter_sdp = 4000, method = "sdp", true_labels = NULL) {
   if (!is.matrix(X)) stop("X must be a matrix")
   p <- nrow(X)
   n <- ncol(X)
@@ -21,11 +18,16 @@ block_coordinate_optim_greedy_unknowncov <- function(X, K, n_iter = 200, stable_
   start_time <- Sys.time()
 
   # Initial Clustering (Initialization Block)
-  cat("Running initial clustering...\n")
-  # Use all features and identity covariance for initialization
-  G_init <- crossprod(X)
-  res_init <- sdp_kmeans(G_init, K, max_iter = max_iter_sdp)
-  cluster_est_now <- res_init$cluster
+  cat("Running initial clustering (kernlab::specc)...\n")
+  # Use kernlab::specc for spectral clustering
+  # specc expects observations in rows (n x p)
+  res_init <- kernlab::specc(t(X), centers = K)
+  cluster_est_now <- as.integer(res_init)
+
+  if (!is.null(true_labels)) {
+    ari_init <- mclust::adjustedRandIndex(cluster_est_now, true_labels)
+    cat(sprintf("Initial Clustering Accuracy (ARI): %.4f\n", ari_init))
+  }
 
   # Iteration
   is_stop <- FALSE
@@ -71,33 +73,43 @@ block_coordinate_optim_greedy_unknowncov <- function(X, K, n_iter = 200, stable_
     # Calculate sample covariance of original x using selected_features
     x_sub <- X[selected_features, , drop = FALSE]
 
-    # Demean per cluster to remove cluster effect (Pooled Covariance estimation)
-    x_sub_centered <- x_sub
-    unique_clusters <- unique(cluster_est_now)
-    for (k in unique_clusters) {
-      cluster_idx <- (cluster_est_now == k)
-      if (sum(cluster_idx) > 0) {
-        cluster_data <- x_sub[, cluster_idx, drop = FALSE]
-        cluster_mean <- rowMeans(cluster_data)
-        # Subtract cluster mean from each column in that cluster
-        x_sub_centered[, cluster_idx] <- sweep(cluster_data, 1, cluster_mean, "-")
-      }
-    }
-
-    # Calculate covariance of centered data
-    cov_sub <- cov(t(x_sub_centered))
-
     # --- Clustering Block ---
-    # Using NULL for covariance implies Identity (efficient path)
-    res_blocking <- run_clustering_block_knowncov(
-      X_tilde = X_tilde_sub,
-      selected_features = seq_len(nrow(X_tilde_sub)),
-      K = K,
-      cluster_est_prev = cluster_est_now,
-      covariance = cov_sub,
-      max_iter = max_iter_sdp
-    )
-    cluster_est_new <- res_blocking$cluster
+    if (method == "spectral") {
+      cat("Running iterative clustering (Spectral on x_sub)...\n")
+      # Use kernlab::specc on the selected original features
+      res_spec <- kernlab::specc(t(x_sub), centers = K)
+      cluster_est_new <- as.integer(res_spec)
+    } else {
+      # 3. Covariance Calculation (Crucial Step)
+      # Calculate sample covariance of original x using selected_features
+
+      # Demean per cluster to remove cluster effect (Pooled Covariance estimation)
+      x_sub_centered <- x_sub
+      unique_clusters <- unique(cluster_est_now)
+      for (k in unique_clusters) {
+        cluster_idx <- (cluster_est_now == k)
+        if (sum(cluster_idx) > 0) {
+          cluster_data <- x_sub[, cluster_idx, drop = FALSE]
+          cluster_mean <- rowMeans(cluster_data)
+          # Subtract cluster mean from each column in that cluster
+          x_sub_centered[, cluster_idx] <- sweep(cluster_data, 1, cluster_mean, "-")
+        }
+      }
+
+      # Calculate covariance of centered data
+      cov_sub <- cov(t(x_sub_centered))
+
+      # Using NULL for covariance implies Identity (efficient path)
+      res_blocking <- run_clustering_block_knowncov(
+        X_tilde = X_tilde_sub,
+        selected_features = seq_len(nrow(X_tilde_sub)),
+        K = K,
+        cluster_est_prev = cluster_est_now,
+        covariance = cov_sub,
+        max_iter = max_iter_sdp
+      )
+      cluster_est_new <- res_blocking$cluster
+    }
 
     # --- Stopping Criteria ---
     # Compare new clustering with old clustering using Adjusted Rand Index
@@ -107,7 +119,12 @@ block_coordinate_optim_greedy_unknowncov <- function(X, K, n_iter = 200, stable_
     iter_end_time <- Sys.time()
     iter_duration <- as.numeric(difftime(iter_end_time, iter_start_time, units = "secs"))
     cat(sprintf("Iteration %d Duration: %.2f seconds\n", iternum, iter_duration))
-    cat(sprintf("Adjusted Rand Index change: %.4f\n", rand_score))
+    cat(sprintf("Adjusted Rand Index change (prev vs now): %.4f\n", rand_score))
+
+    if (!is.null(true_labels)) {
+      ari_true <- mclust::adjustedRandIndex(cluster_est_new, true_labels)
+      cat(sprintf("Iteration %d Accuracy (ARI vs True): %.4f\n", iternum, ari_true))
+    }
 
     # Stopping logic: Stop if Rand Score is perfectly 1 for 'stable_iter' consecutive times
     if (rand_score == 1) {
@@ -131,7 +148,6 @@ block_coordinate_optim_greedy_unknowncov <- function(X, K, n_iter = 200, stable_
   return(list(
     cluster = cluster_est_now,
     iter = iternum,
-    rand_vec = rand_vec,
     rand_vec = rand_vec,
     time = total_time,
     selected_features = selected_features

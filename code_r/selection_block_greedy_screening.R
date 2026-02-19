@@ -6,8 +6,9 @@
 #' @param cluster_est Current cluster assignments (vector of length n)
 #' @param fdr_level False Discovery Rate level for BH procedure (default 0.4)
 #' @param n_perms Number of permutations for the test (default 10000)
+#' @param ... Additional arguments (ignored, but allowed for compatibility)
 #' @return Logical vector of selected features (length p)
-selection_block_greedy_screening <- function(X_tilde, cluster_est, fdr_level = 0.4, n_perms = 10000) {
+selection_block_greedy_screening <- function(X_tilde, cluster_est, fdr_level = 0.4, n_perms = 10000, ...) {
   p <- nrow(X_tilde)
   n <- ncol(X_tilde)
 
@@ -43,13 +44,13 @@ selection_block_greedy_screening <- function(X_tilde, cluster_est, fdr_level = 0
   # Ensure the C++ library is loaded
   lib_name <- "selection_utils"
   ext <- if (.Platform$OS.type == "windows") ".dll" else ".so"
-  
+
   possibilities <- c(
     paste0("code_r/", lib_name, ext),
     paste0("../../code_r/", lib_name, ext),
     paste0("../code_r/", lib_name, ext)
   )
-  
+
   lib_path <- NULL
   for (path_try in possibilities) {
     if (length(path_try) > 0 && !is.na(path_try) && nzchar(path_try) && file.exists(path_try)) {
@@ -65,8 +66,10 @@ selection_block_greedy_screening <- function(X_tilde, cluster_est, fdr_level = 0
       dyn.load(lib_path)
     }
   } else {
-    warning(sprintf("C++ backend for screening ('%s') not found in [%s]. Falling back to R implementation.", 
-                    lib_name, paste(possibilities, collapse=", ")))
+    warning(sprintf(
+      "C++ backend for screening ('%s') not found in [%s]. Falling back to R implementation.",
+      lib_name, paste(possibilities, collapse = ", ")
+    ))
   }
 
   sum_total <- rowSums(X_tilde)
@@ -79,7 +82,7 @@ selection_block_greedy_screening <- function(X_tilde, cluster_est, fdr_level = 0
 
   # Call C++: returns vector of counts (length p)
   use_cpp <- !is.null(lib_path) && length(lib_path) == 1 && nzchar(lib_path) && file.exists(lib_path)
-  
+
   if (use_cpp) {
     counts <- .Call(
       "fast_perm_test_wrapper", as.matrix(X_tilde), as.numeric(obs_stat),

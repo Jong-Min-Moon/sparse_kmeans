@@ -11,8 +11,8 @@
 #' @param K Number of clusters
 #' @param n_iter Maximum number of iterations
 #' @param stable_iter Number of consecutive iterations with ARI=1 to stop (default 10)
-#' @param fdr_level FDR level for selection block (default 0.4)
-block_coordinate_optim_greedy <- function(X_tilde, K, n_iter = 10, stable_iter = 10, fdr_level = 0.4, max_iter_sdp = 2000) {
+#' @param true_labels True cluster assignments (optional, if provided ARI will be logged)
+block_coordinate_optim_greedy <- function(X_tilde, K, n_iter = 10, stable_iter = 10, fdr_level = 0.4, max_iter_sdp = 2000, true_labels = NULL) {
   if (!is.matrix(X_tilde)) stop("X_tilde must be a matrix")
   p <- nrow(X_tilde)
   n <- ncol(X_tilde)
@@ -28,6 +28,11 @@ block_coordinate_optim_greedy <- function(X_tilde, K, n_iter = 10, stable_iter =
   cluster_est_now <- sdp_init$cluster
   t_init_end <- Sys.time()
   cat(sprintf("Initial Clustering took: %.4f seconds\n", as.numeric(difftime(t_init_end, t_init_start, units = "secs"))))
+
+  if (!is.null(true_labels)) {
+    ari_init <- mclust::adjustedRandIndex(cluster_est_now, true_labels)
+    cat(sprintf("Initial Clustering Accuracy (ARI): %.4f\n", ari_init))
+  }
 
   # Iteration
   is_stop <- FALSE
@@ -74,7 +79,12 @@ block_coordinate_optim_greedy <- function(X_tilde, K, n_iter = 10, stable_iter =
     iter_end_time <- Sys.time()
     iter_duration <- as.numeric(difftime(iter_end_time, iter_start_time, units = "secs"))
     cat(sprintf("Iteration %d Duration: %.2f seconds\n", iternum, iter_duration))
-    cat(sprintf("Adjusted Rand Index change: %.4f\n", rand_score))
+    cat(sprintf("Adjusted Rand Index change (prev vs now): %.4f\n", rand_score))
+
+    if (!is.null(true_labels)) {
+      ari_true <- mclust::adjustedRandIndex(cluster_est_new, true_labels)
+      cat(sprintf("Iteration %d Accuracy (ARI vs True): %.4f\n", iternum, ari_true))
+    }
 
 
     # Stopping logic: Stop if Rand Score is perfectly 1 for 'stable_iter' consecutive times
