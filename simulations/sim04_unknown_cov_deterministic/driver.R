@@ -20,60 +20,52 @@ if (length(args) > 0) {
 }
 
 # Source Code (Adjusted paths for simulations/sim04.../)
+source("../../code_r/sparse_symmetric_data_generator.R")
 source("../../code_r/block_coordinate_optim_deterministic_unknowncov.R")
-source("../../code_r/ISEE_bicluster.R")
+source("../../code_r/ESSC.R")
+source("../../code_r/ISEE_residual_lasso.R")
 source("../../code_r/get_intercept_residual_lasso.R")
+source("../../code_r/get_cov_small.R")
+source("../../code_r/ISEE_bicluster.R")
 source("../../code_r/clustering_block_knowncov.R")
-source("../../code_r/selection_block_greedy_screening.R")
 source("../../code_r/sdp_kmeans.R")
+source("../../code_r/get_cluster_acc.R")
 source("../../code_r/utils.R")
 
-set.seed(2025 + job_id) # Unique seed per job
-
 # ---------------------------------------------------------
-# Data Generation Parameters (Matches Sim 02)
+# Data Generation Parameters
 # ---------------------------------------------------------
+# Values matched to standard parity settings (p=400),
+# but allows for easier modification if needed.
 p <- 400
 n <- 500
 K <- 2
-rho <- 0.45
+rho_param <- 45
+rho <- rho_param / 100
+separation <- 3
+precision_sparsity <- 2
+support <- 1:10
+flip <- FALSE
 
-# 1. Precision Matrix Omega (Tridiagonal)
-cat("Generating Precision Matrix Omega...\n")
-Omega <- matrix(0, p, p)
-for (i in 1:p) {
-    Omega[i, i] <- 1
-    if (i > 1) Omega[i, i - 1] <- rho
-    if (i < p) Omega[i, i + 1] <- rho
-}
+cat(sprintf("--- Simulation Run (Job ID: %d) ---\n", job_id))
+cat(sprintf("Params: p=%d, n=%d, sep=%.1f, rho=%.2f\n", p, n, separation, rho))
 
-# Covariance Sigma
-Sigma <- solve(Omega)
+# 1. Initialize Generator
+generator <- sparse_symmetric_data_generator(
+    support = support,
+    separation = separation,
+    dimension = p,
+    precision_sparsity = precision_sparsity,
+    conditional_correlation = rho,
+    flip = flip
+)
 
-# 2. Signal Generation
-S_0 <- 1:10
-cat("Generating Signal...\n")
-
-# Target: || Omega * (mu1 - mu2) ||^2 = 9 (3^2)
-v <- rep(0, p)
-v[S_0] <- 1
-norm_sq_v <- sum(v^2)
-delta <- sqrt(9 / norm_sq_v)
-
-# Set s = v * delta, then mu_diff = Sigma %*% s
-mu_diff <- as.numeric(Sigma %*% (v * delta))
-
-# Centered around 0
-mu1 <- mu_diff / 2
-mu2 <- -mu_diff / 2
-
-# 3. Generate Data
-cat("Generating Data X...\n")
-n_c <- n / 2
-X1 <- mvrnorm(n_c, mu1, Sigma)
-X2 <- mvrnorm(n_c, mu2, Sigma)
-X <- t(rbind(X1, X2)) # p x n
-true_labels <- c(rep(1, n_c), rep(2, n_c))
+# 2. Generate Data
+# Seed logic: base seed (2025) + job_id to ensure variance across jobs
+set.seed(2025 + job_id)
+data_res <- generate_data_from_generator(generator, n, seed = 2025 + job_id)
+X <- data_res$X
+true_labels <- data_res$labels
 
 # ---------------------------------------------------------
 # Run Algorithm (Deterministic)
@@ -83,6 +75,10 @@ cat("Running block_coordinate_optim_deterministic_unknowncov...\n")
 # Register Parallel
 num_cores <- parallel::detectCores() - 1
 if (num_cores < 1) num_cores <- 1
+# On HPC, we might want to respect SLURM config, but defaulting to auto-detect is usually fine per-job
+if (Sys.getenv("SLURM_CPUS_PER_TASK") != "") {
+    num_cores <- as.integer(Sys.getenv("SLURM_CPUS_PER_TASK"))
+}
 doParallel::registerDoParallel(cores = min(num_cores, 10))
 
 start_time <- Sys.time()
@@ -90,9 +86,9 @@ res <- block_coordinate_optim_deterministic_unknowncov(
     X = X,
     K = 2,
     n_iter = 100,
-    stable_iter = 10,
-    max_iter_sdp = 4000,
-    true_labels = true_labels
+    stable_iter = 5,
+    true_labels = true_labels,
+    ari_consecutive_stop = 10
 )
 end_time <- Sys.time()
 
@@ -104,21 +100,25 @@ runtime <- as.numeric(difftime(end_time, start_time, units = "secs"))
 cat(sprintf("Runtime: %.2f seconds\n", runtime))
 
 # Clustering Accuracy (ARI)
-ari <- adjustedRandIndex(res$cluster, true_labels)
+ari <- mclust::adjustedRandIndex(res$cluster, true_labels)
+acc <- get_cluster_acc(res$cluster, true_labels)
 cat(sprintf("Adjusted Rand Index (ARI): %.4f\n", ari))
+cat(sprintf("Balanced Accuracy (Acc): %.4f\n", acc))
 
 # Variable Selection
-selected_indices <- which(res$selected_features)
+selected_indices <- res$s_hat
 cat(sprintf("Number of selected features: %d\n", length(selected_indices)))
 
 # TP/FP
-tp <- length(intersect(selected_indices, S_0))
-fp <- length(setdiff(selected_indices, S_0))
+tp <- length(intersect(selected_indices, support))
+fp <- length(setdiff(selected_indices, support))
 
-cat(sprintf("True Positives (TP): %d / %d\n", tp, length(S_0)))
+cat(sprintf("True Positives (TP): %d / %d\n", tp, length(support)))
 cat(sprintf("False Positives (FP): %d\n", fp))
-cat(sprintf("Recall: %.2f\n", tp / length(S_0)))
+if (length(support) > 0) {
+    cat(sprintf("Recall: %.2f\n", tp / length(support)))
+}
 
 # Save Result
 dir.create("results", showWarnings = FALSE)
-saveRDS(list(res = res, ari = ari, tp = tp, fp = fp, job_id = job_id), file = sprintf("results/sim_id%d.rds", job_id))
+saveRDS(list(res = res, ari = ari, acc = acc, tp = tp, fp = fp, job_id = job_id, params = list(p = p, n = n, rho = rho, sep = separation)), file = sprintf("results/sim_id%d.rds", job_id))

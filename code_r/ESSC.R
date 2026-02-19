@@ -1,5 +1,5 @@
-#' ESSC (Earlier Spectral Selection Clustering)
-#'
+#' ESSC (eigen-selected spectral clustering)
+#'  Han, X., Tong, X. & Fan, Y. Eigen Selection in Spectral Clustering: A Theory-Guided Practice. Journal of the American Statistical Association 118, 109–121 (2023).
 #' This follows the logic in cluster_spectral.m
 #' @param X Data matrix (p x n)
 #' @param K Number of clusters

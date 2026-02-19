@@ -1,17 +1,44 @@
-# Deploy Simulation 04 to HPC
 
-$Server = "147.46.20.103"
-$User = "jongmin"
-$RemotePath = "/home/jongmin/sparse_kmeans/simulations/sim04_unknown_cov_deterministic"
+<#
+.SYNOPSIS
+    Deploys Simulation 04 (Deterministic, Unknown Covariance) to HPC.
+#>
 
-cat "Deploying Simulation 04 to $Server..."
+param(
+    [string]$Username = "jongminm",
+    [string]$Hostname = "discovery.usc.edu",
+    [string]$RemoteBase = "~/sparse_kmeans_project"
+)
 
-# 1. Create remote directory
-ssh "$User@$Server" "mkdir -p $RemotePath"
+$ErrorActionPreference = "Stop"
 
-# 2. Upload files
-scp driver.R "$User@$Server:$RemotePath/"
-scp submit.sh "$User@$Server:$RemotePath/"
+# Define Local Paths
+$SimDir = "d:\GitHub\sparse_kmeans\simulations\sim04_unknown_cov_deterministic"
+$CodeDir = "d:\GitHub\sparse_kmeans\code_r"
 
-cat "Deployment complete."
-cat "To run: ssh $User@$Server 'cd $RemotePath && sbatch submit.sh'"
+# 1. Create Remote Directories
+Write-Host "Creating remote directories..." -ForegroundColor Cyan
+ssh "${Username}@${Hostname}" "mkdir -p ${RemoteBase}/simulations/sim04_unknown_cov_deterministic && mkdir -p ${RemoteBase}/code_r"
+
+# 2. Transfer Simulation Files (Driver, Submit Script)
+Write-Host "Transferring simulation files..." -ForegroundColor Cyan
+# Copy only necessary files to avoid clutter
+scp "${SimDir}\driver.R" "${SimDir}\submit.sh" "${Username}@${Hostname}:${RemoteBase}/simulations/sim04_unknown_cov_deterministic/"
+
+# 3. Transfer Library Files
+Write-Host "Transferring library files..." -ForegroundColor Cyan
+# We need to ensure all the new files are transferred. *.R covers everything.
+scp "${CodeDir}\*.R" "${Username}@${Hostname}:${RemoteBase}/code_r/"
+
+# 4. Convert Line Endings & Submit
+Write-Host "Submitting job..." -ForegroundColor Cyan
+# dos2unix is critical for scripts created on Windows
+$submitCmd = "cd ${RemoteBase}/simulations/sim04_unknown_cov_deterministic && rm -rf logs results *.out *.err && dos2unix *.sh *.R && chmod +x *.sh && sbatch submit.sh"
+ssh "${Username}@${Hostname}" $submitCmd
+
+if ($LASTEXITCODE -eq 0) {
+    Write-Host "Job submitted successfully!" -ForegroundColor Green
+}
+else {
+    Write-Error "Job submission failed."
+}
