@@ -88,3 +88,45 @@ get_intercept_residual_lasso <- function(response, predictor) {
 
   return(list(intercept = intercept, residual = residual))
 }
+#' Get Intercept and Residuals from Lasso Regression using AIC
+#'
+#' Fits a Lasso regression and selects lambda via AIC, matching MATLAB behavior.
+#' @export
+get_intercept_residual_lasso_aic <- function(response, predictor) {
+  n <- length(response)
+
+  # Fit lasso path
+  fit <- tryCatch(
+    {
+      glmnet::glmnet(predictor, response, alpha = 1, intercept = TRUE)
+    },
+    error = function(e) {
+      return(NULL)
+    }
+  )
+
+  if (is.null(fit)) {
+    intercept <- mean(response)
+    residual <- response - intercept
+    return(list(intercept = intercept, residual = residual))
+  }
+
+  # BIC = n * log(RSS/n) + log(n)*df
+  # Standard AIC overfits in high dimensions (p ~ n).
+  rss <- (1 - fit$dev.ratio) * fit$nulldev
+  df <- fit$df + 1 # +1 for intercept
+
+  # Handle potential issues with zero RSS
+  bic <- n * log(pmax(rss, 1e-10) / n) + log(n) * df
+
+  best_idx <- which.min(bic)
+  best_lambda <- fit$lambda[best_idx]
+
+  coefs <- coef(fit, s = best_lambda)
+  intercept <- as.numeric(coefs[1])
+  beta <- coefs[-1, , drop = FALSE]
+
+  residual <- as.numeric(response - (intercept + predictor %*% beta))
+
+  return(list(intercept = intercept, residual = residual))
+}
