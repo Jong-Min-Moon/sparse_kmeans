@@ -21,8 +21,8 @@ block_coordinate_optim_deterministic_unknowncov <- function(X, K, n_iter = 50, s
     start_time <- Sys.time()
 
     # 1. INITIALIZATION BLOCK
-    cat("Running initial clustering (MATLAB style cluster_spectral)...\n")
-    cluster_est_now <- cluster_spectral_matlab(X, K)
+    cat("Running initial clustering (ESSC)...\n")
+    cluster_est_now <- ESSC(X, K)
 
     if (!is.null(true_labels)) {
         ari_init <- mclust::adjustedRandIndex(cluster_est_now, true_labels)

@@ -11,7 +11,7 @@ library(glmnet)
 # Source all components
 source("../../code_r/sparse_symmetric_data_generator.R")
 source("../../code_r/block_coordinate_optim_deterministic_unknowncov.R")
-source("../../code_r/cluster_spectral_matlab.R")
+source("../../code_r/ESSC.R")
 source("../../code_r/get_intercept_residual_lasso.R")
 source("../../code_r/get_cov_small.R")
 source("../../code_r/ISEE_bicluster.R")

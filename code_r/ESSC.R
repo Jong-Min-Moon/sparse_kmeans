@@ -1,10 +1,10 @@
-#' MATLAB-style Spectral Clustering (Comparison Variant)
+#' ESSC (Earlier Spectral Selection Clustering)
 #'
 #' This follows the logic in cluster_spectral.m
 #' @param X Data matrix (p x n)
 #' @param K Number of clusters
 #' @export
-cluster_spectral_matlab <- function(X, K) {
+ESSC <- function(X, K) {
     p <- nrow(X)
     n <- ncol(X)
 
