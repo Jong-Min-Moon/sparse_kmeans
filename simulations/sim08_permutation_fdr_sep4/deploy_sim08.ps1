@@ -32,8 +32,10 @@ scp "${CodeDir}\*.R" "${Username}@${Hostname}:${RemoteBase}/code_r/"
 scp "${CodeDir}\selection_utils.cpp" "${Username}@${Hostname}:${RemoteBase}/code_r/"
 
 # 4. Compile C++ Backend on Remote
+# 4. Compile C++ Backend on Remote
 Write-Host "Compiling C++ backend on remote..." -ForegroundColor Cyan
-$compileCmd = "cd ${RemoteBase}/code_r && R CMD SHLIB selection_utils.cpp"
+# Fetch Rcpp flags dynamically
+$compileCmd = "cd ${RemoteBase}/code_r && export PKG_CXXFLAGS=`$(Rscript -e 'cat(Rcpp:::CxxFlags())') && export PKG_LIBS=`$(Rscript -e 'cat(Rcpp:::LdFlags())') && R CMD SHLIB selection_utils.cpp"
 ssh "${Username}@${Hostname}" "module load rstats/4.5.1 && $compileCmd"
 
 # 5. Convert Line Endings & Submit
