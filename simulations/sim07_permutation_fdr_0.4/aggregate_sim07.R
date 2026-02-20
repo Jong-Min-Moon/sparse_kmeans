@@ -10,7 +10,7 @@ output_dir <- file.path(base_dir, "output")
 summary_file <- "summary_sim07.csv"
 
 if (!dir.exists(output_dir)) {
-    stop("Output directory not found: ", output_dir, "\nRun retrieve_sim07.ps1 first.")
+    stop("Output directory not found: ", output_dir, "\nRun retrieve_sim07.sh first.")
 }
 
 # List all RDS files
@@ -63,18 +63,17 @@ results_list <- purrr::map(all_files, function(f) {
 
 all_results <- bind_rows(results_list)
 
-summary_stats <- all_results %>%
-    summarise(
-        n_reps = n(),
-        mean_accuracy = mean(accuracy, na.rm = TRUE),
-        mean_ari = mean(ari, na.rm = TRUE),
-        mean_tp = mean(tp, na.rm = TRUE),
-        mean_fp = mean(fp, na.rm = TRUE),
-        mean_recall = mean(recall, na.rm = TRUE),
-        mean_precision = mean(precision, na.rm = TRUE),
-        mean_obs_fdr = mean(obs_fdr, na.rm = TRUE), # Check if this matches Target FDR (0.4)
-        perfect_acc_count = sum(accuracy >= 0.999, na.rm = TRUE)
-    )
+summary_stats <- data.frame(
+    n_reps = nrow(all_results),
+    mean_accuracy = mean(all_results$accuracy, na.rm = TRUE),
+    mean_ari = mean(all_results$ari, na.rm = TRUE),
+    mean_tp = mean(all_results$tp, na.rm = TRUE),
+    mean_fp = mean(all_results$fp, na.rm = TRUE),
+    mean_recall = mean(all_results$recall, na.rm = TRUE),
+    mean_precision = mean(all_results$precision, na.rm = TRUE),
+    mean_obs_fdr = mean(all_results$obs_fdr, na.rm = TRUE), # Check if this matches Target FDR (0.4)
+    perfect_acc_count = sum(all_results$accuracy >= 0.999, na.rm = TRUE)
+)
 
 write.csv(summary_stats, summary_file, row.names = FALSE)
 cat(sprintf("\nSummary saved to %s\n", summary_file))
