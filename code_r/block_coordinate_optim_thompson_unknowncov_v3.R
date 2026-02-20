@@ -13,9 +13,10 @@
 # library(CVXR)
 # library(MASS)
 
-#' Block Coordinate Optimization with Thompson Sampling (Unknown Covariance)
+#' Block Coordinate Optimization with Thompson Sampling (Unknown Covariance, v3 Oracle ISEE)
 #'
 #' Implements the block coordinate ascent with Thompson Sampling for feature selection.
+#' Version 3 Experimental Control: Force-inputs true cluster assignments into the ISEE step only for Iteration 1.
 #' Uses clustering_block_knowncov for the clustering step.
 #'
 #' @param X Data matrix (p x n)
@@ -23,10 +24,10 @@
 #' @param n_iter Number of iterations (default 10)
 #' @param C Confidence parameter for threshold (default 0.5)
 #' @param n_perms Number of permutations for reward step (default 100)
-#' @param true_labels True cluster assignments (optional, if provided ARI will be logged)
+#' @param true_labels True cluster assignments (REQUIRED for v3)
 #' @return List containing cluster assignments, selected features, and metrics
 #' @export
-block_coordinate_optim_thompson_unknowncov <- function(X, K, n_iter = 100, C = 0.5, n_perms = 200, fdr_level = 0.1, max_iter_sdp = 4000, true_labels = NULL) {
+block_coordinate_optim_thompson_unknowncov_v3 <- function(X, K, n_iter = 100, C = 0.5, n_perms = 200,  max_iter_sdp = 4000, true_labels = NULL) {
     if (!is.matrix(X)) stop("X must be a matrix")
 
     p <- nrow(X)
@@ -90,9 +91,23 @@ block_coordinate_optim_thompson_unknowncov <- function(X, K, n_iter = 100, C = 0
         # =========================================================
         # 2. SELECTION BLOCK
         # =========================================================
+        # Require true_labels for Oracle ISEE step in version 3
+        if (is.null(true_labels)) {
+            stop("true_labels must be provided for version 3 (Oracle ISEE on 1st iteration).")
+        }
+
         # transfomration step
-        res_isee <- ISEE_bicluster(X, cluster_est_now)
+        # Iteration 1: Force-input true_labels into ISEE
+        if (iternum == 1) {
+            cat("Iteration 1: Using true cluster labels for ISEE transformation.\n")
+            cluster_isee_input <- true_labels
+        } else {
+            # Iteration 2+: Use estimated cluster IDs
+            cluster_isee_input <- cluster_est_now
+        }
+        res_isee <- ISEE_residual_lasso(X, cluster_isee_input, K)
         X_tilde <- res_isee$X_tilde
+        Omega_diag_hat <- res_isee$Omega_diag
         # -------------------------------------------------------
         # A. Reward Step
         # -------------------------------------------------------
@@ -101,7 +116,7 @@ block_coordinate_optim_thompson_unknowncov <- function(X, K, n_iter = 100, C = 0
 
         # Run Greedy Screening (Permutation Test) on the subset
         # rewards_sub is a LOGICAL vector of length length(S_hat_now)
-        rewards_sub <- selection_block_greedy_screening(X_tilde_sub, cluster_est_now,  n_perms = n_perms)
+        rewards_sub <- selection_block_greedy_screening(X_tilde_sub, cluster_est_now, fdr_level = null, n_perms = 10000)
 
         # -------------------------------------------------------
         # B. Update Step
@@ -170,29 +185,20 @@ block_coordinate_optim_thompson_unknowncov <- function(X, K, n_iter = 100, C = 0
         # Demean per cluster to remove cluster effect (Pooled Covariance estimation)
         x_sub <- X[S_hat_next, , drop = FALSE]
         X_tilde_sub_new <- X_tilde[S_hat_next, , drop = FALSE]
-        x_sub_centered <- x_sub
-        unique_clusters <- unique(cluster_est_now)
-        for (k in unique_clusters) {
-            cluster_idx <- (cluster_est_now == k)
-            if (sum(cluster_idx) > 0) {
-                cluster_data <- x_sub[, cluster_idx, drop = FALSE]
-                cluster_mean <- rowMeans(cluster_data)
-                # Subtract cluster mean from each column in that cluster
-                x_sub_centered[, cluster_idx] <- sweep(cluster_data, 1, cluster_mean, "-")
-            }
+        # Estimate Sigma_hat on s_hat
+        Sigma_hat_small <- get_cov_small(X, cluster_est_now, S_hat_next)
+        Sigma_full <- diag(1, p)
+        if (length(S_hat_next) > 0) {
+            Sigma_full[S_hat_next, S_hat_next] <- Sigma_hat_small
         }
 
-        # Calculate covariance of centered data
-        cov_sub <- cov(t(x_sub_centered))
 
-        # Using NULL for covariance implies Identity (efficient path)
         res_blocking <- run_clustering_block_knowncov(
-            X_tilde = X_tilde_sub_new,
-            selected_features = seq_len(nrow(X_tilde_sub_new)),
+            X_tilde = X_tilde,
+            selected_features = S_hat_next,
             K = K,
             cluster_est_prev = cluster_est_now,
-            covariance = cov_sub,
-            max_iter = max_iter_sdp
+            covariance = Sigma_full
         )
         cluster_est_new <- res_blocking$cluster
         obj_val <- res_blocking$value

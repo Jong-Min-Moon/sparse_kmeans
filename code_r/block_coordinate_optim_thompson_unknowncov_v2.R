@@ -91,8 +91,9 @@ block_coordinate_optim_thompson_unknowncov <- function(X, K, n_iter = 100, C = 0
         # 2. SELECTION BLOCK
         # =========================================================
         # transfomration step
-        res_isee <- ISEE_bicluster(X, cluster_est_now)
+        res_isee <- ISEE_residual_lasso(X, cluster_est_now, K)
         X_tilde <- res_isee$X_tilde
+        Omega_diag_hat <- res_isee$Omega_diag
         # -------------------------------------------------------
         # A. Reward Step
         # -------------------------------------------------------
@@ -101,7 +102,7 @@ block_coordinate_optim_thompson_unknowncov <- function(X, K, n_iter = 100, C = 0
 
         # Run Greedy Screening (Permutation Test) on the subset
         # rewards_sub is a LOGICAL vector of length length(S_hat_now)
-        rewards_sub <- selection_block_greedy_screening(X_tilde_sub, cluster_est_now,  n_perms = n_perms)
+        rewards_sub <- selection_block_greedy_screening(X_tilde_sub, cluster_est_now, fdr_level = fdr_level, n_perms = n_perms)
 
         # -------------------------------------------------------
         # B. Update Step
@@ -170,29 +171,20 @@ block_coordinate_optim_thompson_unknowncov <- function(X, K, n_iter = 100, C = 0
         # Demean per cluster to remove cluster effect (Pooled Covariance estimation)
         x_sub <- X[S_hat_next, , drop = FALSE]
         X_tilde_sub_new <- X_tilde[S_hat_next, , drop = FALSE]
-        x_sub_centered <- x_sub
-        unique_clusters <- unique(cluster_est_now)
-        for (k in unique_clusters) {
-            cluster_idx <- (cluster_est_now == k)
-            if (sum(cluster_idx) > 0) {
-                cluster_data <- x_sub[, cluster_idx, drop = FALSE]
-                cluster_mean <- rowMeans(cluster_data)
-                # Subtract cluster mean from each column in that cluster
-                x_sub_centered[, cluster_idx] <- sweep(cluster_data, 1, cluster_mean, "-")
-            }
+        # Estimate Sigma_hat on s_hat
+        Sigma_hat_small <- get_cov_small(X, cluster_est_now, S_hat_next)
+        Sigma_full <- diag(1, p)
+        if (length(S_hat_next) > 0) {
+            Sigma_full[S_hat_next, S_hat_next] <- Sigma_hat_small
         }
 
-        # Calculate covariance of centered data
-        cov_sub <- cov(t(x_sub_centered))
 
-        # Using NULL for covariance implies Identity (efficient path)
         res_blocking <- run_clustering_block_knowncov(
-            X_tilde = X_tilde_sub_new,
-            selected_features = seq_len(nrow(X_tilde_sub_new)),
+            X_tilde = X_tilde,
+            selected_features = S_hat_next,
             K = K,
             cluster_est_prev = cluster_est_now,
-            covariance = cov_sub,
-            max_iter = max_iter_sdp
+            covariance = Sigma_full
         )
         cluster_est_new <- res_blocking$cluster
         obj_val <- res_blocking$value
