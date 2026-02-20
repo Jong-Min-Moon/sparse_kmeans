@@ -18,94 +18,121 @@ library(matrixStats) # For fast colVars/rowMeans
 #' \item{threshold}{The selected threshold value.}
 #' \item{n_selected}{Number of features selected.}
 #' \item{est_fdr}{The estimated FDR at the selected threshold.}
+# Load C++ Backend (Shared Library)
+# Should be compiled via R CMD SHLIB selection_utils.cpp
+load_cpp_backend <- function() {
+    dll_name <- "selection_utils"
+    ext <- .Platform$dynlib.ext
+
+    # Paths to check
+    paths <- c(
+        file.path(".", paste0(dll_name, ext)),
+        file.path("code_r", paste0(dll_name, ext)),
+        file.path("../../code_r", paste0(dll_name, ext)),
+        file.path("../code_r", paste0(dll_name, ext))
+    )
+
+    loaded <- FALSE
+    for (p in paths) {
+        if (file.exists(p)) {
+            dyn.load(p)
+            loaded <- TRUE
+            break
+        }
+    }
+
+    if (!loaded) {
+        warning("Could not find selection_utils", ext, ". Ensure it is compiled via R CMD SHLIB.")
+    }
+}
+
+# Run loader
+load_cpp_backend()
+
+# Wrapper functions for .Call
+get_signed_perm_stats_cpp <- function(X, indicator, factor1, factor2, n_perms) {
+    .Call("get_signed_perm_stats_wrapper", X, indicator, factor1, factor2, n_perms)
+}
+
+count_matrix_exceedances_cpp <- function(perm_mat, thresholds) {
+    .Call("count_matrix_exceedances_wrapper", perm_mat, thresholds)
+}
+
+#' SAM-Style Permutation FDR (Delta Thresholding)
+#'
+#' w_j = |d_j - mean(d_j^perm)|
 get_permutation_fdr_threshold <- function(stats_obs, X_tilde, cluster_labels, Omega_diag, n_perms = 20, fdr_target = 0.1) {
-    # Ensure C++ function is available
-    ensure_cpp_backend()
+    # C++ backend should be loaded globally
 
     p <- nrow(X_tilde)
     n <- length(cluster_labels)
-
     n1 <- sum(cluster_labels == 1)
     n2 <- sum(cluster_labels == 2)
 
-    # 1. Sort Observed Stats (Candidates)
-    sorted_stats <- sort(stats_obs, decreasing = TRUE)
-
-    # 2. C++ Acceleration for Null Counts (SAM Style)
-    # We need to map stats_obs back to "Raw Diff" scale for C++
-    # OR we pass the scaling factors to C++?
-    # The current C++ computes |raw_diff|.
-    # Our stats_obs = |raw_diff| * scale_factor.
-    # So we should pass thresholds converted to RAW scale.
-
+    # 1. Prepare Scaling Factors
     scale_factor_vec <- sqrt(n1 * n2 / n) / sqrt(pmax(Omega_diag, 1e-8))
 
-    # But wait, scale_factor is per-feature (Omega varies).
-    # If we convert thresholds to raw, we have a problem: Threshold T corresponds to different raw diffs for different features.
-    # We cannot simply "unscale" the threshold globally.
-
-    # Solution: We must compute the FULL STATISTIC in C++ (including Omega).
-    # Let's verify existing C++:
-    # `perm_stat = std::abs(sum1 * factor1 - factor2[i]);`
-    # It does NOT include Omega.
-
-    # Quick Fix: pass 'scale_factor_vec' to C++ and multiply inside loop.
-    # I need to modify C++ again?
-    # Or I can pre-scale X_tilde in R?
-    # Stat = |Mean1 - Mean2| / Scale.
-    #      = |Sum1/n1 - Sum2/n2| / Scale
-    # If I scale X_tilde rows by (1/Scale), then new Stat = |Mean1' - Mean2'|.
-    # Yes! X_tilde_scaled[i, ] = X_tilde[i, ] / Omega_term[i].
-    # Then I can use the existing C++ with raw diffs on the scaled data.
-
-    # Let's apply this trick in R to avoid changing C++ signature again.
-
-    # statistic = abs_diff_raw * scale_factor_vec
-    # We want C++ to compute: abs_diff_raw_on_input
-    # If Input = X_tilde * scale_factor_vec, then
-    # RawDiff(Input) = RawDiff(X) * scale_factor_vec = statistic!
-
-    X_for_cpp <- sweep(X_tilde, 1, scale_factor_vec, "*")
-
-    # Update factors for C++
-    factor1 <- (1 / n1 + 1 / n2)
-    # factor2 must be RowSums of the NEW X_for_cpp / n2
-    factor2 <- rowSums(X_for_cpp) / n2
-
+    # Constants for C++
+    inv_n1 <- 1 / n1
+    inv_n2 <- 1 / n2
+    factor1 <- inv_n1 + inv_n2
+    factor2 <- rowSums(X_tilde) * inv_n2
     base_indicator <- as.integer(c(rep(1, n1), rep(0, n2)))
 
-    # Call C++
-    # Counts[k] = sum(null_stats >= sorted_stats[k]) across all perms
-    total_counts <- sam_perm_test_cpp(
-        as.matrix(X_for_cpp), base_indicator,
+    # 2. Get Raw Permutation Matrix (p x n_perms)
+    # This matrix contains (mean1^b - mean2^b) for each feature and permutation
+    perm_raw_mat <- get_signed_perm_stats_cpp(
+        as.matrix(X_tilde), base_indicator,
         as.numeric(factor1), as.numeric(factor2),
-        as.integer(n_perms), as.numeric(sorted_stats)
+        as.integer(n_perms)
     )
 
+    # 3. Compute Feature-wise Null Expectation (E_perm[d_j])
+    # null_mean_raw_j: Expected raw difference under null
+    null_mean_raw <- rowMeans(perm_raw_mat)
 
-    # 3. Grid Search (SAM)
-    selected_threshold <- sqrt(5 * log(p))
+    # 4. Compute Observed Raw Stats
+    m1 <- rowMeans(X_tilde[, cluster_labels == 1, drop = FALSE])
+    m2 <- rowMeans(X_tilde[, cluster_labels == 2, drop = FALSE])
+    obs_raw_signed <- m1 - m2
+
+    # 5. Compute SAM Delta Statistic
+    # d_j = raw_signed * scale_factor
+    # Delta_j = |d_j - E[d_j]| = |raw_signed - null_mean_raw| * scale_factor
+
+    Delta_obs <- abs(obs_raw_signed - null_mean_raw) * scale_factor_vec
+
+    # 6. Compute Permutation Delta Matrix
+    # We need Delta_j^b for all b.
+    # Delta_j^b = |raw_signed^b - null_mean_raw| * scale_factor
+    # This centers each permutation by the GLOBAL null mean (across all perms).
+
+    perm_centered_raw <- sweep(perm_raw_mat, 1, null_mean_raw, "-")
+    Delta_perm_mat <- abs(perm_centered_raw) * scale_factor_vec
+
+    # 7. Grid Search for Delta Threshold
+    # Candidates: Sorted Delta_obs
+    sorted_deltas <- sort(Delta_obs, decreasing = TRUE)
+
+    # Call C++ to count exceedances efficiently
+    # Counts[k] = sum_{b} count(Delta^b >= sorted_deltas[k])
+    total_counts <- count_matrix_exceedances_cpp(Delta_perm_mat, sorted_deltas)
+
+    # 8. FDR Calculation
+    selected_delta <- 0
     est_fdr <- 0
     best_k <- 0
 
-    # Optimization:
-    # If p is large, we don't want to loop p times checking (p * n_perms) entries.
-    # But usually p ~ 400-2000. p*n_perms ~ 2e7.
-    # Doing `sum(null_stats_mat >= lambda)` is fast enough (C-level scan).
+    # Search for smallest delta (largest k) satisfying FDR target
+    for (k in 1:length(sorted_deltas)) {
+        delta_val <- sorted_deltas[k]
+        if (delta_val <= 0) break
 
-    # Let's iterate.
-    for (k in 1:length(sorted_stats)) {
-        lambda <- sorted_stats[k]
-        if (lambda <= 0) break
-
-        # R: Discoveries in Real Data
+        # R: Number of features with Delta_obs >= delta_val
         R <- k
 
-        # V: Mean Discoveries in Null Data
-        # sum(mat >= lambda) returns total count across all perms
-        # divide by n_perms to get mean count per perm
-        total_v <- sum(null_stats_mat >= lambda)
-        V <- total_v / n_perms
+        # V: Expected number of null features >= delta_val
+        V <- total_counts[k] / n_perms
 
         # FDR
         fdr_val <- V / max(R, 1)
@@ -113,18 +140,19 @@ get_permutation_fdr_threshold <- function(stats_obs, X_tilde, cluster_labels, Om
         if (fdr_val <= fdr_target) {
             best_k <- k
             est_fdr <- fdr_val
-            selected_threshold <- lambda
+            selected_delta <- delta_val
         }
-        # In step-down, we could stop if FDR gets too high, but we search for largest k (lowest lambda)
-        # matching the target.
     }
 
     if (best_k == 0) {
-        cat("  Permutation FDR: No features met target. Reverting to Univ Threshold.\n")
-        return(list(threshold = sqrt(5 * log(p)), n_selected = 0, est_fdr = NA))
+        # Fallback
+        return(list(delta = Inf, n_selected = 0, est_fdr = NA, s_hat = integer(0)))
     }
 
-    return(list(threshold = selected_threshold, n_selected = best_k, est_fdr = est_fdr))
+    # Identify selected features
+    s_hat <- which(Delta_obs >= selected_delta)
+
+    return(list(delta = selected_delta, n_selected = length(s_hat), est_fdr = est_fdr, s_hat = s_hat))
 }
 
 
@@ -185,19 +213,25 @@ block_coordinate_optim_permutation <- function(X, K, n_iter = 50, n_perms = 20, 
         # The statistic: Same as used in permutation function
         abs_diff <- abs(means_mat[, 1] - means_mat[, 2]) / sqrt(pmax(Omega_diag_hat, 1e-8)) * sqrt(n1 * n2 / n)
 
-        # --- Permutation Thresholding ---
-        cat(sprintf("Estimating Threshold via %d permutations...\n", n_perms))
+        # --- Permutation Thresholding (SAM Delta) ---
+        cat(sprintf("Estimating Delta Threshold via %d permutations...\n", n_perms))
+        # Note: stats_obs argument is ignored inside now, but we keep signature or pass Delta_obs if needed?
+        # Actually the function re-calculates everything from X_tilde.
+        # So first arg is just a placeholder or we should clean it up.
+        # But for minimal disruption, we pass abs_diff (ignored) or pass NULL.
+
         perm_res <- get_permutation_fdr_threshold(abs_diff, X_tilde, cluster_est_now, Omega_diag_hat, n_perms, fdr_target)
 
-        current_threshold <- perm_res$threshold
-        cat(sprintf("  Selected Threshold: %.4f (Univ: %.4f)\n", current_threshold, universal_threshold))
+        current_delta <- perm_res$delta
+        cat(sprintf("  Selected Delta: %.4f\n", current_delta))
         cat(sprintf("  Features Selected: %d (Est FDR: %.4f)\n", perm_res$n_selected, perm_res$est_fdr))
 
-        if (perm_res$n_selected == 0) {
+        s_hat <- perm_res$s_hat
+
+        if (length(s_hat) == 0) {
             cat("  WARNING: No features selected. Using Top K features fallback.\n")
+            # Fallback based on raw abs_diff?
             s_hat <- order(abs_diff, decreasing = TRUE)[1:K]
-        } else {
-            s_hat <- which(abs_diff >= current_threshold)
         }
 
         # --- Clustering Block ---
@@ -207,7 +241,9 @@ block_coordinate_optim_permutation <- function(X, K, n_iter = 50, n_perms = 20, 
         # Estimate Sigma_hat on s_hat
         Sigma_hat_small <- get_cov_small(X, cluster_est_now, s_hat)
         Sigma_full <- diag(1, p)
-        Sigma_full[s_hat, s_hat] <- Sigma_hat_small
+        if (length(s_hat) > 0) {
+            Sigma_full[s_hat, s_hat] <- Sigma_hat_small
+        }
 
         res_cluster <- run_clustering_block_knowncov(X_tilde, s_hat, K, cluster_est_now, covariance = Sigma_full)
         cluster_est_new <- res_cluster$cluster
@@ -243,6 +279,6 @@ block_coordinate_optim_permutation <- function(X, K, n_iter = 50, n_perms = 20, 
         s_hat = s_hat,
         iternum = iternum,
         abs_diff = abs_diff,
-        final_threshold = current_threshold
+        final_delta = current_delta
     ))
 }

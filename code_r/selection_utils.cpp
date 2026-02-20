@@ -100,15 +100,14 @@ IntegerVector fast_perm_test_cpp(NumericMatrix X, NumericVector obs_stat,
 }
 
 // [[Rcpp::export]]
-IntegerVector sam_perm_test_cpp(NumericMatrix X, IntegerVector indicator, 
-                                double factor1, NumericVector factor2, 
-                                int n_perms, NumericVector thresholds) {
+NumericMatrix get_signed_perm_stats_cpp(NumericMatrix X, IntegerVector indicator, 
+                                        double factor1, NumericVector factor2, 
+                                        int n_perms) {
     int p = X.nrow();
     int n = X.ncol();
-    int n_thresh = thresholds.size();
     
-    // Result: For each threshold, how many null stats >= threshold?
-    IntegerVector global_counts(n_thresh, 0);
+    // Result: (p x n_perms) matrix of signed raw statistics
+    NumericMatrix perm_stats(p, n_perms);
     
     #ifdef _OPENMP
     #pragma omp parallel
@@ -117,14 +116,9 @@ IntegerVector sam_perm_test_cpp(NumericMatrix X, IntegerVector indicator,
         std::vector<int> local_indicator(n);
         for(int i = 0; i < n; ++i) local_indicator[i] = indicator[i];
         
-        std::vector<int> local_counts(n_thresh, 0);
-        
         int tid = omp_get_thread_num();
         std::mt19937 g(std::random_device{}() + tid);
         
-        // Scratch space for stats (avoid reallocating)
-        std::vector<double> perm_stats(p);
-
         #pragma omp for
         for (int b = 0; b < n_perms; ++b) {
             // 1. Shuffle
@@ -136,41 +130,16 @@ IntegerVector sam_perm_test_cpp(NumericMatrix X, IntegerVector indicator,
                 for (int j = 0; j < n; ++j) {
                     if (local_indicator[j] == 1) sum1 += X(i, j);
                 }
-                perm_stats[i] = std::abs(sum1 * factor1 - factor2[i]);
-            }
-            
-            // 3. Sort Stats Descending
-            std::sort(perm_stats.begin(), perm_stats.end(), std::greater<double>());
-            
-            // 4. Two-pointer match against Thresholds (also Descending)
-            // thresholds[k] vs perm_stats[j]
-            // We want count of perm_stats >= thresholds[k]
-            
-            int stats_idx = 0;
-            for (int k = 0; k < n_thresh; ++k) {
-                double t = thresholds[k];
-                // Advance stats pointer while stats >= t
-                while (stats_idx < p && perm_stats[stats_idx] >= t) {
-                    stats_idx++;
-                }
-                // stats_idx is now the count of stats >= t
-                local_counts[k] += stats_idx; 
-            }
-        }
-        
-        #pragma omp critical
-        {
-            for (int k = 0; k < n_thresh; ++k) {
-                global_counts[k] += local_counts[k];
+                // Signed raw difference: mean1 - mean2
+                // = sum1 * factor1 - factor2[i]
+                perm_stats(i, b) = sum1 * factor1 - factor2[i];
             }
         }
     }
     #else
-    // Serial Fallback
     std::vector<int> local_indicator(n);
     for(int i = 0; i < n; ++i) local_indicator[i] = indicator[i];
     std::mt19937 g(std::random_device{}());
-    std::vector<double> perm_stats(p);
     
     for (int b = 0; b < n_perms; ++b) {
         std::shuffle(local_indicator.begin(), local_indicator.end(), g);
@@ -179,14 +148,69 @@ IntegerVector sam_perm_test_cpp(NumericMatrix X, IntegerVector indicator,
             for (int j = 0; j < n; ++j) {
                 if (local_indicator[j] == 1) sum1 += X(i, j);
             }
-            perm_stats[i] = std::abs(sum1 * factor1 - factor2[i]);
+            perm_stats(i, b) = sum1 * factor1 - factor2[i];
         }
-        std::sort(perm_stats.begin(), perm_stats.end(), std::greater<double>());
+    }
+    #endif
+    
+    return perm_stats;
+}
+
+// [[Rcpp::export]]
+IntegerVector count_matrix_exceedances_cpp(NumericMatrix stats_matrix, NumericVector thresholds) {
+    int p = stats_matrix.nrow();
+    int n_perms = stats_matrix.ncol();
+    int n_thresh = thresholds.size();
+    
+    IntegerVector global_counts(n_thresh, 0);
+    
+    // Convert matrix to vector for easier iteration if needed, but column-access is fine.
+    // We iterate per threshold, then per permutation? 
+    // Or per permutation, then per threshold.
+    // Iterating per permutation allows sorting the column for fast threshold lookup (log p).
+    // Or just linear scan if p is small.
+    // For large p, sorting each column is O(p log p). 2-pointer is O(p + T).
+    // Since we do this for every permutation, efficient counting is key.
+    
+    #ifdef _OPENMP
+    #pragma omp parallel
+    {
+        std::vector<int> local_counts(n_thresh, 0);
+        std::vector<double> col_stats(p);
         
+        #pragma omp for
+        for (int b = 0; b < n_perms; ++b) {
+            // Copy column
+            for(int i=0; i<p; ++i) col_stats[i] = stats_matrix(i, b);
+            
+            // Sort descending
+            std::sort(col_stats.begin(), col_stats.end(), std::greater<double>());
+            
+            // Match against sorted thresholds (descending)
+            int stats_idx = 0;
+            for (int k = 0; k < n_thresh; ++k) {
+                double t = thresholds[k];
+                while (stats_idx < p && col_stats[stats_idx] >= t) {
+                    stats_idx++;
+                }
+                local_counts[k] += stats_idx;
+            }
+        }
+        
+        #pragma omp critical
+        {
+            for (int k = 0; k < n_thresh; ++k) global_counts[k] += local_counts[k];
+        }
+    }
+    #else
+    std::vector<double> col_stats(p);
+    for (int b = 0; b < n_perms; ++b) {
+        for(int i=0; i<p; ++i) col_stats[i] = stats_matrix(i, b);
+        std::sort(col_stats.begin(), col_stats.end(), std::greater<double>());
         int stats_idx = 0;
         for (int k = 0; k < n_thresh; ++k) {
             double t = thresholds[k];
-            while (stats_idx < p && perm_stats[stats_idx] >= t) stats_idx++;
+            while (stats_idx < p && col_stats[stats_idx] >= t) stats_idx++;
             global_counts[k] += stats_idx;
         }
     }
@@ -195,16 +219,21 @@ IntegerVector sam_perm_test_cpp(NumericMatrix X, IntegerVector indicator,
     return global_counts;
 }
 
-extern "C" SEXP sam_perm_test_wrapper(SEXP XSEXP, SEXP indicatorSEXP, 
-                                     SEXP factor1SEXP, SEXP factor2SEXP, 
-                                     SEXP n_permsSEXP, SEXP thresholdsSEXP) {
+extern "C" SEXP get_signed_perm_stats_wrapper(SEXP XSEXP, SEXP indicatorSEXP, 
+                                             SEXP factor1SEXP, SEXP factor2SEXP, 
+                                             SEXP n_permsSEXP) {
     NumericMatrix X(XSEXP);
     IntegerVector indicator(indicatorSEXP);
     double factor1 = as<double>(factor1SEXP);
     NumericVector factor2(factor2SEXP);
     int n_perms = as<int>(n_permsSEXP);
-    NumericVector thresholds(thresholdsSEXP);
     
-    return Rcpp::wrap(sam_perm_test_cpp(X, indicator, factor1, factor2, n_perms, thresholds));
+    return Rcpp::wrap(get_signed_perm_stats_cpp(X, indicator, factor1, factor2, n_perms));
+}
+
+extern "C" SEXP count_matrix_exceedances_wrapper(SEXP statsSEXP, SEXP threshSEXP) {
+    NumericMatrix stats(statsSEXP);
+    NumericVector thresh(threshSEXP);
+    return Rcpp::wrap(count_matrix_exceedances_cpp(stats, thresh));
 }
 
