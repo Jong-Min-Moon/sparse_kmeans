@@ -25,7 +25,7 @@ block_coordinate_optim_deterministic_unknowncov <- function(X, K, n_iter = 50, s
     rand_vec <- rep(NA, n_iter)
     consecutive_stable_count <- 0
     start_time <- Sys.time()
-    universal_threshold <- sqrt(2 * log(p))
+    universal_threshold <- sqrt(5 * log(p))
 
     # 1. INITIALIZATION BLOCK
     cat("Running initial clustering (ESSC)...\n")
