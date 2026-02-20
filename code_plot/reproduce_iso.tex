@@ -1,0 +1,166 @@
+\documentclass[standalone]{standalone}
+\usepackage{pgfplots}
+\usepgfplotslibrary{groupplots}
+\usetikzlibrary{matrix, calc}
+\pgfplotsset{compat=1.18}
+
+% Define colors for pairs (Okabe-Ito)
+\definecolor{colorSpec}{RGB}{213,94,0}    % Vermilion
+\definecolor{colorHc}{RGB}{0,114,178}     % Blue
+\definecolor{colorSdp}{RGB}{0,158,115}    % Bluish Green
+\definecolor{colorArias}{RGB}{204,121,167} % Reddish Purple
+\definecolor{colorIfpca}{RGB}{230,159,0}  % Orange
+\definecolor{colorWitten}{RGB}{86,180,233} % Sky Blue
+\definecolor{colorChime}{RGB}{240,228,66} % Yellow
+\definecolor{colorTvs}{RGB}{100,100,100}      % Dark Gray
+
+\begin{document}
+
+\begin{tikzpicture}
+    % Define the group plot
+    \begin{groupplot}[
+        group style={
+            group size=4 by 1,
+            horizontal sep=0.3cm,
+            vertical sep=1.5cm,
+            x descriptions at=edge bottom,
+            y descriptions at=edge left,
+        },
+        width=4.4cm,
+        height=4.4cm,
+        grid=major,
+        xlabel={Dimension ($p$)},
+        ylabel={Clustering Accuracy},
+        % font=\scriptsize, % This key is invalid in this context
+        tick label style={font=\scriptsize},
+        label style={font=\scriptsize},
+        legend style={font=\scriptsize},
+        legend style={font=\scriptsize},
+        title style={font=\footnotesize, align=center},
+        every axis plot/.append style={mark size=1.5pt},
+        cycle list={
+            {colorSpec, solid, mark=*, mark options={solid}, very thick},
+            {colorHc, solid, mark=square*, mark options={solid}, thick},
+            {colorSdp, solid, mark=triangle*, mark options={solid}, thick},
+            {colorArias, solid, mark=diamond*, mark options={solid}, thick},
+            {colorIfpca, solid, mark=pentagon*, mark options={solid}, thick},
+            {colorWitten, solid, mark=10-pointed star, mark options={solid}, thick},
+            {colorChime, solid, mark=oplus*, mark options={solid}, thick},
+            {colorTvs, solid, mark=x, mark options={solid}, very thick},
+            % Dashed versions for iterative comparison
+            {colorSpec, dashed, mark=o, mark options={solid}, thick},
+            {colorHc, dashed, mark=square, mark options={solid}, thick},
+            {colorSdp, dashed, mark=triangle, mark options={solid}, thick}
+        },
+        ymin=0.46, ymax=1,
+        xmin=-250, xmax=5250,
+        xmin=-250, xmax=5250
+    ]
+
+    % --- Plot 1: Iterative vs Non-iterative ---
+    \nextgroupplot[title={Known covariance\\(a) Initialization}]
+        % Spec
+        \addplot+[color=colorSpec, solid, ultra thick] table [x=dim, y=spec, col sep=comma] {simul_result/iso_sep4_extended.csv};
+        \label{p1:spec}
+        \addplot+[color=colorSpec, dashed, mark=o, mark options={solid}] table [x=dim, y=noniter_spec, col sep=comma] {simul_result/iso_sep4_extended.csv};
+        \label{p1:spec_non}
+
+        % HC
+        % HC
+        \addplot+[color=colorHc, solid, mark=square*] table [x=dim, y=hc, col sep=comma] {simul_result/iso_sep4_extended.csv};
+        \label{p1:hc}
+        \addplot+[color=colorHc, dashed, mark=square, mark options={solid}] table [x=dim, y=noniter_hc, col sep=comma] {simul_result/iso_sep4_extended.csv};
+        \label{p1:hc_non}
+
+        % SDP
+        % SDP
+        \addplot+[color=colorSdp, solid, mark=triangle*] table [x=dim, y=sdp, col sep=comma] {simul_result/iso_sep4_extended.csv};
+        \label{p1:sdp}
+        \addplot+[color=colorSdp, dashed, mark=triangle, mark options={solid}] table [x=dim, y=noniter, col sep=comma] {simul_result/iso_sep4_extended.csv};
+        \label{p1:sdp_non}
+
+    % --- Plot 2: SDP vs Competitors ---
+    \nextgroupplot[title={Known covariance\\(b) Comparison}]
+        % SDP (Reference) - Redundant label if we reuse p1:sdp logic in legend, or new label?
+        % We'll plot it but might not need a new label if we use the generic one, but let's label it just in case.
+        \addplot+[color=colorSpec, solid, ultra thick] table [x=dim, y=spec, col sep=comma] {simul_result/iso_sep4_extended.csv};
+        
+  
+        % Competitors
+        \addplot+[color=colorArias, solid, mark=diamond*] table [x=dim, y=arias, col sep=comma] {simul_result/iso_sep4_extended.csv};
+        \label{p2:arias}
+
+        \addplot+[color=colorIfpca, solid, mark=pentagon*] table [x=dim, y=ifpca, col sep=comma] {simul_result/iso_sep4_extended.csv};
+        \label{p2:ifpca}
+
+        \addplot+[color=colorWitten, solid, mark=star] table [x=dim, y=witten, col sep=comma] {simul_result/iso_sep4_extended.csv};
+        \label{p2:witten}
+
+        \addplot+[color=colorChime, solid, mark=oplus*] table [x=dim, y=chime, col sep=comma] {simul_result/iso_sep4_extended.csv};
+        \label{p2:chime}
+
+        \addplot+[color=colorTvs, solid, ultra thick, mark=x, mark size=2pt] table [x=dim, y=tvs, col sep=comma] {simul_result/iso_sep4_extended.csv};
+        \label{p2:tvs}
+
+    % --- Plot 3: Non-isotropic Rho=0.2 ---
+    \nextgroupplot[title={Unknown covariance\\(c)  $\rho=0.2$}, xmin=25, xmax=425]
+        % Main Method (ISEE/SDP equivalent)
+        \addplot+[color=colorSpec, solid, ultra thick] table [x=dim, y=rho20_isee_dirty, col sep=comma] {simul_result/noniso_sep3.csv};
+        %\label{p3:isee} % Reusing label/color from SDP? Or new label? Let's use SDP color.
+
+        % Competitors
+        % Competitors
+        \addplot+[color=colorArias, solid, mark=diamond*] table [x=dim, y=rho20_arias, col sep=comma] {simul_result/noniso_sep3.csv};
+        \addplot+[color=colorIfpca, solid, mark=pentagon*] table [x=dim, y=rho20_ifpca, col sep=comma] {simul_result/noniso_sep3.csv};
+        \addplot+[color=colorWitten, solid, mark=star] table [x=dim, y=rho20_witten, col sep=comma] {simul_result/noniso_sep3.csv};
+        \addplot+[color=colorChime, solid, mark=oplus*] table [x=dim, y=rho20_chime, col sep=comma] {simul_result/noniso_sep3.csv};
+
+    % --- Plot 4: Non-isotropic Rho=0.45 ---
+    \nextgroupplot[title={Unknown covariance\\(d)  $\rho=0.45$}, xmin=25, xmax=425]
+        % Main Method
+        \addplot+[color=colorSpec, solid, ultra thick] table [x=dim, y=rho45_isee_dirty, col sep=comma] {simul_result/noniso_sep3.csv};
+        
+        % Competitors
+        % Competitors
+        \addplot+[color=colorArias, solid, mark=diamond*] table [x=dim, y=rho45_arias, col sep=comma] {simul_result/noniso_sep3.csv};
+        \addplot+[color=colorIfpca, solid, mark=pentagon*] table [x=dim, y=rho45_ifpca, col sep=comma] {simul_result/noniso_sep3.csv};
+        \addplot+[color=colorWitten, solid, mark=star] table [x=dim, y=rho45_witten, col sep=comma] {simul_result/noniso_sep3.csv};
+        \addplot+[color=colorChime, solid, mark=oplus*] table [x=dim, y=rho45_chime, col sep=comma] {simul_result/noniso_sep3.csv};
+        % Glasso is present for 0.45 but not 0.20? Typically we show consistent sets. 
+        % Check file... rho45_glasso exists. rho20_glasso does NOT exist in columns (Step 217).
+        % Adding glasso for 0.45 only? Or skip to keep consistent? 
+        % I'll skip glasso to keep legend consistent unless requested.
+
+    \end{groupplot}
+
+    % --- Merged Global Legend ---
+    \node[anchor=north] at ($(group c1r1.south west)!0.5!(group c4r1.south east)$) [yshift=-1cm] {
+        \begin{tikzpicture}
+            \matrix[
+                matrix of nodes,
+                nodes={anchor=west, inner sep=1pt, font=\scriptsize},
+                column sep={2pt},
+                row sep=0pt
+            ] {
+                \ref{p1:spec_non} (1) Spectral clustering & \ref{p1:spec} Greedy algorithm initialized by (1)  &
+                \ref{p2:tvs} TVS algorithm
+                &
+                \ref{p2:arias} SAS 
+                \\ 
+             
+                 
+                
+                \ref{p1:hc_non} (2) Hierarchical clustering & \ref{p1:hc} Greedy algorithm initialized by (2) & 
+           \ref{p2:ifpca} IFPCA 
+           &     \ref{p2:witten} SKM 
+           &  \\
+                \ref{p1:sdp_non} (3) SDP K-means & \ref{p1:sdp} Greedy algorithm initialized by (3) &
+                \ref{p2:chime} CHIME 
+                 & & & & \\
+            };
+        \end{tikzpicture}
+    };
+
+\end{tikzpicture}
+
+\end{document}
