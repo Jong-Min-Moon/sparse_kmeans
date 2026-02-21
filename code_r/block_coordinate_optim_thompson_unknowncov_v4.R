@@ -13,21 +13,21 @@
 # library(CVXR)
 # library(MASS)
 
-#' Block Coordinate Optimization with Thompson Sampling (Unknown Covariance, v3 Oracle ISEE)
+#' Block Coordinate Optimization with Thompson Sampling (Unknown Covariance, v4 SAM FDR)
 #'
 #' Implements the block coordinate ascent with Thompson Sampling for feature selection.
-#' Version 3 Experimental Control: Force-inputs true cluster assignments into the ISEE step only for Iteration 1.
-#' Uses clustering_block_knowncov for the clustering step.
+#' Version 4: Replaces restrictive p-value screening with the adaptive SAM-style Permutation FDR Delta Thresholding.
 #'
 #' @param X Data matrix (p x n)
 #' @param K Number of clusters
 #' @param n_iter Number of iterations (default 10)
 #' @param C Confidence parameter for threshold (default 0.5)
-#' @param n_perms Number of permutations for reward step (default 100)
-#' @param true_labels True cluster assignments (REQUIRED for v3)
+#' @param n_perms Number of permutations for reward step (default 200)
+#' @param fdr_level Target FDR for SAM Permutation thresholding (default 0.1)
+#' @param true_labels Optional string for true assignments, used just for logging.
 #' @return List containing cluster assignments, selected features, and metrics
 #' @export
-block_coordinate_optim_thompson_unknowncov_v3 <- function(X, K, n_iter = 100, C = 0.5, n_perms = 200,  max_iter_sdp = 4000, true_labels = NULL) {
+block_coordinate_optim_thompson_unknowncov_v4 <- function(X, K, n_iter = 100, C = 0.5, n_perms = 200, fdr_level = 0.1, max_iter_sdp = 4000, true_labels = NULL) {
     if (!is.matrix(X)) stop("X must be a matrix")
 
     p <- nrow(X)
@@ -91,32 +91,41 @@ block_coordinate_optim_thompson_unknowncov_v3 <- function(X, K, n_iter = 100, C 
         # =========================================================
         # 2. SELECTION BLOCK
         # =========================================================
-        # Require true_labels for Oracle ISEE step in version 3
-        if (is.null(true_labels)) {
-            stop("true_labels must be provided for version 3 (Oracle ISEE on 1st iteration).")
-        }
-
-        # transfomration step
-        # Iteration 1: Force-input true_labels into ISEE
-        if (iternum == 1) {
-            cat("Iteration 1: Using true cluster labels for ISEE transformation.\n")
-            cluster_isee_input <- true_labels
-        } else {
-            # Iteration 2+: Use estimated cluster IDs
-            cluster_isee_input <- cluster_est_now
-        }
+        cluster_isee_input <- cluster_est_now
         res_isee <- ISEE_residual_lasso(X, cluster_isee_input, K)
         X_tilde <- res_isee$X_tilde
         Omega_diag_hat <- res_isee$Omega_diag
         # -------------------------------------------------------
-        # A. Reward Step
+        # A. Reward Step (Adaptive SAM Permutation FDR)
         # -------------------------------------------------------
+        cat(sprintf("Estimating Threshold via %d permutations (Target FDR %.2f)...\n", n_perms, fdr_level))
+        
         # Subset X_tilde based on CURRENT selection indices (S_hat_now)
         X_tilde_sub <- X_tilde[S_hat_now, , drop = FALSE]
 
-        # Run Greedy Screening (Permutation Test) on the subset
-        # rewards_sub is a LOGICAL vector of length length(S_hat_now)
-        rewards_sub <- selection_block_greedy_screening(X_tilde_sub, cluster_est_now, fdr_level = NULL, n_perms = 10000)
+        # Calculate raw observed statistics for the subset
+        m1 <- rowMeans(X_tilde_sub[, cluster_isee_input == 1, drop = FALSE])
+        m2 <- rowMeans(X_tilde_sub[, cluster_isee_input == 2, drop = FALSE])
+        obs_raw_signed <- m1 - m2
+        Omega_diag_sub <- Omega_diag_hat[S_hat_now]
+        
+        # Call the SAM Delta Threshold FDR function
+        fdr_res <- get_permutation_fdr_threshold(
+            stats_obs = obs_raw_signed, 
+            X_tilde = X_tilde_sub, 
+            cluster_labels = cluster_isee_input, 
+            Omega_diag = Omega_diag_sub, 
+            n_perms = n_perms, 
+            fdr_target = fdr_level
+        )
+        
+        cat(sprintf("  Selected Threshold: %.4f\n", fdr_res$delta))
+        cat(sprintf("  Features Selected in Subset: %d (Est FDR: %.4f)\n", fdr_res$n_selected, fdr_res$est_fdr))
+
+        rewards_sub <- rep(FALSE, length(S_hat_now))
+        if (fdr_res$n_selected > 0) {
+            rewards_sub[fdr_res$s_hat] <- TRUE
+        }
 
         # -------------------------------------------------------
         # B. Update Step
