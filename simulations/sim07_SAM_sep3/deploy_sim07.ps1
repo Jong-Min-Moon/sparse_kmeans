@@ -13,16 +13,16 @@ param(
 $ErrorActionPreference = "Stop"
 
 # Define Local Paths
-$SimDir = "d:\GitHub\sparse_kmeans\simulations\sim07_permutation_fdr_0.4"
+$SimDir = "d:\GitHub\sparse_kmeans\simulations\sim07_SAM_sep3"
 $CodeDir = "d:\GitHub\sparse_kmeans\code_r"
 
 # 1. Create Remote Directories
 Write-Host "Creating remote directories..." -ForegroundColor Cyan
-ssh "${Username}@${Hostname}" "mkdir -p ${RemoteBase}/simulations/sim07_permutation_fdr_0.4 && mkdir -p ${RemoteBase}/code_r"
+ssh "${Username}@${Hostname}" "mkdir -p ${RemoteBase}/simulations/sim07_SAM_sep3 && mkdir -p ${RemoteBase}/code_r"
 
 # 2. Transfer Simulation Files (Driver, Submit Script)
 Write-Host "Transferring simulation files..." -ForegroundColor Cyan
-scp "${SimDir}\driver.R" "${SimDir}\submit.sh" "${Username}@${Hostname}:${RemoteBase}/simulations/sim07_permutation_fdr_0.4/"
+scp "${SimDir}\driver.R" "${SimDir}\submit.sh" "${Username}@${Hostname}:${RemoteBase}/simulations/sim07_SAM_sep3/"
 
 # 3. Transfer Library Files
 Write-Host "Transferring library files..." -ForegroundColor Cyan
@@ -31,7 +31,7 @@ scp "${CodeDir}\*.R" "${Username}@${Hostname}:${RemoteBase}/code_r/"
 
 # 4. Convert Line Endings & Submit
 Write-Host "Submitting job..." -ForegroundColor Cyan
-$submitCmd = "cd ${RemoteBase}/simulations/sim07_permutation_fdr_0.4 && rm -rf logs results *.out *.err && dos2unix *.sh *.R && chmod +x *.sh && sbatch submit.sh"
+$submitCmd = "cd ${RemoteBase}/simulations/sim07_SAM_sep3 && rm -rf logs results *.out *.err && dos2unix *.sh *.R && chmod +x *.sh && sbatch submit.sh"
 ssh "${Username}@${Hostname}" $submitCmd
 
 if ($LASTEXITCODE -eq 0) {
