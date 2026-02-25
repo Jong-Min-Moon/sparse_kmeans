@@ -271,6 +271,9 @@ block_coordinate_optim_greedy_unknowncov_SAM <- function(X, K, n_iter = 200, n_p
             is_stop <- TRUE
         }
     }
+    # final ISEE refinement
+    res_isee <- ISEE_residual_lasso(X, cluster_est_now, K)
+    X_tilde_final <- res_isee$X_tilde
 
     total_time <- difftime(Sys.time(), start_time, units = "secs")
 
@@ -279,6 +282,7 @@ block_coordinate_optim_greedy_unknowncov_SAM <- function(X, K, n_iter = 200, n_p
         s_hat = s_hat,
         iternum = iternum,
         abs_diff = abs_diff,
-        final_delta = current_delta
+        final_delta = current_delta,
+        X_tilde_final = X_tilde_final
     ))
 }
