@@ -8,7 +8,7 @@
 #' @param n_perms Number of permutations for the test (default 10000)
 #' @param ... Additional arguments (ignored, but allowed for compatibility)
 #' @return Logical vector of selected features (length p)
-selection_block_greedy_screening <- function(X_tilde, cluster_est, fdr_level = 0.4, n_perms = 10000, ...) {
+selection_block_greedy_screening <- function(X_tilde, cluster_est, fdr_level = 0.4, n_perms = 10000, p_val_threshold = 0.01, ...) {
   p <- nrow(X_tilde)
   n <- ncol(X_tilde)
 
@@ -111,12 +111,13 @@ selection_block_greedy_screening <- function(X_tilde, cluster_est, fdr_level = 0
       n_selected, fdr_level, min(adj_p_values), n_perms
     ))
   } else {
-    # Raw P-value Threshold (0.01) matches MATLAB
-    selected <- p_values <= 0.01
+    # Raw P-value Threshold (matching user preference)
+    p_val_thresh <- if (exists("p_val_threshold")) p_val_threshold else 0.01
+    selected <- p_values <= p_val_thresh
     n_selected <- sum(selected)
     cat(sprintf(
-      "%d entries survived (P-val < 0.01) | Min raw-p: %.4e | P-val method: Permutation (%d)\n",
-      n_selected, min(p_values), n_perms
+      "%d entries survived (P-val < %.4f) | Min raw-p: %.4e | P-val method: Permutation (%d)\n",
+      n_selected, p_val_thresh, min(p_values), n_perms
     ))
   }
 
