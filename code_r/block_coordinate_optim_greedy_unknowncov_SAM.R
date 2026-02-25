@@ -161,10 +161,10 @@ get_permutation_fdr_threshold <- function(stats_obs, X_tilde, cluster_labels, Om
 #' @param X Data matrix (p x n)
 #' @param K Number of clusters
 #' @param n_iter Maximum number of iterations
-#' @param n_perms Number of permutations for FDR control (default 20)
-#' @param fdr_target Target FDR level (default 0.1)
+#' @param n_perms Number of permutations for FDR control (default 5000)
+#' @param fdr_target Target FDR level (default 0.4)
 #' @export
-block_coordinate_optim_permutation <- function(X, K, n_iter = 50, n_perms = 20, fdr_target = 0.1, stable_iter = 5, true_labels = NULL) {
+block_coordinate_optim_greedy_unknowncov_SAM <- function(X, K, n_iter = 200, n_perms = 5000, fdr_target = 0.4, stable_iter = 5, true_labels = NULL) {
     # variable initialization
     p <- nrow(X)
     n <- ncol(X)

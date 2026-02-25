@@ -26,7 +26,7 @@ scp "${SimDir}\driver.R" "${SimDir}\submit.sh" "${Username}@${Hostname}:${Remote
 
 # 3. Transfer Library Files
 Write-Host "Transferring library files..." -ForegroundColor Cyan
-# Crucial: Ensure the new block_coordinate_optim_permutation.R is transferred
+# Crucial: Ensure the new block_coordinate_optim_greedy_unknowncov_SAM.R is transferred
 scp "${CodeDir}\*.R" "${Username}@${Hostname}:${RemoteBase}/code_r/"
 
 # 4. Convert Line Endings & Submit

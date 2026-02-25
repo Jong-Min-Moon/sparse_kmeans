@@ -31,7 +31,7 @@ if (length(args) > 0) {
 # Source Code
 source("../../code_r/sparse_symmetric_data_generator.R")
 source("../../code_r/block_coordinate_optim_thompson_unknowncov_v3_1_first_iter_oracle.R") # sim10 variant
-source("../../code_r/block_coordinate_optim_permutation.R")
+source("../../code_r/block_coordinate_optim_greedy_unknowncov_SAM.R")
 source("../../code_r/ESSC.R")
 source("../../code_r/ISEE_residual_lasso.R")
 source("../../code_r/get_intercept_residual_lasso.R")

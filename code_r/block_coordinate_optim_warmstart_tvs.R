@@ -7,7 +7,7 @@ library(mclust)
 # source("selection_block_greedy_screening.R")
 # source("clustering_block_knowncov.R")
 # source("ISEE_residual_lasso.R")
-# source("block_coordinate_optim_permutation.R") # for get_permutation_fdr_threshold
+# source("block_coordinate_optim_greedy_unknowncov_SAM.R") # for get_permutation_fdr_threshold
 # source("ESSC.R")
 # source("utils.R")
 

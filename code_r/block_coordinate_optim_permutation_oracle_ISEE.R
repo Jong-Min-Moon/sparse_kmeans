@@ -1,6 +1,6 @@
 # Permutation-Based Iterative SDP K-Means (FDR Control) — Oracle ISEE Variant
 # MODIFICATION: ISEE step uses true_labels instead of estimated cluster labels.
-# Everything else is identical to block_coordinate_optim_permutation.R.
+# Everything else is identical to block_coordinate_optim_greedy_unknowncov_SAM.R.
 library(foreach)
 library(doParallel) # Ensure parallel backend is registered if needed, though we use simple loops or standard simple parallel if implemented
 library(matrixStats) # For fast colVars/rowMeans

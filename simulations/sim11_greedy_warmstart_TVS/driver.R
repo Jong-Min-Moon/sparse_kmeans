@@ -28,7 +28,7 @@ if (length(args) > 0) {
 # Source Code
 source("../../code_r/sparse_symmetric_data_generator.R")
 source("../../code_r/block_coordinate_optim_warmstart_tvs.R")
-source("../../code_r/block_coordinate_optim_permutation.R")
+source("../../code_r/block_coordinate_optim_greedy_unknowncov_SAM.R")
 source("../../code_r/selection_block_greedy_screening.R")
 source("../../code_r/ESSC.R")
 source("../../code_r/ISEE_residual_lasso.R")
