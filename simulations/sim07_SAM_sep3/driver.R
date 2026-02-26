@@ -89,7 +89,7 @@ start_time <- Sys.time()
 res <- block_coordinate_optim_greedy_unknowncov_SAM(
     X = X,
     K = 2,
-    n_iter = 100,
+    n_iter = 200,
     n_perms = n_perms,
     fdr_target = fdr_target,
     stable_iter = 5,
@@ -129,6 +129,8 @@ if (length(selected_indices) > 0) {
 
 # Save Result
 dir.create("results", showWarnings = FALSE)
+# Format fdr to e.g. "0p4" instead of "0.4" for safe filename
+fdr_str <- gsub("\\.", "p", as.character(fdr_target))
 saveRDS(list(
     res = res,
     ari = ari,
@@ -136,5 +138,6 @@ saveRDS(list(
     tp = tp,
     fp = fp,
     job_id = job_id,
+    fdr_target = fdr_target,
     params = list(p = p, n = n, rho = rho, sep = separation, fdr = fdr_target, n_perms = n_perms)
-), file = sprintf("results/sim_id%d.rds", job_id))
+), file = sprintf("results/sim_id%d_fdr%s.rds", job_id, fdr_str))
