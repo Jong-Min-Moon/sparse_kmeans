@@ -22,13 +22,12 @@
 #' @param K Number of clusters
 #' @param n_iter Number of iterations (default 10)
 #' @param C Confidence parameter for threshold (default 0.5)
-#' @param FDR_level False Discovery Rate level for reward step (default 0.4)
 #' @param n_perms Number of permutations for reward step (default 100)
 #' @param covariance Covariance matrix (p x p). If NULL, assumes Identity.
-#' @param true_labels True cluster assignments (optional, if provided ARI will be logged)
+#' @param true_cluster True cluster labels (for computing accuracy). If NULL, accuracy is not computed.
 #' @return List containing cluster assignments, selected features, and metrics
 #' @export
-block_coordinate_optim_thompson <- function(X, K, n_iter = 100, C = 0.5, n_perms = 200, fdr_level = 0.1, covariance = NULL, true_labels = NULL) {
+block_coordinate_optim_thompson <- function(X, K, n_iter = 1000, C = 0.5, n_perms = 300, covariance = NULL, true_cluster = NULL) {
   if (!is.matrix(X)) stop("X must be a matrix")
 
   p <- nrow(X)
@@ -50,6 +49,10 @@ block_coordinate_optim_thompson <- function(X, K, n_iter = 100, C = 0.5, n_perms
   obj_vec <- numeric(n_iter) # Track Objective Function
   selected_history <- list()
   reward_history <- list()
+
+  if (!is.null(true_cluster)) {
+    acc_vec <- numeric(n_iter)
+  }
 
   # Calculate X_tilde
   if (is.null(covariance)) {
@@ -87,11 +90,6 @@ block_coordinate_optim_thompson <- function(X, K, n_iter = 100, C = 0.5, n_perms
   clustering_result_init <- run_clustering_block_knowncov(X_tilde, current_selection_logical_init, K, cluster_est_prev = numeric(n), covariance = covariance)
   cluster_est_now <- clustering_result_init$cluster
 
-  if (!is.null(true_labels)) {
-    ari_init <- mclust::adjustedRandIndex(cluster_est_now, true_labels)
-    cat(sprintf("Initial Clustering Accuracy (ARI): %.4f\n", ari_init))
-  }
-
   # Start with all features selected for the first reward assessment
 
   for (iternum in 1:n_iter) {
@@ -109,7 +107,7 @@ block_coordinate_optim_thompson <- function(X, K, n_iter = 100, C = 0.5, n_perms
 
     # Run Greedy Screening (Permutation Test) on the subset
     # rewards_sub is a LOGICAL vector of length length(S_hat_now)
-    rewards_sub <- selection_block_greedy_screening(X_tilde_sub, cluster_est_now, fdr_level = fdr_level, n_perms = n_perms)
+    rewards_sub <- selection_block_greedy_screening(X_tilde_sub, cluster_est_now, fdr_level = NULL, n_perms = n_perms)
 
     # -------------------------------------------------------
     # B. Update Step
@@ -125,15 +123,12 @@ block_coordinate_optim_thompson <- function(X, K, n_iter = 100, C = 0.5, n_perms
 
     cat(sprintf("Rewarded arms: %d / %d selected in this subset\n", sum(rewards_sub), length(current_indices)))
 
-    # --- Logging Top 20 Features among current selection ---
-    post_mean_temp <- alpha_vec[current_indices] / (alpha_vec[current_indices] + beta_vec[current_indices])
-    n_show <- min(20, length(current_indices))
-    top_indices_local <- order(post_mean_temp, decreasing = TRUE)[1:n_show]
-    top_probs <- post_mean_temp[top_indices_local]
-    top_indices_global <- current_indices[top_indices_local]
-
-    cat(sprintf("Top %d Features in selected subset (Posterior Mean):\n", n_show))
-    print(setNames(top_probs, top_indices_global))
+    # --- Logging Top 10 Features ---
+    post_mean_temp <- alpha_vec / (alpha_vec + beta_vec)
+    top10_indices <- order(post_mean_temp, decreasing = TRUE)[1:10]
+    top10_probs <- post_mean_temp[top10_indices]
+    cat("Top 10 Features (Posterior Mean):\n")
+    print(setNames(top10_probs, top10_indices))
     # -------------------------------
 
     # Store rewards history (creating full vector for logging)
@@ -183,11 +178,13 @@ block_coordinate_optim_thompson <- function(X, K, n_iter = 100, C = 0.5, n_perms
     # Compute Rand Index
     ri <- adjustedRandIndex(cluster_est_new, cluster_est_now)
     rand_vec[iternum] <- ri
-    cat(sprintf("Adjusted Rand Index change (prev vs now): %.4f\n", ri))
+    cat(sprintf("Adjusted Rand Index change: %.4f\n", ri))
 
-    if (!is.null(true_labels)) {
-      ari_true <- mclust::adjustedRandIndex(cluster_est_new, true_labels)
-      cat(sprintf("Iteration %d Accuracy (ARI vs True): %.4f\n", iternum, ari_true))
+    # Compute Accuracy if true_cluster is given
+    if (!is.null(true_cluster)) {
+      acc <- get_cluster_acc(cluster_est_new, true_cluster)
+      acc_vec[iternum] <- acc
+      cat(sprintf("Clustering Accuracy: %.4f\n", acc))
     }
 
     # Prepare for next iteration
@@ -202,11 +199,17 @@ block_coordinate_optim_thompson <- function(X, K, n_iter = 100, C = 0.5, n_perms
   cat(sprintf("\n--- Final Selection ---\n"))
   cat(sprintf("Features selected: %d / %d\n", sum(final_selection), p))
 
-  return(list(
+  out <- list(
     cluster = cluster_est_now,
     selected = final_selection,
     alpha = alpha_vec,
     beta = beta_vec,
     objective = obj_vec
-  ))
+  )
+
+  if (!is.null(true_cluster)) {
+    out$acc_history <- acc_vec
+  }
+
+  return(out)
 }
