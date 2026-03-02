@@ -1,5 +1,5 @@
 # ---------------------------------------------------------
-# Single Simulation Run: sim14_thompson
+# Single Simulation Run: sim_18
 # ---------------------------------------------------------
 library(methods)
 library(MASS)
@@ -18,7 +18,7 @@ library(cluster)
 args <- commandArgs(trailingOnly = TRUE)
 
 job_id <- 1
-separation <- 4
+separation <- 6
 pval <- 0.01
 
 n_iter_tvs <- 1000
@@ -27,7 +27,7 @@ n_step_admm <- 4000
 # Note: User requested n_perms = 10000 and n_step_admm = 4000 for this exact run configuration
 
 if (length(args) > 0) {
-    for (i in 1:length(args)) {
+    for (i in seq_along(args)) {
         if (args[i] == "--job_id" && i < length(args)) {
             val <- suppressWarnings(as.integer(args[i + 1]))
             if (!is.na(val)) job_id <- val
@@ -68,7 +68,7 @@ precision_sparsity <- 2
 support <- 1:10
 flip <- FALSE
 
-cat(sprintf("--- Simulation Run sim14_thompson (Job ID: %d, Sep: %.1f, P-Val: %.4f) ---\n", job_id, separation, pval))
+cat(sprintf("--- Simulation Run sim_18 (Job ID: %d, Sep: %.1f, P-Val: %.4f) ---\n", job_id, separation, pval))
 
 set.seed(2025 + job_id)
 

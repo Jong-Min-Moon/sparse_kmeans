@@ -4,7 +4,8 @@ library(sparcl)
 #' @param X n x p data matrix
 #' @param K number of clusters (default 2)
 #' @param seed optional random seed
-run_witten <- function(X, K = 2, seed = NULL) {
+#' @param return_list whether to return a list with cluster and L (default FALSE)
+run_witten <- function(X, K = 2, seed = NULL, return_list = FALSE) {
     if (!is.null(seed)) {
         set.seed(seed)
     }
@@ -26,7 +27,14 @@ run_witten <- function(X, K = 2, seed = NULL) {
         })
     })
 
-    return(km.out[[1]]$Cs)
+    if (return_list) {
+        return(list(
+            cluster = km.out[[1]]$Cs,
+            L = sum(km.out[[1]]$ws != 0)
+        ))
+    } else {
+        return(km.out[[1]]$Cs)
+    }
 }
 
 # --- Arias-Castro Sparse K-Means (Hill Climbing) ---
@@ -139,7 +147,8 @@ hill_climb <- function(X, k, nbins = 50, nperms = 25, itermax = 100, threshold =
 #' @param X n x p data matrix
 #' @param K number of clusters (default 2)
 #' @param seed optional random seed
-run_arias <- function(X, K = 2, seed = NULL) {
+#' @param return_list whether to return a list with cluster and L (default FALSE)
+run_arias <- function(X, K = 2, seed = NULL, return_list = FALSE) {
     if (!is.null(seed)) {
         set.seed(seed)
     }
@@ -151,5 +160,13 @@ run_arias <- function(X, K = 2, seed = NULL) {
     }
 
     res <- hill_climb(X, K, nbins = 50, nperms = 25, itermax = 100, threshold = 1e-5)
-    return(res$best_result)
+
+    if (return_list) {
+        return(list(
+            cluster = res$best_result,
+            L = length(res$feature_set)
+        ))
+    } else {
+        return(res$best_result)
+    }
 }

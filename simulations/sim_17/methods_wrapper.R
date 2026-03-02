@@ -22,11 +22,11 @@ run_all_methods <- function(X, K, pvalcut, seed) {
     st <- Sys.time()
     witten_res <- tryCatch(
         {
-            run_witten(X, K, seed = seed)
+            run_witten(X, K, seed = seed, return_list = TRUE)
         },
         error = function(e) {
             warning(paste("Witten failed:", e$message))
-            rep(NA, n)
+            list(cluster = rep(NA, n), L = NA)
         }
     )
     rt_witten <- as.numeric(difftime(Sys.time(), st, units = "secs"))
@@ -37,11 +37,11 @@ run_all_methods <- function(X, K, pvalcut, seed) {
     st <- Sys.time()
     arias_res <- tryCatch(
         {
-            run_arias(X, K, seed = seed)
+            run_arias(X, K, seed = seed, return_list = TRUE)
         },
         error = function(e) {
             warning(paste("Arias failed:", e$message))
-            rep(NA, n)
+            list(cluster = rep(NA, n), L = NA)
         }
     )
     rt_arias <- as.numeric(difftime(Sys.time(), st, units = "secs"))
@@ -69,8 +69,16 @@ run_all_methods <- function(X, K, pvalcut, seed) {
     rt_ifpca <- as.numeric(difftime(Sys.time(), st, units = "secs"))
 
     return(list(
-        witten = list(cluster = witten_res, runtime = rt_witten),
-        arias = list(cluster = arias_res, runtime = rt_arias),
+        witten = list(
+            cluster = witten_res$cluster,
+            L = witten_res$L,
+            runtime = rt_witten
+        ),
+        arias = list(
+            cluster = arias_res$cluster,
+            L = arias_res$L,
+            runtime = rt_arias
+        ),
         ifpca = list(
             cluster = if (!is.null(ifpca_res)) ifpca_res$labels else rep(NA, n),
             L = if (!is.null(ifpca_res)) ifpca_res$L else NA,

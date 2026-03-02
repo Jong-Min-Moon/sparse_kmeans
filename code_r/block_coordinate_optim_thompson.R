@@ -23,11 +23,14 @@
 #' @param n_iter Number of iterations (default 10)
 #' @param C Confidence parameter for threshold (default 0.5)
 #' @param n_perms Number of permutations for reward step (default 100)
+#' @param p_val_threshold Threshold for greedy screening step (default 0.01). fdr_level must be NULL to use this correctly.
+#' @param n_step_admm Number of iterations for ADMM clustering step (default 2000, mapped to `max_iter`)
 #' @param covariance Covariance matrix (p x p). If NULL, assumes Identity.
 #' @param true_cluster True cluster labels (for computing accuracy). If NULL, accuracy is not computed.
 #' @return List containing cluster assignments, selected features, and metrics
 #' @export
-block_coordinate_optim_thompson <- function(X, K, n_iter = 1000, C = 0.5, n_perms = 300, covariance = NULL, true_cluster = NULL) {
+block_coordinate_optim_thompson <- function(X, K, n_iter = 1000, C = 0.5, n_perms = 300, p_val_threshold = 0.01, n_step_admm = 2000, covariance = NULL, true_cluster = NULL) {
+  if (!is.numeric(n_step_admm) || n_step_admm <= 0 || n_step_admm %% 1 != 0) stop("n_step_admm must be a positive integer.")
   if (!is.matrix(X)) stop("X must be a matrix")
 
   p <- nrow(X)
@@ -87,7 +90,7 @@ block_coordinate_optim_thompson <- function(X, K, n_iter = 1000, C = 0.5, n_perm
 
   # Run Clustering on this initial subset
   # We pass cluster_est_prev = NULL as there is no previous estimate
-  clustering_result_init <- run_clustering_block_knowncov(X_tilde, current_selection_logical_init, K, cluster_est_prev = numeric(n), covariance = covariance)
+  clustering_result_init <- run_clustering_block_knowncov(X_tilde, current_selection_logical_init, K, cluster_est_prev = numeric(n), covariance = covariance, max_iter = n_step_admm)
   cluster_est_now <- clustering_result_init$cluster
 
   # Start with all features selected for the first reward assessment
@@ -107,7 +110,13 @@ block_coordinate_optim_thompson <- function(X, K, n_iter = 1000, C = 0.5, n_perm
 
     # Run Greedy Screening (Permutation Test) on the subset
     # rewards_sub is a LOGICAL vector of length length(S_hat_now)
-    rewards_sub <- selection_block_greedy_screening(X_tilde_sub, cluster_est_now, fdr_level = NULL, n_perms = n_perms)
+    rewards_sub <- selection_block_greedy_screening(
+      X_tilde_sub,
+      cluster_est_now,
+      fdr_level = NULL,
+      n_perms = n_perms,
+      p_val_threshold = p_val_threshold
+    )
 
     # -------------------------------------------------------
     # B. Update Step
@@ -167,7 +176,7 @@ block_coordinate_optim_thompson <- function(X, K, n_iter = 1000, C = 0.5, n_perm
     # clustering_block_knowncov uses X_tilde and logical vector
 
     # Clustering Block returns list(cluster, value)
-    clustering_result <- run_clustering_block_knowncov(X_tilde, current_selection_logical, K, cluster_est_now, covariance = covariance)
+    clustering_result <- run_clustering_block_knowncov(X_tilde, current_selection_logical, K, cluster_est_now, covariance = covariance, max_iter = n_step_admm)
     cluster_est_new <- clustering_result$cluster
     obj_val <- clustering_result$value
 

@@ -26,7 +26,7 @@ rho <- 0.45
 precision_sparsity <- 2
 support <- 1:10
 flip <- FALSE
-separations <- c(4, 5)
+separations <- c(6)
 n_runs <- 100
 
 # IF-PCA specific
@@ -100,6 +100,26 @@ for (sep in separations) {
             ifpca_L = methods_out$ifpca$L,
             runtime_ifpca = methods_out$ifpca$runtime
         )
+
+        # 6. Intermediate Result Logging
+        n_witten <- methods_out$witten$L
+        n_arias <- methods_out$arias$L
+        n_ifpca <- methods_out$ifpca$L
+
+        acc_w <- acc_out$acc_witten
+        acc_a <- acc_out$acc_arias
+        acc_i <- acc_out$acc_ifpca
+
+        log_msg <- sprintf(
+            "Rep %d, sep = %d: Witten [feat = %s, acc = %.3f], Arias [feat = %s, acc = %.3f], IF-PCA [feat = %s, acc = %.3f]\n",
+            job_id, sep,
+            ifelse(is.na(n_witten), "NA", as.character(n_witten)), acc_w,
+            ifelse(is.na(n_arias), "NA", as.character(n_arias)), acc_a,
+            ifelse(is.na(n_ifpca), "NA", as.character(n_ifpca)), acc_i
+        )
+
+        cat(log_msg)
+        cat(log_msg, file = "logs/intermediate_progress.txt", append = TRUE)
 
         # Save independent file as a backup
         saveRDS(res_df, file = sprintf("results/sim_id%d_sep%d.rds", job_id, sep))

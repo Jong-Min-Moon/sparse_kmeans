@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=sim14_thomp
+#SBATCH --job-name=sim18_thomp
 #SBATCH --partition=main
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
