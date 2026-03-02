@@ -10,8 +10,8 @@ REMOTE_BASE=${3:-"~/sparse_kmeans_project"}
 LOCAL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 REMOTE_SIM_DIR="${REMOTE_BASE}/simulations/sim14_thompson"
-REMOTE_RESULTS_DIR="${REMOTE_SIM_DIR}/results"
-LOCAL_OUTPUT_DIR="${LOCAL_DIR}/output"
+REMOTE_RESULTS_DIR="${REMOTE_SIM_DIR}/results_raw"
+LOCAL_OUTPUT_DIR="${LOCAL_DIR}/results_raw"
 
 # Colors
 CYAN='\033[0;36m'
@@ -31,10 +31,10 @@ echo -e "${GRAY}Copying results directory...${NC}"
 scp -r "${USERNAME}@${HOSTNAME}:${REMOTE_RESULTS_DIR}" "${LOCAL_DIR}/"
 EXIT_CODE=$?
 
-# Rename to output
-if [ -d "${LOCAL_DIR}/results" ]; then
+# Rename to results_raw (if moved cleanly)
+if [ -d "${LOCAL_DIR}/results_raw" ] && [ "${LOCAL_OUTPUT_DIR}" != "${LOCAL_DIR}/results_raw" ]; then
     rm -rf "${LOCAL_OUTPUT_DIR}"
-    mv "${LOCAL_DIR}/results" "${LOCAL_OUTPUT_DIR}"
+    mv "${LOCAL_DIR}/results_raw" "${LOCAL_OUTPUT_DIR}"
 fi
 
 if [ $EXIT_CODE -eq 0 ]; then

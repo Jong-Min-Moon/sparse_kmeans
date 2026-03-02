@@ -36,18 +36,21 @@ df_list <- lapply(all_res, function(x) {
 
 df <- bind_rows(df_list)
 
-summary_df <- df %>%
-    group_by(sep, pval) %>%
-    summarize(
-        n_runs = n(),
-        mean_acc = mean(accuracy, na.rm = TRUE),
-        sd_acc = sd(accuracy, na.rm = TRUE),
-        mean_L = mean(L, na.rm = TRUE),
-        sd_L = sd(L, na.rm = TRUE),
-        mean_rt = mean(runtime, na.rm = TRUE),
-        .groups = "drop"
-    ) %>%
-    arrange(sep, desc(pval))
+summary_df <- do.call(rbind, lapply(split(df, list(df$sep, df$pval)), function(sub_df) {
+    if(nrow(sub_df) == 0) return(NULL)
+    data.frame(
+        sep = sub_df$sep[1],
+        pval = sub_df$pval[1],
+        n_runs = nrow(sub_df),
+        mean_acc = mean(sub_df$accuracy, na.rm = TRUE),
+        sd_acc = sd(sub_df$accuracy, na.rm = TRUE),
+        mean_L = mean(sub_df$L, na.rm = TRUE),
+        sd_L = sd(sub_df$L, na.rm = TRUE),
+        mean_rt = mean(sub_df$runtime, na.rm = TRUE)
+    )
+}))
+summary_df <- summary_df[order(summary_df$sep, -summary_df$pval), ]
+rownames(summary_df) <- NULL
 
 print(summary_df)
 

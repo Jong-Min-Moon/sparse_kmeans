@@ -12,7 +12,7 @@
 #' @param n_iter Maximum number of iterations
 #' @param stable_iter Number of consecutive iterations with ARI=1 to stop (default 10)
 #' @param true_labels True cluster assignments (optional, if provided ARI will be logged)
-block_coordinate_optim_greedy <- function(X_tilde, K, n_iter = 10, stable_iter = 10, fdr_level = 0.4, max_iter_sdp = 2000, true_labels = NULL) {
+block_coordinate_optim_greedy <- function(X_tilde, K, n_iter = 100, stable_iter = 10, fdr_level = 0.4, max_iter_sdp = 2000, true_labels = NULL) {
   if (!is.matrix(X_tilde)) stop("X_tilde must be a matrix")
   p <- nrow(X_tilde)
   n <- ncol(X_tilde)
