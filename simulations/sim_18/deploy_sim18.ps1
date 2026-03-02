@@ -7,7 +7,7 @@ param(
     [string]$Username = "jongminm",
     [string]$Hostname = "discovery.usc.edu",
     [string]$RemoteBase = "~/sparse_kmeans_project",
-    [double[]]$Pvals = @(0.01, 0.005, 0.001),
+    [double[]]$Pvals = @(0.001),
     [double[]]$Separations = @(6)
 )
 
