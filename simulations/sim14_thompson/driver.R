@@ -85,6 +85,9 @@ data_res <- generate_data_from_generator(generator, n, seed = 2025 + job_id)
 X <- data_res$X
 true_labels <- data_res$labels
 
+# Standardize each feature (row-wise scaling) before clustering
+X <- t(scale(t(X)))
+
 cat("Running Thompson Block Optimization...\n")
 
 start_time <- Sys.time()
