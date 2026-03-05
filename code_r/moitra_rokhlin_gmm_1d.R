@@ -39,3 +39,113 @@ estimate_excess_moments <- function(x) {
     X6 = X6
   ))
 }
+
+#' Internal function: evaluate the robust polynomial combination r(y)
+evaluate_r <- function(y, X3, X4, X5, X6) {
+  p5 <- 6 * (2 * X3 * y^3 + X5 * y^2 - 3 * X3 * X4 * y + 2 * X3^3)^2 + 
+        (2 * y^3 + 3 * X4 * y - 4 * X3^2)^2 * (2 * y^3 + X4 * y - X3^2)
+        
+  p6 <- (4 * X3^2 - 3 * X4 * y - 2 * y^3) * 
+        (4 * X4^3 - 4 * X3^2 * X4 * y - 8 * X3^2 * y^3 - X4^2 * y^2 + 8 * X4 * y^4 + X6 * y^3 + 4 * y^6) - 
+        (10 * X3^3 - 7 * X3 * X4 * y - 2 * X3 * y^3) * 
+        (2 * X3^3 - 3 * X3 * X4 * y + 2 * X3 * y^3 + X5 * y^2)
+        
+  return(p5^2 + p6^2)
+}
+
+#' Recover Alpha from Moments
+#' Algorithm 3.1 subroutine to solve for the reparameterized variance difference proxy Alpha
+RecoverAlphaFromMoments <- function(X3, X4, X5, X6, epsilon = 1e-4) {
+  # ymax is the largest real root of 2y^3 + X4*y - X3^2 = 0
+  roots <- polyroot(c(-X3^2, X4, 0, 2))
+  real_roots <- Re(roots)[abs(Im(roots)) < 1e-8]
+  if (length(real_roots) == 0) stop("No real roots found for ymax")
+  ymax <- max(real_roots)
+  if (ymax <= 0) {
+      ymax <- 1e-6 # fallback if degenerate
+  }
+  
+  kappa <- 1 + sqrt(abs(X4)) / ymax
+  upper_limit <- (1 + epsilon / kappa) * ymax
+  
+  # Find candidates for alpha: we want the roots of r'(y), i.e., the local minima of r(y)
+  # Evaluating over a dense grid to find candidates
+  grid_points <- seq(1e-8, upper_limit, length.out = 10000)
+  r_vals <- evaluate_r(grid_points, X3, X4, X5, X6)
+  
+  diffs <- diff(r_vals)
+  is_local_min <- c(FALSE, diffs[-length(diffs)] < 0 & diffs[-1] > 0, FALSE)
+  min_indices <- which(is_local_min)
+  
+  candidate_alphas <- upper_limit
+  if (length(min_indices) > 0) {
+    # Refine local minima
+    refined_minima <- sapply(min_indices, function(i) {
+      lower <- grid_points[max(1, i - 2)]
+      upper <- grid_points[min(length(grid_points), i + 2)]
+      res <- optimize(evaluate_r, interval = c(lower, upper), X3=X3, X4=X4, X5=X5, X6=X6)
+      return(res$minimum)
+    })
+    candidate_alphas <- c(refined_minima, upper_limit)
+  }
+  
+  # Filter strictly to condition: r(alpha) <= 2 * alpha^18 * kappa^10 * epsilon
+  valid_alphas <- c()
+  for (cand in candidate_alphas) {
+    if (cand <= upper_limit) {
+      r_val <- evaluate_r(cand, X3, X4, X5, X6)
+      threshold <- 2 * (cand^18) * (kappa^10) * epsilon
+      if (r_val <= threshold) {
+        valid_alphas <- c(valid_alphas, cand)
+      }
+    }
+  }
+  
+  if (length(valid_alphas) == 0) {
+    return(upper_limit)
+  }
+  
+  return(max(valid_alphas))
+}
+
+#' Recover 1D Gaussian Mixture params from moments (Algorithm 3.1)
+RecoverFromMoments <- function(mu, sigma2, X3, X4, X5, X6, epsilon = 1e-4) {
+  alpha <- RecoverAlphaFromMoments(X3, X4, X5, X6, epsilon)
+  
+  gamma_num <- alpha^2 * X5 + 2 * X3^3 + 2 * alpha^3 * X3 - 3 * X3 * X4 * alpha
+  gamma_den <- 4 * X3^2 - 2 * alpha^3 - 3 * X4 * alpha
+  
+  # Avoid exact division by zero if pathological
+  if (abs(gamma_den) < 1e-12) {
+      gamma_den <- sign(gamma_den) * 1e-12
+      if (gamma_den == 0) gamma_den <- 1e-12
+  }
+  
+  gamma <- (1 / alpha) * (gamma_num / gamma_den)
+  beta <- (1 / alpha) * (X3 - 3 * alpha * gamma)
+  
+  # Calculate shifted means (mathematically corrected quadratic formula from paper)
+  disc <- sqrt(max(0, beta^2 + 4 * alpha))
+  mu1 <- (beta - disc) / 2
+  mu2 <- (beta + disc) / 2
+  
+  # Probabilities
+  p1 <- mu2 / (mu2 - mu1)
+  p2 <- -mu1 / (mu2 - mu1)
+  
+  p1 <- max(0, min(1, p1))
+  p2 <- 1 - p1
+  
+  # Variances
+  sigma1_sq <- sigma2 - (p1 * mu1^2 + p2 * mu2^2 - mu1 * gamma)
+  sigma2_sq <- sigma1_sq + (mu2 - mu1) * gamma
+  
+  sigma1_sq <- max(1e-10, sigma1_sq)
+  sigma2_sq <- max(1e-10, sigma2_sq)
+  
+  return(list(
+    comp1 = list(p = p1, mu = mu1 + mu, sigma = sqrt(sigma1_sq)),
+    comp2 = list(p = p2, mu = mu2 + mu, sigma = sqrt(sigma2_sq)),
+    alpha = alpha, beta = beta, gamma = gamma
+  ))
+}
