@@ -26,8 +26,8 @@ rho <- 0.45
 precision_sparsity <- 2
 support <- 1:10
 flip <- FALSE
-separations <- c(6)
-n_runs <- 100
+separations <- c(8,9,10,11)
+n_runs <- 20
 
 # IF-PCA specific
 pvalcut <- log(p) / p
@@ -77,6 +77,8 @@ for (sep in separations) {
         # 2. Generate Data Exactly Once Per Replication
         data_res <- generate_data_from_generator(generator, n, seed = current_seed)
         X <- data_res$X
+
+
         true_labels <- data_res$labels
 
         # 3. Apply ALL Methods to the SAME `X`

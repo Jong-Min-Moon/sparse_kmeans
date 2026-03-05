@@ -6,8 +6,8 @@ set -euo pipefail
 USERNAME=${1:-"jongminm"}
 HOSTNAME=${2:-"discovery.usc.edu"}
 REMOTE_BASE=${3:-"~/sparse_kmeans_project"}
-PVALS=(0.01 0.005 0.001)
-SEPARATIONS=(8 9 10)
+PVALS=(0.005 0.001)
+SEPARATIONS=(11)
 
 # Colors
 CYAN='\033[0;36m'

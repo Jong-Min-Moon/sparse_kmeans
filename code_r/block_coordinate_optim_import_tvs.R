@@ -18,7 +18,7 @@ library(mclust)
 block_coordinate_optim_import_tvs <- function(X, K,
                                               sim_id,
                                               fdr_level,
-                                              n_iter_tvs = 50,
+                                              n_iter_tvs = 500,
                                               C = 0.5,
                                               p_val_threshold = 0.01,
                                               true_labels = NULL) {
