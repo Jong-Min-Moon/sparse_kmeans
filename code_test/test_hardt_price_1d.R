@@ -1,4 +1,4 @@
-source("code_r/moitra_rokhlin_gmm_1d.R")
+source("code_r/hardt_price_gmm_1d.R")
 
 # True parameters
 p1_true <- 0.3
