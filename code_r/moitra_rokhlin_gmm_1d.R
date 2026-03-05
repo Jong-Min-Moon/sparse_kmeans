@@ -149,3 +149,40 @@ RecoverFromMoments <- function(mu, sigma2, X3, X4, X5, X6, epsilon = 1e-4) {
     alpha = alpha, beta = beta, gamma = gamma
   ))
 }
+
+#' Recover 1D Gaussian Mixture params when means are equal (Algorithm 3.2)
+#' 
+#' @param mu Overall mean
+#' @param sigma2 Overall variance
+#' @param X4 4th excess moment
+#' @param X6 6th excess moment
+SameMeanRecoverFromMoments <- function(mu, sigma2, X4, X6) {
+  # Avoid exact division by zero if pathological
+  if (abs(X4) < 1e-12) {
+    X4 <- sign(X4) * 1e-12
+    if (X4 == 0) X4 <- 1e-12
+  }
+  
+  delta_sigma2 <- sqrt((4/3) * X4 + (X6^2) / (25 * X4^2))
+  
+  # Fix typo in paper's pseudocode Algorithm 3.2: 
+  # X6 actually tracks (p1 - p2), not (p2 - p1). So p1 takes the + branch.
+  p1 <- 0.5 * (1 + X6 / (5 * X4 * delta_sigma2))
+  p2 <- 1 - p1
+  
+  # Ensure probabilities are in [0, 1]
+  p1 <- max(0, min(1, p1))
+  p2 <- 1 - p1
+  
+  sigma1_sq <- sigma2 - p2 * delta_sigma2
+  sigma2_sq <- sigma2 + p1 * delta_sigma2
+  
+  # Ensure variances are strictly positive
+  sigma1_sq <- max(1e-10, sigma1_sq)
+  sigma2_sq <- max(1e-10, sigma2_sq)
+  
+  return(list(
+    comp1 = list(p = p1, mu = mu, sigma = sqrt(sigma1_sq)),
+    comp2 = list(p = p2, mu = mu, sigma = sqrt(sigma2_sq))
+  ))
+}
