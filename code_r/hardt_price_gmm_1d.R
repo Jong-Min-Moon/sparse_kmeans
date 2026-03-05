@@ -268,41 +268,61 @@ Recover1DMixture <- function(x, delta = 0.05) {
   X4 <- moments$X4
   X5 <- moments$X5
   X6 <- moments$X6
+  mu_std <- moments$mu # Should be 0 for standardized data
+  sigma2_std <- moments$sigma2 # Should be 1 for standardized data
+  X3_std <- moments$X3
+  X4_std <- moments$X4
+  X5_std <- moments$X5
+  X6_std <- moments$X6
   
   # Step 2: Establish Error bounds
   f <- (log(1 / delta) / n)^(1 / 12)
-  sigma <- sqrt(sigma2)
+  sigma_std <- sqrt(sigma2_std) # This will be 1 for standardized data
   
-  # Step 3: Estimate geometry parameters
-  if (X4 > 0 && abs(X4) > 1e-12) {
-    delta_mu <- min(abs(X3)^(1/3) + abs(X4)^(1/4), abs(X3) / sqrt(X4))
-  } else {
-    delta_mu <- abs(X3)^(1/3) + abs(X4)^(1/4)
+  # Determine if completely unresolvable noise
+  # Since f^2 grows very large for small sample subsets (like the ones used in Alg C projection mappings),
+  # we damp the theoretical asymptotic check slightly to avoid accidentally blocking valid well-separated
+  # projections that have high noise.
+  eps_noise <- 0.05 * f^2 * sigma2_std
+  if (abs(X4_std) < eps_noise && X3_std^2 < eps_noise) {
+       cat("[ROUTING] Overriding: Geometry Fully Obscured. Selected Fallback (Single Component)\n")
+       return(list(
+         comp1 = list(p = 0.5, mu = mu_overall, sigma = sigma_overall),
+         comp2 = list(p = 0.5, mu = mu_overall, sigma = sigma_overall),
+         fallback = TRUE
+       ))
   }
   
-  delta_sigma2 <- sqrt(abs(X4))
+  # Step 3: Bounds calculations (all computed in mathematically stable std space)
+  if (X4_std > 0) {
+    delta_mu_std <- min(abs(X3_std)^(1/3) + abs(X4_std)^(1/4), abs(X3_std) / sqrt(X4_std))
+  } else {
+    delta_mu_std <- abs(X3_std)^(1/3) + abs(X4_std)^(1/4)
+  }
+  
+  delta_sigma2_std <- sqrt(abs(X4_std))
   
   # Step 4: Routing
-  best_candidate <- NULL
+  best_candidate <- NULL 
   
-  if (f^2 <= (delta_mu^2 / sigma2)) {
+  if (f^2 <= (delta_mu_std^2)) {
     # Means are reliably separated (Algorithm 3.1)
     cat("[ROUTING] Selected Algorithm 3.1 (Well-Separated Means)\n")
-    epsilon <- sqrt((sigma / max(1e-12, delta_mu))^12 * log(1 / delta) / n)
-    best_candidate <- RecoverFromMoments(mu, sigma2, X3, X4, X5, X6, epsilon)
+    epsilon <- sqrt((1 / max(1e-12, delta_mu_std))^12 * log(1 / delta) / n)
+    best_candidate <- RecoverFromMoments(mu_std, sigma2_std, X3_std, X4_std, X5_std, X6_std, epsilon)
     
-  } else if (f^2 <= (delta_sigma2 / sigma2)) {
+  } else if (f^2 <= (delta_sigma2_std)) {
     # Means inseparable, but variances are distinct (Algorithm 3.2)
     cat("[ROUTING] Selected Algorithm 3.2 (Identical Means, Distinct Variances)\n")
-    best_candidate <- SameMeanRecoverFromMoments(mu, sigma2, X4, X6)
+    best_candidate <- SameMeanRecoverFromMoments(mu_std, sigma2_std, X4_std, X6_std)
   }
   
   if (is.null(best_candidate)) {
     # Geometry fully obscured by noise: Output single Gaussian cluster
     cat("[ROUTING] Selected Fallback (Single Component)\n")
     best_candidate <- list(
-      comp1 = list(p = 0.5, mu = mu, sigma = sigma),
-      comp2 = list(p = 0.5, mu = mu, sigma = sigma),
+      comp1 = list(p = 0.5, mu = 0, sigma = 1),
+      comp2 = list(p = 0.5, mu = 0, sigma = 1),
       fallback = TRUE
     )
   }
