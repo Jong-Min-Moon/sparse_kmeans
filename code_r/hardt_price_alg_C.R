@@ -159,12 +159,18 @@ Reduce4DTo1D <- function(X, epsilon = 0.5, delta = 0.05) {
       plan(multisession)
   }
   
-  cat("[Alg C] Processing 1D projection ensemble in parallel...\n")
-  projections_res <- future_lapply(1:m, function(i) {
+  cat("[Alg C] Processing 1D projection ensemble sequentially via Rcpp...\n")
+  
+  # Source the C++ logic once
+  require(Rcpp)
+  sourceCpp("code_rcpp/hardt_price_1d.cpp")
+  
+  # Execute projections over fast C++ kernel directly
+  projections_res <- lapply(1:m, function(i) {
       a_i <- a_samples[i, ]
       x_1d <- as.numeric(X %*% a_i)
       
-      res_1d <- Recover1DMixture(x_1d, delta = delta / m)
+      res_1d <- Recover1DMixture_cpp(x_1d, delta = delta / m)
       
       if (is.null(res_1d) || isTRUE(res_1d$fallback)) {
           m_emp <- mean(x_1d)
@@ -178,7 +184,7 @@ Reduce4DTo1D <- function(X, epsilon = 0.5, delta = 0.05) {
         var1 = res_1d$comp1$sigma^2,
         var2 = if(!is.null(res_1d$comp2)) res_1d$comp2$sigma^2 else res_1d$comp1$sigma^2
       ))
-  }, future.seed = TRUE)
+  })
   
   cat("\n[Alg C] Running Vectorized Voting Filter to isolate means...\n")
   
