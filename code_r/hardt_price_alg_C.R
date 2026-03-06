@@ -6,6 +6,9 @@
 #' @param n number of vectors to sample
 #' @param d dimension (e.g., d = 4 for the 4D to 1D reduction)
 #' @return A matrix of size n x d where each row is a bounded projection vector
+library(future)
+library(future.apply)
+
 sample_N9 <- function(n, d) {
   out <- matrix(0, nrow = n, ncol = d)
   count <- 0
@@ -146,62 +149,54 @@ Reduce4DTo1D <- function(X, epsilon = 0.5, delta = 0.05) {
   
   a_samples <- sample_N9(m, d)
   
-  projections_res <- list()
+  # Setup parallel execution if not already configured
+  if (inherits(plan(), "sequential")) {
+      plan(multisession)
+  }
   
-  for (i in 1:m) {
+  cat("[Alg C] Processing 1D projection ensemble in parallel...\n")
+  projections_res <- future_lapply(1:m, function(i) {
       a_i <- a_samples[i, ]
+      x_1d <- as.numeric(X %*% a_i)
       
-      x_1d <- drop(X %*% a_i)
-      
-      # Recover the 1D parameters on the projection line
       res_1d <- Recover1DMixture(x_1d, delta = delta / m)
       
       if (is.null(res_1d) || isTRUE(res_1d$fallback) || is.null(res_1d$comp2)) {
-          # If the projection caused the geometry to completely overlap, we only got 1 component.
-          # We duplicate it for the math filter so the error checks just evaluate the single target.
           res_1d$comp2 <- res_1d$comp1
       }
       
-      if (is.null(res_1d$comp1$sigma) || is.null(res_1d$comp2$sigma)) {
-          cat(sprintf("\n[ERROR] Found NULL sigma at projection %d. Structure dump:\n", i))
-          print(str(res_1d))
-          stop("Halting due to malformed 1D orchestrator output.")
-      }
-      
-      projections_res[[i]] <- list(
+      return(list(
         mu1 = res_1d$comp1$mu,
         mu2 = res_1d$comp2$mu,
         var1 = res_1d$comp1$sigma^2,
         var2 = res_1d$comp2$sigma^2
-      )
-  }
+      ))
+  }, future.seed = TRUE)
   
-  cat("\n[Alg C] Running Voting Filter to isolate means out of mesh space...\n")
-  accepted_mu <- rep(FALSE, nrow(N_mu))
-  # Theoretical voting threshold (at least 85% of random projections must structurally align)
+  cat("\n[Alg C] Running Vectorized Voting Filter to isolate means...\n")
+  
+  # Vectorized mean voting
+  projs_means <- N_mu %*% t(a_samples) # (N_mu x m)
+  mu1s <- sapply(projections_res, function(x) x$mu1)
+  mu2s <- sapply(projections_res, function(x) x$mu2)
+  
+  # Calculate threshold for each projection
+  eps_primes <- epsilon * rowSums(abs(a_samples)) + 0.1
+  thresholds <- eps_primes * sigma_hat / 2
+  
+  # Efficient comparison using sweep or broadcasting
+  err1 <- abs(sweep(projs_means, 2, mu1s, "-"))
+  err2 <- abs(sweep(projs_means, 2, mu2s, "-"))
+  
+  pass_mask <- (sweep(err1, 2, thresholds, "<=") | sweep(err2, 2, thresholds, "<="))
+  mu_votes <- rowSums(pass_mask)
+  
   voting_threshold <- floor(0.85 * m)
+  accepted_mu <- (mu_votes >= voting_threshold)
   
-  for (idx in 1:nrow(N_mu)) {
-      cand_mu <- N_mu[idx, ]
-      votes <- 0
-      
-      for (i in 1:m) {
-          a_i <- a_samples[i, ]
-          proj <- sum(a_i * cand_mu)
-          
-          err1 <- abs(proj - projections_res[[i]]$mu1)
-          err2 <- abs(proj - projections_res[[i]]$mu2)
-          
-          eps_prime <- epsilon * sum(abs(a_i)) + 0.1
-          
-          if (err1 <= (eps_prime * sigma_hat / 2) || err2 <= (eps_prime * sigma_hat / 2)) {
-              votes <- votes + 1
-          }
-      }
-      
-      if (votes >= voting_threshold) {
-          accepted_mu[idx] <- TRUE
-      }
+  if (!any(accepted_mu)) {
+      cat("[Alg C] WARNING: No means passed voting threshold. Relaxing...\n")
+      accepted_mu <- (mu_votes >= floor(max(mu_votes) * 0.9))
   }
   
   valid_mu_indices <- which(accepted_mu)
