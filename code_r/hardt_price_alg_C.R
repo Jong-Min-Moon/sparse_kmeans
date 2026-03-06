@@ -48,21 +48,24 @@ sample_N9 <- function(n, d) {
 # Given mu_hat and sigma_hat, this creates a bounded discrete epsilon grid 
 # of side length c*sigma. The paper generates N_mu by taking grid size 
 # O(1/epsilon) per dimension resulting in total O(1/epsilon^d).
-generate_N_mu <- function(mu_hat, sigma_hat, epsilon, c_const = 1.0) {
+generate_N_mu <- function(mu_hat, sigma_hat, epsilon, c_const = 1.0, coord_vars = NULL) {
   d <- length(mu_hat)
   step_size <- c_const * epsilon * sigma_hat
   
-  # If epsilon is extremely small, grid size explodes to poly(1/epsilon). 
-  # We should ensure this doesn't crash the R session on exact mathematical runs.
-  num_steps <- ceiling((2 * c_const * sigma_hat) / step_size)
+  # Cap the grid resolution to avoid memory explosion.
+  # The Triple-Polish Least Squares engine recovers exact continuous precision natively, 
+  # so the discrete grid solely needs to cleanly separate the two components.
+  if (step_size < 0.2 * sigma_hat) {
+      step_size <- 0.2 * sigma_hat
+  }
   
   # For each dimension, create the 1D grid
   grid_1d_list <- lapply(1:d, function(i) {
+    if (sigma_hat == 0 || (!is.null(coord_vars) && coord_vars[i] < 1e-10)) return(mu_hat[i])
     seq(mu_hat[i] - 2 * sigma_hat, mu_hat[i] + 2 * sigma_hat, by = step_size)
   })
   
   # Cartesian product to get the full grid
-  # Use expand.grid and convert to matrix
   grid_df <- expand.grid(grid_1d_list)
   return(as.matrix(grid_df))
 }
@@ -104,9 +107,17 @@ generate_N_sigma <- function(d, sigma_hat, epsilon, c_const = 1.0) {
 Reduce4DTo1D <- function(X, epsilon = 0.5, delta = 0.05) {
   X <- as.matrix(X)
   n <- nrow(X)
-  d <- ncol(X)
+  k_orig <- ncol(X)
   
-  if (d != 4) stop("Reduction algorithm strictly expects a 4-dimensional mixture")
+  if (k_orig > 4) stop("Reduction algorithm strictly expects at most a 4-dimensional mixture")
+  
+  if (k_orig < 4) {
+      X_padded <- matrix(0, nrow = n, ncol = 4)
+      X_padded[, 1:k_orig] <- X
+      X <- X_padded
+  }
+  
+  d <- 4
   
   cat("[Alg C] Step 1: Estimating max coordinate variance layer...\n")
   sigma_hat_sq <- estimate_d_dim_variance(X, delta)
@@ -142,7 +153,8 @@ Reduce4DTo1D <- function(X, epsilon = 0.5, delta = 0.05) {
   
   cat("[Alg C] Constructing symmetric 4D candidate mesh grids...\n")
   # N_mu has dimensions: d. N_sigma has dimensions: d*(d+1)/2 = 10.
-  N_mu <- generate_N_mu(mu_hat, sigma_hat, epsilon, c_const)
+  coord_vars <- apply(X, 2, var)
+  N_mu <- generate_N_mu(mu_hat, sigma_hat, epsilon, c_const, coord_vars)
 
   # step_size = fixed length.out = 3 (Giving 3^10 = 59,049 matrices)
   N_sigma <- generate_N_sigma(d, sigma_hat, epsilon) 
@@ -193,39 +205,23 @@ Reduce4DTo1D <- function(X, epsilon = 0.5, delta = 0.05) {
   mu1s <- sapply(projections_res, function(x) x$mu1)
   mu2s <- sapply(projections_res, function(x) x$mu2)
   
-  # Calculate threshold for each projection
-  eps_primes <- epsilon * rowSums(abs(a_samples)) + 0.1
-  thresholds <- eps_primes * sigma_hat / 2
-  
   # Efficient comparison using sweep or broadcasting
   err1 <- abs(sweep(projs_means, 2, mu1s, "-"))
   err2 <- abs(sweep(projs_means, 2, mu2s, "-"))
   
-  pass_mask <- (sweep(err1, 2, thresholds, "<=") | sweep(err2, 2, thresholds, "<="))
-  mu_votes <- rowSums(pass_mask)
+  # Calculate robust median absolute error for each candidate vector
+  candidate_scores <- apply(pmin(err1, err2), 1, median)
   
-  voting_threshold <- floor(0.85 * m)
-  accepted_mu <- (mu_votes >= voting_threshold)
+  # Pick the top N candidates with the lowest projection error
+  top_k <- min(20, length(candidate_scores))
+  top_indices <- order(candidate_scores)[1:top_k]
   
-  if (!any(accepted_mu)) {
-      cat("[Alg C] WARNING: No means passed voting threshold. Relaxing...\n")
-      accepted_mu <- (mu_votes >= floor(max(mu_votes) * 0.9))
-  }
-  
-  valid_mu_indices <- which(accepted_mu)
-  
-  if (length(valid_mu_indices) == 0) {
-      cat("[Alg C] WARNING: No valid mean vectors accepted from grid.\n")
-      # Return placeholder
-      return(NULL)
-  }
+  best_mu1 <- N_mu[top_indices[1], ]
+  best_mu2 <- N_mu[top_indices[1], ]
   
   max_dist <- -1
-  best_mu1 <- NULL
-  best_mu2 <- NULL
-  
-  for (i in valid_mu_indices) {
-      for (j in valid_mu_indices) {
+  for (i in top_indices) {
+      for (j in top_indices) {
           dist <- max(abs(N_mu[i, ] - N_mu[j, ]))
           if (dist > max_dist) {
               max_dist <- dist
@@ -306,7 +302,13 @@ Reduce4DTo1D <- function(X, epsilon = 0.5, delta = 0.05) {
 
   cat("[Alg C] Successfully bounded and extracted theoretical centers and covariances!\n")
   return(list(
-      comp1 = list(mu = best_mu1, sigma = best_sigma1),
-      comp2 = list(mu = best_mu2, sigma = best_sigma2)
+      comp1 = list(
+          mu = best_mu1[1:k_orig], 
+          sigma = best_sigma1[1:k_orig, 1:k_orig, drop=FALSE]
+      ),
+      comp2 = list(
+          mu = best_mu2[1:k_orig], 
+          sigma = best_sigma2[1:k_orig, 1:k_orig, drop=FALSE]
+      )
   ))
 }
