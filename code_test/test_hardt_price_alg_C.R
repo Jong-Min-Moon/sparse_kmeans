@@ -33,6 +33,33 @@ run_alg_c_test <- function(test_name, n, p, mu1, mu2, sigma1, sigma2, epsilon=0.
       cat("Recovered A:", round(res$comp1$mu, 3), "\n")
       cat("Recovered B:", round(res$comp2$mu, 3), "\n")
       
+      cat("\n=== Recovered Sigmas (Diagonals) ===\n")
+      cat("Expected sigma1:", round(sigma1, 3), "\n")
+      cat("Expected sigma2:", round(sigma2, 3), "\n\n")
+
+      if (!is.null(res$comp1$sigma)) {
+          cat("Recovered A Sigma Diag:", round(diag(res$comp1$sigma), 3), "\n")
+          cat("Recovered B Sigma Diag:", round(diag(res$comp2$sigma), 3), "\n")
+          
+          # Frobenius norm of error
+          S1 <- diag(sigma1, d)
+          S2 <- diag(sigma2, d)
+          
+          err_f_11 <- sqrt(sum((S1 - res$comp1$sigma)^2))
+          err_f_12 <- sqrt(sum((S1 - res$comp2$sigma)^2))
+          err_f_21 <- sqrt(sum((S2 - res$comp1$sigma)^2))
+          err_f_22 <- sqrt(sum((S2 - res$comp2$sigma)^2))
+          
+          # Match pairs
+          if ((err_f_11 + err_f_22) < (err_f_12 + err_f_21)) {
+              cat(sprintf("\nFrobenius Norm Error A: %.4f\n", err_f_11))
+              cat(sprintf("Frobenius Norm Error B: %.4f\n", err_f_22))
+          } else {
+              cat(sprintf("\nFrobenius Norm Error A: %.4f\n", err_f_21))
+              cat(sprintf("Frobenius Norm Error B: %.4f\n", err_f_12))
+          }
+      }
+      
       errA <- min(max(abs(mu1 - res$comp1$mu)), max(abs(mu2 - res$comp1$mu)))
       errB <- min(max(abs(mu1 - res$comp2$mu)), max(abs(mu2 - res$comp2$mu)))
       cat(sprintf("\nMax coordinate error bound (L_inf): %.4f\n", max(errA, errB)))
