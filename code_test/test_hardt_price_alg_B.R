@@ -44,6 +44,17 @@ cat("=== Recovered Means ===\n")
 cat("rec_mu A: ", round(res$comp1$mu, 3), "\n")
 cat("rec_mu B: ", round(res$comp2$mu, 3), "\n\n")
 
+cat("\n=== Recovered Covariances ===\n")
+cat("\nExpected S1:\n")
+print(round(S1, 3))
+cat("\nRecovered S_A:\n")
+print(round(res$comp1$sigma, 3))
+
+cat("\nExpected S2:\n")
+print(round(S2, 3))
+cat("\nRecovered S_B:\n")
+print(round(res$comp2$sigma, 3))
+
 # Align components based on distance to mu1
 distA <- sum((res$comp1$mu - mu1)^2)
 distB <- sum((res$comp2$mu - mu1)^2)
@@ -60,6 +71,9 @@ if (distA < distB) {
   
   sig_err_1 <- sqrt(sum((res$comp2$sigma - S1)^2))
   sig_err_2 <- sqrt(sum((res$comp1$sigma - S2)^2))
+  
+  # Ensure the visuals map correctly to the errors reported
+  cat("\n[!] Note: Component A actually maps to Truth 2, Component B maps to Truth 1 due to symmetry.\n")
 }
 
 cat(sprintf("Max Coordinate Mean Error (L-inf): %.4f\n", max(mu_err_1, mu_err_2)))

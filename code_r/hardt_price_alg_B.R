@@ -44,6 +44,9 @@ ReduceDTo4 <- function(X, epsilon = 0.5, delta = 0.05) {
       }
   }
   
+  cat("[Alg B Diagnostics] xi_means[[1]] evaluated as:\n")
+  print(xi_means[[1]])
+  
   mean_anchor_idx <- -1
   mean_thresh <- (eps_prime * sigma_hat) / 4
   
@@ -58,7 +61,7 @@ ReduceDTo4 <- function(X, epsilon = 0.5, delta = 0.05) {
       cat("[Alg B] Means are indistinguishable. Assigning identical mean components.\n")
       for (i in 1:d) {
           mu_hat_1[i] <- xi_means[[i]][1]
-          mu_hat_2[i] <- xi_means[[i]][2]
+          mu_hat_2[i] <- xi_means[[i]][1]
       }
   } else {
       cat(sprintf("[Alg B] Found strong mean anchor at coordinate %d.\n", mean_anchor_idx))
@@ -85,6 +88,11 @@ ReduceDTo4 <- function(X, epsilon = 0.5, delta = 0.05) {
           # Match to anchor
           dist1 <- abs(xi_means[[i]][1] - nu_i_1)
           dist2 <- abs(xi_means[[i]][1] - nu_i_2)
+          
+          tau_mu <- (epsilon * sigma_hat) / 10
+          if (dist1 > tau_mu && dist2 > tau_mu) {
+              return(NULL) # "failure"
+          }
           
           if (dist1 < dist2) {
               mu_hat_1[j] <- nu_j_1
@@ -113,6 +121,8 @@ ReduceDTo4 <- function(X, epsilon = 0.5, delta = 0.05) {
   for(i in 1:d) {
       if (cov_anchor_i != -1) break
       for(j in i:d) {
+          if (cov_anchor_i != -1) break
+          
           idx_query <- unique(c(i, j))
           res_2d <- Reduce4DTo1D(X[, idx_query, drop=FALSE], epsilon = eps_prime, delta = delta_prime)
           
@@ -141,30 +151,11 @@ ReduceDTo4 <- function(X, epsilon = 0.5, delta = 0.05) {
   
   if (cov_anchor_i == -1) {
       cat("[Alg B] Covariance entries are indistinguishable. Assigning identically.\n")
-      # Need to fill out the rest of the 2D queries
+      cat("[Alg B] Covariance entries are indistinguishable. Assigning from 2D oracles.\n")
       for (i in 1:d) {
           for (j in i:d) {
-              if (is.null(xi_cov[[i, j]])) {
-                  idx_query <- unique(c(i, j))
-                  res_2d <- Reduce4DTo1D(X[, idx_query, drop=FALSE], epsilon = eps_prime, delta = delta_prime)
-                  
-                  if (is.null(res_2d)) {
-                      v_emp <- cov(X[, idx_query, drop=FALSE])
-                      v1 <- v_emp[1, length(idx_query)]; v2 <- v_emp[1, length(idx_query)]
-                  } else {
-                      if (length(idx_query) == 1) {
-                          v1 <- res_2d$comp1$sigma[1, 1]
-                      } else {
-                          v1 <- res_2d$comp1$sigma[1, 2]
-                      }
-                  }
-                  
-                  Sigma_hat_1[i, j] <- Sigma_hat_1[j, i] <- v1
-                  Sigma_hat_2[i, j] <- Sigma_hat_2[j, i] <- v1
-              } else {
-                  Sigma_hat_1[i, j] <- Sigma_hat_1[j, i] <- xi_cov[[i, j]][1]
-                  Sigma_hat_2[i, j] <- Sigma_hat_2[j, i] <- xi_cov[[i, j]][2]
-              }
+              Sigma_hat_1[i, j] <- Sigma_hat_1[j, i] <- xi_cov[[i, j]][1]
+              Sigma_hat_2[i, j] <- Sigma_hat_2[j, i] <- xi_cov[[i, j]][1]
           }
       }
   } else {
@@ -175,60 +166,72 @@ ReduceDTo4 <- function(X, epsilon = 0.5, delta = 0.05) {
       Sigma_hat_1[cov_anchor_i, cov_anchor_j] <- Sigma_hat_1[cov_anchor_j, cov_anchor_i] <- xi_cov[[cov_anchor_i, cov_anchor_j]][1]
       Sigma_hat_2[cov_anchor_i, cov_anchor_j] <- Sigma_hat_2[cov_anchor_j, cov_anchor_i] <- xi_cov[[cov_anchor_i, cov_anchor_j]][2]
       
+      # To handle D=500 efficiently, we parallelize the 125,000 independent 4D oracle checks.
+      # We construct a list of all query targets, execute in parallel, and re-assign.
+      cat(sprintf("[Alg B] Dispatching %d independent 4D oracle queries over parallel workers...\n", d * (d + 1) / 2 - 1))
+      
+      queries <- list()
+      q_idx <- 1
       for (k in 1:d) {
           for (l in k:d) {
               if (k == cov_anchor_i && l == cov_anchor_j) next
-              
-              # Query 4D oracle on (i, j, k, l)
-              idx_query <- c(cov_anchor_i, cov_anchor_j, k, l)
-              u_idx <- unique(idx_query)
-              
-              pos_i <- match(cov_anchor_i, u_idx)
-              pos_j <- match(cov_anchor_j, u_idx)
-              pos_k <- match(k, u_idx)
-              pos_l <- match(l, u_idx)
-              
-              res_4d <- Reduce4DTo1D(X[, u_idx, drop=FALSE], epsilon = eps_prime, delta = delta_prime)
-              
-              if (is.null(res_4d)) {
-                  v_emp <- cov(X[, u_idx, drop=FALSE])
-                  v1 <- v_emp[pos_k, pos_l]; v2 <- v_emp[pos_k, pos_l]
-                  Sigma_hat_1[k, l] <- Sigma_hat_1[l, k] <- v1
-                  Sigma_hat_2[k, l] <- Sigma_hat_2[l, k] <- v2
-                  next
-              }
-              
-              # Extracted Anchor entries
+              queries[[q_idx]] <- c(k, l)
+              q_idx <- q_idx + 1
+          }
+      }
+      
+      # Execute via multi-core fork to leverage native macOS parallelization with shared C++ pointers
+      library(parallel)
+      n_cores <- max(1, detectCores() - 1)
+      results_list <- mclapply(seq_along(queries), function(idx) {
+          if (idx %% 5000 == 0) cat(sprintf("[Alg B] Processed %d / %d queries...\n", idx, length(queries)))
+          q <- queries[[idx]]
+          k <- q[1]
+          l <- q[2]
+          
+          idx_query <- c(cov_anchor_i, cov_anchor_j, k, l)
+          u_idx <- unique(idx_query)
+          
+          pos_i <- match(cov_anchor_i, u_idx)
+          pos_j <- match(cov_anchor_j, u_idx)
+          pos_k <- match(k, u_idx)
+          pos_l <- match(l, u_idx)
+          
+          res_4d <- Reduce4DTo1D(X[, u_idx, drop=FALSE], epsilon = eps_prime, delta = delta_prime)
+          
+          if (is.null(res_4d)) {
+              v_emp <- cov(X[, u_idx, drop=FALSE])
+              v1 <- v_emp[pos_k, pos_l]; v2 <- v_emp[pos_k, pos_l]
+          } else {
               sigma_ij_1 <- res_4d$comp1$sigma[pos_i, pos_j]
               sigma_ij_2 <- res_4d$comp2$sigma[pos_i, pos_j]
-              
-              # Extracted Target entries
               sigma_kl_1 <- res_4d$comp1$sigma[pos_k, pos_l]
               sigma_kl_2 <- res_4d$comp2$sigma[pos_k, pos_l]
               
-              # Match to anchor
               dist1 <- abs(anchor_val_1 - sigma_ij_1)
               dist2 <- abs(anchor_val_1 - sigma_ij_2)
               
+              tau_sig <- (epsilon^2 * sigma_hat_sq) / 10
+              if (dist1 > tau_sig && dist2 > tau_sig) {
+                  return(list(k=k, l=l, v1=NULL, v2=NULL, failed=TRUE))
+              }
+              
               if (dist1 < dist2) {
-                  Sigma_hat_1[k, l] <- Sigma_hat_1[l, k] <- sigma_kl_1
-                  Sigma_hat_2[k, l] <- Sigma_hat_2[l, k] <- sigma_kl_2
+                  v1 <- sigma_kl_1; v2 <- sigma_kl_2
               } else {
-                  Sigma_hat_1[k, l] <- Sigma_hat_1[l, k] <- sigma_kl_2
-                  Sigma_hat_2[k, l] <- Sigma_hat_2[l, k] <- sigma_kl_1
+                  v1 <- sigma_kl_2; v2 <- sigma_kl_1
               }
           }
+          return(list(k=k, l=l, v1=v1, v2=v2))
+      }, mc.cores = n_cores)
+      
+      for (res in results_list) {
+          if (isTRUE(res$failed)) return(NULL) # "failure"
+          Sigma_hat_1[res$k, res$l] <- Sigma_hat_1[res$l, res$k] <- res$v1
+          Sigma_hat_2[res$k, res$l] <- Sigma_hat_2[res$l, res$k] <- res$v2
       }
   }
   
-  # Ensure PSD projection of recovered global matrices
-  project_psd <- function(mat) {
-      ee <- eigen(mat, symmetric = TRUE)
-      ee$values[ee$values < 0] <- 0
-      return(ee$vectors %*% diag(ee$values) %*% t(ee$vectors))
-  }
-  Sigma_hat_1 <- project_psd(Sigma_hat_1)
-  Sigma_hat_2 <- project_psd(Sigma_hat_2)
   
   # ---------------------------------------------------------------------
   # STEP 3: Matching up Sigma and mu combinations

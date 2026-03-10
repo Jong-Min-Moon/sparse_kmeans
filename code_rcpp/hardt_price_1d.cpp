@@ -325,7 +325,7 @@ List Recover1DMixture_cpp(NumericVector x, double delta = 0.05) {
 
   double f = std::pow(std::log(1.0 / delta) / n, 1.0 / 12.0);
 
-  double eps_noise = 0.05 * f * f * sigma2_std;
+  double eps_noise = 1e-4;
   if (std::abs(X4_std) < eps_noise && X3_std * X3_std < eps_noise) {
     return List::create(Named("comp1") = List::create(
                             Named("p") = 0.5, Named("mu") = mu_overall,

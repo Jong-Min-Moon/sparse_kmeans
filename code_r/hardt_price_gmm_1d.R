@@ -283,9 +283,9 @@ Recover1DMixture <- function(x, delta = 0.05) {
   # Since f^2 grows very large for small sample subsets (like the ones used in Alg C projection mappings),
   # we damp the theoretical asymptotic check slightly to avoid accidentally blocking valid well-separated
   # projections that have high noise.
-  eps_noise <- 0.05 * f^2 * sigma2_std
+  eps_noise <- 1e-4
   if (abs(X4_std) < eps_noise && X3_std^2 < eps_noise) {
-       cat("[ROUTING] Overriding: Geometry Fully Obscured. Selected Fallback (Single Component)\n")
+    #   cat("[ROUTING] Overriding: Geometry Fully Obscured. Selected Fallback (Single Component)\n")
        return(list(
          comp1 = list(p = 0.5, mu = mu_overall, sigma = sigma_overall),
          comp2 = list(p = 0.5, mu = mu_overall, sigma = sigma_overall),
@@ -307,19 +307,19 @@ Recover1DMixture <- function(x, delta = 0.05) {
   
   if (f^2 <= (delta_mu_std^2)) {
     # Means are reliably separated (Algorithm 3.1)
-    cat("[ROUTING] Selected Algorithm 3.1 (Well-Separated Means)\n")
+    # cat("[ROUTING] Selected Algorithm 3.1 (Well-Separated Means)\n")
     epsilon <- sqrt((1 / max(1e-12, delta_mu_std))^12 * log(1 / delta) / n)
     best_candidate <- RecoverFromMoments(mu_std, sigma2_std, X3_std, X4_std, X5_std, X6_std, epsilon)
     
   } else if (f^2 <= (delta_sigma2_std)) {
     # Means inseparable, but variances are distinct (Algorithm 3.2)
-    cat("[ROUTING] Selected Algorithm 3.2 (Identical Means, Distinct Variances)\n")
+    # cat("[ROUTING] Selected Algorithm 3.2 (Identical Means, Distinct Variances)\n")
     best_candidate <- SameMeanRecoverFromMoments(mu_std, sigma2_std, X4_std, X6_std)
   }
   
   if (is.null(best_candidate)) {
     # Geometry fully obscured by noise: Output single Gaussian cluster
-    cat("[ROUTING] Selected Fallback (Single Component)\n")
+    # cat("[ROUTING] Selected Fallback (Single Component)\n")
     best_candidate <- list(
       comp1 = list(p = 0.5, mu = 0, sigma = 1),
       comp2 = list(p = 0.5, mu = 0, sigma = 1),

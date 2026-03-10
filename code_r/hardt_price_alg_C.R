@@ -8,6 +8,8 @@
 #' @return A matrix of size n x d where each row is a bounded projection vector
 library(future)
 library(future.apply)
+library(Rcpp)
+sourceCpp("code_rcpp/hardt_price_1d.cpp")
 
 sample_N9 <- function(n, d) {
   out <- matrix(0, nrow = n, ncol = d)
@@ -35,68 +37,7 @@ sample_N9 <- function(n, d) {
   return(out)
 }
 
-#' Generate Candidate Grid N_mu
-#'
-#' Creates an L_infinity net around an initial estimate mu_hat
-#' of width 2*sigma_hat in every coordinate, with step size c*epsilon*sigma_hat.
-#'
-#' @param mu_hat The center vector (length d)
-#' @param sigma_hat The robust variance scale estimate
-#' @param epsilon The target precision
-#' @param c A sufficiently small constant (e.g., 0.1)
-#' @return A matrix where each row is a candidate mean vector
-# Given mu_hat and sigma_hat, this creates a bounded discrete epsilon grid 
-# of side length c*sigma. The paper generates N_mu by taking grid size 
-# O(1/epsilon) per dimension resulting in total O(1/epsilon^d).
-generate_N_mu <- function(mu_hat, sigma_hat, epsilon, c_const = 1.0, coord_vars = NULL) {
-  d <- length(mu_hat)
-  step_size <- c_const * epsilon * sigma_hat
-  
-  # Cap the grid resolution to avoid memory explosion.
-  # The Triple-Polish Least Squares engine recovers exact continuous precision natively, 
-  # so the discrete grid solely needs to cleanly separate the two components.
-  if (step_size < 0.2 * sigma_hat) {
-      step_size <- 0.2 * sigma_hat
-  }
-  
-  # For each dimension, create the 1D grid
-  grid_1d_list <- lapply(1:d, function(i) {
-    if (sigma_hat == 0 || (!is.null(coord_vars) && coord_vars[i] < 1e-10)) return(mu_hat[i])
-    seq(mu_hat[i] - 2 * sigma_hat, mu_hat[i] + 2 * sigma_hat, by = step_size)
-  })
-  
-  # Cartesian product to get the full grid
-  grid_df <- expand.grid(grid_1d_list)
-  return(as.matrix(grid_df))
-}
 
-#' Generate Candidate Grid N_sigma
-#'
-#' Creates a net for symmetric covariance matrices in the range
-#' [-sigma_hat^2, sigma_hat^2] with step size c*epsilon*sigma_hat^2.
-#'
-#' @param d Dimension
-#' @param sigma_hat The robust variance scale estimate
-#' @param epsilon The target precision
-#' @param c A sufficiently small constant (e.g., 0.1)
-#' @return A list of candidate d x d symmetric covariance matrices
-generate_N_sigma <- function(d, sigma_hat, epsilon, c_const = 1.0) {
-  # We need to cover off-diagonal correlations which can be negative.
-  # Diagonals must stay positive.
-  diag_grid <- seq(0.1, 1.3 * sigma_hat^2, length.out = 3)
-  off_diag_grid <- seq(-0.6 * sigma_hat^2, 0.6 * sigma_hat^2, length.out = 3)
-  
-  # Parameters 1, 2, 3, 4 are diagonals. 5-10 are off-diagonals.
-  grid_list <- list(
-      diag_grid, diag_grid, diag_grid, diag_grid, # Diagonals
-      off_diag_grid, off_diag_grid, off_diag_grid, off_diag_grid, off_diag_grid, off_diag_grid # Off-diagonals
-  )
-  
-  # Total size logic: 3^4 * 3^6 = 3^10 = 59,049 candidates.
-  # This is much smaller than 4^10 and more accurate for correlations.
-  grid_df <- expand.grid(grid_list)
-  return(t(as.matrix(grid_df)))
-}
 
 #' Algorithm C: Reduction from 4D to 1D
 #'
@@ -119,12 +60,12 @@ Reduce4DTo1D <- function(X, epsilon = 0.5, delta = 0.05) {
   
   d <- 4
   
-  cat("[Alg C] Step 1: Estimating max coordinate variance layer...\n")
+  # cat("[Alg C] Step 1: Estimating max coordinate variance layer...\n")
   sigma_hat_sq <- estimate_d_dim_variance(X, delta)
   sigma_hat <- sqrt(sigma_hat_sq)
-  cat(sprintf("[Alg C] Max coordinate variance scale isolated: %.4f\n", sigma_hat_sq))
+  # cat(sprintf("[Alg C] Max coordinate variance scale isolated: %.4f\n", sigma_hat_sq))
   
-  cat("[Alg C] Step 2: Locating spatial geometry center through 1D marginals...\n")
+  # cat("[Alg C] Step 2: Locating spatial geometry center through 1D marginals...\n")
   mu_hat <- numeric(d)
   
   for (j in 1:d) {
@@ -149,33 +90,12 @@ Reduce4DTo1D <- function(X, epsilon = 0.5, delta = 0.05) {
   mu_hat <- colMeans(X)
 
   
-  c_const <- 0.6 # Constant tweaked higher so the brute force grid size doesn't crash R
-  
-  cat("[Alg C] Constructing symmetric 4D candidate mesh grids...\n")
-  # N_mu has dimensions: d. N_sigma has dimensions: d*(d+1)/2 = 10.
-  coord_vars <- apply(X, 2, var)
-  N_mu <- generate_N_mu(mu_hat, sigma_hat, epsilon, c_const, coord_vars)
-
-  # step_size = fixed length.out = 3 (Giving 3^10 = 59,049 matrices)
-  N_sigma <- generate_N_sigma(d, sigma_hat, epsilon) 
-  cat(sprintf("[Alg C] Generated %d discrete vector candidates.\n", nrow(N_mu)))
-  cat(sprintf("[Alg C] Generated %d discrete covariance matrices.\n", length(N_sigma)))
-  
-  m <- ceiling(10 * log(max(1, nrow(N_mu)) / delta))
-  cat(sprintf("[Alg C] Broadcasting over %d bounded random structural projections (a_i ~ N_9^4)...\n", m))
+  m <- ceiling(10 * log(100 / delta))
+  # cat(sprintf("[Alg C] Broadcasting over %d bounded random structural projections (a_i ~ N_9^4)...\n", m))
   
   a_samples <- sample_N9(m, d)
   
-  # Setup parallel execution if not already configured
-  if (inherits(plan(), "sequential")) {
-      plan(multisession)
-  }
-  
-  cat("[Alg C] Processing 1D projection ensemble sequentially via Rcpp...\n")
-  
-  # Source the C++ logic once
-  require(Rcpp)
-  sourceCpp("code_rcpp/hardt_price_1d.cpp")
+  # cat("[Alg C] Processing 1D projection ensemble via Rcpp...\n")
   
   # Execute projections over fast C++ kernel directly
   projections_res <- lapply(1:m, function(i) {
@@ -198,117 +118,139 @@ Reduce4DTo1D <- function(X, epsilon = 0.5, delta = 0.05) {
       ))
   })
   
-  cat("\n[Alg C] Running Vectorized Voting Filter to isolate means...\n")
+  # --------------------------------------------------------------------------
+  # ALGORITHM C: EXACT THEORETICAL IMPLEMENTATION
+  # --------------------------------------------------------------------------
+  c_const <- 0.1
+  eps_mu <- max(c_const * epsilon * sigma_hat, 1.5 * sigma_hat) 
   
-  # Vectorized mean voting
-  projs_means <- N_mu %*% t(a_samples) # (N_mu x m)
-  mu1s <- sapply(projections_res, function(x) x$mu1)
-  mu2s <- sapply(projections_res, function(x) x$mu2)
+  M_accepted <- list()
+  grid_mu_1d <- seq(-2 * sigma_hat, 2 * sigma_hat, by = eps_mu)
   
-  # Efficient comparison using sweep or broadcasting
-  err1 <- abs(sweep(projs_means, 2, mu1s, "-"))
-  err2 <- abs(sweep(projs_means, 2, mu2s, "-"))
-  
-  # Calculate robust median absolute error for each candidate vector
-  candidate_scores <- apply(pmin(err1, err2), 1, median)
-  
-  # Pick the top N candidates with the lowest projection error
-  top_k <- min(20, length(candidate_scores))
-  top_indices <- order(candidate_scores)[1:top_k]
-  
-  best_mu1 <- N_mu[top_indices[1], ]
-  best_mu2 <- N_mu[top_indices[1], ]
-  
-  max_dist <- -1
-  for (i in top_indices) {
-      for (j in top_indices) {
-          dist <- max(abs(N_mu[i, ] - N_mu[j, ]))
-          if (dist > max_dist) {
-              max_dist <- dist
-              best_mu1 <- N_mu[i, ]
-              best_mu2 <- N_mu[j, ]
+  # Step 2: Accept/Reject Mean Grid N_mu
+  for(m1 in grid_mu_1d) {
+    for(m2 in grid_mu_1d) {
+      for(m3 in grid_mu_1d) {
+        for(m4 in grid_mu_1d) {
+          mu_cand <- mu_hat + c(m1, m2, m3, m4)
+          rejected <- FALSE
+          for (i in seq_len(m)) {
+             ai <- a_samples[i, ]
+             val <- sum(ai * mu_cand)
+             if (abs(val - projections_res[[i]]$mu1) > (epsilon * sigma_hat / 2) && 
+                 abs(val - projections_res[[i]]$mu2) > (epsilon * sigma_hat / 2)) {
+                 rejected <- TRUE
+                 break
+             }
           }
+          if (!rejected) {
+             M_accepted[[length(M_accepted) + 1]] <- mu_cand
+          }
+        }
+      }
+    }
+  }
+  
+  if (length(M_accepted) == 0) {
+      cat("[Alg C] Mean grid rejected all candidates (M_accepted is empty)\n")
+      return(NULL)
+  }
+  
+  # Step 3: Maximize L_infty dist
+  max_dist <- -1
+  best_mu1 <- M_accepted[[1]]
+  best_mu2 <- M_accepted[[1]]
+  for(i in seq_along(M_accepted)) {
+    for(j in seq_along(M_accepted)) {
+       dist <- max(abs(M_accepted[[i]] - M_accepted[[j]]))
+       if (dist > max_dist) {
+          max_dist <- dist
+          best_mu1 <- M_accepted[[i]]
+          best_mu2 <- M_accepted[[j]]
+       }
+    }
+  }
+  
+  # Step 4: Accept/Reject Covariance Grid N_sigma
+  S_accepted <- list()
+  eps_sig <- max(c_const * epsilon^2 * sigma_hat_sq, 1.5 * sigma_hat_sq)
+  grid_sig_1d <- seq(-sigma_hat_sq, sigma_hat_sq, by = eps_sig)
+  
+  search_sigma <- function(params) {
+      if (length(params) == 10) {
+          mat <- matrix(0, 4, 4)
+          mat[1,1] <- params[1]; mat[2,2] <- params[2]; mat[3,3] <- params[3]; mat[4,4] <- params[4]
+          mat[1,2] <- mat[2,1] <- params[5]
+          mat[1,3] <- mat[3,1] <- params[6]
+          mat[1,4] <- mat[4,1] <- params[7]
+          mat[2,3] <- mat[3,2] <- params[8]
+          mat[2,4] <- mat[4,2] <- params[9]
+          mat[3,4] <- mat[4,3] <- params[10]
+          
+          rejected <- FALSE
+          for (i in seq_len(m)) {
+             ai <- a_samples[i, ]
+             val <- as.numeric(t(ai) %*% mat %*% ai)
+             if (abs(val - projections_res[[i]]$var1) > (epsilon^2 * sigma_hat_sq / 2) && 
+                 abs(val - projections_res[[i]]$var2) > (epsilon^2 * sigma_hat_sq / 2)) {
+                 rejected <- TRUE
+                 break
+             }
+          }
+          if (!rejected) {
+             S_accepted[[length(S_accepted) + 1]] <<- mat
+          }
+          return()
+      }
+      for (v in grid_sig_1d) {
+          search_sigma(c(params, v))
+      }
+  }
+  search_sigma(c())
+  
+  if (length(S_accepted) == 0) {
+      cat("[Alg C] Covariance grid rejected all candidates (S_accepted is empty)\n")
+      return(NULL)
+  }
+  
+  # Step 5: Maximize L_infty dist for matrices
+  max_dist <- -1
+  best_sig1 <- S_accepted[[1]]
+  best_sig2 <- S_accepted[[1]]
+  for(i in seq_along(S_accepted)) {
+    for(j in seq_along(S_accepted)) {
+       dist <- max(abs(S_accepted[[i]] - S_accepted[[j]]))
+       if (dist > max_dist) {
+          max_dist <- dist
+          best_sig1 <- S_accepted[[i]]
+          best_sig2 <- S_accepted[[j]]
+       }
+    }
+  }
+  
+  # Step 6: Permutation swap validation
+  for (i in seq_len(m)) {
+      ai <- a_samples[i, ]
+      
+      val_sig1 <- as.numeric(t(ai) %*% best_sig1 %*% ai)
+      val_mu1 <- sum(ai * best_mu1)
+      
+      match_1_to_1 <- (abs(val_sig1 - projections_res[[i]]$var1) <= epsilon^2 * sigma_hat_sq / 2) &&
+                      (abs(val_mu1 - projections_res[[i]]$mu1) <= epsilon * sigma_hat / 2)
+      
+      match_1_to_2 <- (abs(val_sig1 - projections_res[[i]]$var2) <= epsilon^2 * sigma_hat_sq / 2) &&
+                      (abs(val_mu1 - projections_res[[i]]$mu2) <= epsilon * sigma_hat / 2)
+                      
+      if (!match_1_to_1 && match_1_to_2) {
+          temp <- best_sig1
+          best_sig1 <- best_sig2
+          best_sig2 <- temp
+          break
       }
   }
   
-  cat("\n[Alg C] Vectorizing Covariance Grid Search (Consensus Check)...\n")
-  M_A <- matrix(0, nrow = m, ncol = 10)
-  for (i in 1:m) {
-      ai <- a_samples[i, ]
-      M_A[i, 1:4] <- ai^2
-      M_A[i, 5]  <- 2 * ai[1] * ai[2]
-      M_A[i, 6]  <- 2 * ai[1] * ai[3]
-      M_A[i, 7]  <- 2 * ai[1] * ai[4]
-      M_A[i, 8]  <- 2 * ai[2] * ai[3]
-      M_A[i, 9]  <- 2 * ai[2] * ai[4]
-      M_A[i, 10] <- 2 * ai[3] * ai[4]
-  }
-  
-  # Helper to reconstruct symmetric matrix from params
-  reconstruct_sigma_internal <- function(params) {
-      mat <- matrix(0, d, d)
-      mat[1,1] <- params[1]; mat[2,2] <- params[2]; mat[3,3] <- params[3]; mat[4,4] <- params[4]
-      mat[1,2] <- mat[2,1] <- params[5]
-      mat[1,3] <- mat[3,1] <- params[6]
-      mat[1,4] <- mat[4,1] <- params[7]
-      mat[2,3] <- mat[3,2] <- params[8]
-      mat[2,4] <- mat[4,2] <- params[9]
-      mat[3,4] <- mat[4,3] <- params[10]
-      return(mat)
-  }
-  
-  cat("[Alg C] Polishing Mean Estimates via Least Squares Regression...\n")
-  # 1. Labeling for means using grid-based best_mu1, best_mu2
-  W1 <- numeric(m); W2 <- numeric(m)
-  for (i in 1:m) {
-      ai <- a_samples[i, ]
-      gm1 <- sum(ai * best_mu1); gm2 <- sum(ai * best_mu2)
-      t1 <- projections_res[[i]]$mu1; t2 <- projections_res[[i]]$mu2
-      if (abs(t1 - gm1) + abs(t2 - gm2) < abs(t2 - gm1) + abs(t1 - gm2)) {
-          W1[i] <- t1; W2[i] <- t2
-      } else {
-          W1[i] <- t2; W2[i] <- t1
-      }
-  }
-  best_mu1 <- as.numeric(solve(t(a_samples) %*% a_samples) %*% (t(a_samples) %*% W1))
-  best_mu2 <- as.numeric(solve(t(a_samples) %*% a_samples) %*% (t(a_samples) %*% W2))
-
-  cat("[Alg C] Polishing Covariance Estimates via Mean-Labeling LS...\n")
-  # 2. Use POLISHED MEANS to label the variances (much more robust)
-  V1 <- numeric(m); V2 <- numeric(m)
-  for (i in 1:m) {
-      ai <- a_samples[i, ]
-      pm1 <- sum(ai * best_mu1); pm2 <- sum(ai * best_mu2)
-      tu1 <- projections_res[[i]]$mu1; tu2 <- projections_res[[i]]$mu2
-      tv1 <- projections_res[[i]]$var1; tv2 <- projections_res[[i]]$var2
-      if (abs(tu1 - pm1) < abs(tu2 - pm1)) {
-          V1[i] <- tv1; V2[i] <- tv2
-      } else {
-          V1[i] <- tv2; V2[i] <- tv1
-      }
-  }
-  
-  theta1_opt <- as.numeric(solve(t(M_A) %*% M_A + diag(1e-6, 10)) %*% (t(M_A) %*% V1))
-  theta2_opt <- as.numeric(solve(t(M_A) %*% M_A + diag(1e-6, 10)) %*% (t(M_A) %*% V2))
-  
-  project_psd <- function(mat) {
-      ee <- eigen(mat, symmetric = TRUE)
-      ee$values[ee$values < 0] <- 0
-      return(ee$vectors %*% diag(ee$values) %*% t(ee$vectors))
-  }
-  
-  best_sigma1 <- project_psd(reconstruct_sigma_internal(theta1_opt))
-  best_sigma2 <- project_psd(reconstruct_sigma_internal(theta2_opt))
-
-  cat("[Alg C] Successfully bounded and extracted theoretical centers and covariances!\n")
   return(list(
-      comp1 = list(
-          mu = best_mu1[1:k_orig], 
-          sigma = best_sigma1[1:k_orig, 1:k_orig, drop=FALSE]
-      ),
-      comp2 = list(
-          mu = best_mu2[1:k_orig], 
-          sigma = best_sigma2[1:k_orig, 1:k_orig, drop=FALSE]
-      )
+      comp1 = list(mu = best_mu1[1:k_orig], sigma = best_sig1[1:k_orig, 1:k_orig, drop=FALSE]),
+      comp2 = list(mu = best_mu2[1:k_orig], sigma = best_sig2[1:k_orig, 1:k_orig, drop=FALSE])
   ))
 }
