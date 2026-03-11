@@ -180,3 +180,50 @@ generate_erdos_renyi_data <- function(n, p, separation = NULL, s = 10) {
         n2 = n2
     ))
 }
+
+#' Data Generator Specification for Identity Covariance
+#'
+#' @param support Indices of signal features (e.g. 1:10)
+#' @param separation Distance between cluster means
+#' @param dimension Total number of features (p)
+#' @export
+get_specification_identity <- function(support, separation, dimension) {
+    covariance_matrix <- diag(1, dimension)
+    
+    # Calculate magnitude based on separation and identity covariance
+    # For identity covariance, sum_Sigma_S0 is simply the size of the support
+    sum_Sigma_S0 <- length(support)
+    m <- separation / 2 / sqrt(sum_Sigma_S0)
+
+    mu_star <- rep(0, dimension)
+    mu_star[support] <- m
+
+    signal_diff <- mu_star - (-mu_star)
+    signal_strength <- sum(signal_diff^2)
+
+    cat(sprintf("Diagnostic: Computed signal strength ||mu_star - (-mu_star)||^2 is %.5f\n", signal_strength))
+
+    # The warning should be dynamic based on the separation parameter rather than fixed at 16.0
+    # signal_strength should inherently equal separation^2
+    expected_strength <- separation^2
+    
+    if (abs(signal_strength - expected_strength) > 1e-5) {
+        warning(sprintf("Signal strength deviates from %.5f. Computed value: %.5f", expected_strength, signal_strength))
+    }
+
+    mu1 <- -mu_star
+    mu2 <- mu_star
+
+    return(list(
+        support = support,
+        separation = separation,
+        dimension = dimension,
+        precision_sparsity = 0,
+        rho = 0,
+        covariance_matrix = covariance_matrix,
+        precision_matrix = covariance_matrix,
+        magnitude = m,
+        mu1 = as.numeric(mu1),
+        mu2 = as.numeric(mu2)
+    ))
+}
