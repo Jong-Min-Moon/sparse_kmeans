@@ -44,7 +44,7 @@ if (length(args) > 0) {
 # Load Source Code
 # ---------------------------------------------------------
 # Source from ../../code_r/
-source("../../code_r/block_coordinate_optim_thompson.R")
+source("../../code_r/cluster_thompson.R")
 source("../../code_r/utils.R")
 source("../../code_r/clustering_block_knowncov.R")
 source("../../code_r/selection_block_greedy_screening.R")
@@ -115,7 +115,7 @@ for (C_val in C_values) {
   cat(sprintf("  Running for C=%.1f...\n", C_val))
 
   # Run Algorithm
-  res <- block_coordinate_optim_thompson(X, K, n_iter = n_iter, C = C_val, n_perms = 200, covariance = NULL)
+  res <- cluster_thompson(X, K, n_iter = n_iter, C = C_val, n_perms = 200, covariance = NULL)
 
   # Calculate Silhouette Index
   # Note: silhouette requires at least 2 clusters to be valid

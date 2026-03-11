@@ -29,7 +29,7 @@
 #' @param true_cluster True cluster labels (for computing accuracy). If NULL, accuracy is not computed.
 #' @return List containing cluster assignments, selected features, and metrics
 #' @export
-block_coordinate_optim_thompson <- function(X, K, n_iter = 500, C = 0.5, n_perms = 300, p_val_threshold = 0.01, n_step_admm = 2000, covariance = NULL, true_cluster = NULL) {
+cluster_thompson <- function(X, K, n_iter = 500, C = 0.5, n_perms = 300, p_val_threshold = 0.01, n_step_admm = 2000, covariance = NULL, true_cluster = NULL) {
   if (!is.numeric(n_step_admm) || n_step_admm <= 0 || n_step_admm %% 1 != 0) stop("n_step_admm must be a positive integer.")
   if (!is.matrix(X)) stop("X must be a matrix")
 
@@ -201,9 +201,9 @@ block_coordinate_optim_thompson <- function(X, K, n_iter = 500, C = 0.5, n_perms
     S_hat_now <- S_hat_next
   }
 
-  # Final Selection based on Posterior Mean > 0.5
+  # Final Selection based on Posterior Mean > cutoff
   posterior_mean <- alpha_vec / (alpha_vec + beta_vec)
-  final_selection <- posterior_mean > 0.5
+  final_selection <- posterior_mean > cutoff
 
   cat(sprintf("\n--- Final Selection ---\n"))
   cat(sprintf("Features selected: %d / %d\n", sum(final_selection), p))

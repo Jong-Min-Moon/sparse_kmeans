@@ -49,7 +49,7 @@ if (length(args) > 0) {
 
 # Source Code
 source("../../code_r/data_generator.R")
-source("../../code_r/block_coordinate_optim_thompson.R")
+source("../../code_r/cluster_thompson.R")
 source("../../code_r/selection_block_greedy_screening.R")
 source("../../code_r/clustering_block_knowncov.R")
 source("../../code_r/sdp_kmeans.R")
@@ -96,7 +96,7 @@ start_time <- Sys.time()
 # Using default C=0.5
 res <- tryCatch(
     {
-        block_coordinate_optim_thompson(
+        cluster_thompson(
             X, K,
             n_iter = n_iter_tvs,
             C = 0.5,

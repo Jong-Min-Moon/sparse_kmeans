@@ -34,7 +34,7 @@ if (!dir.exists(output_dir)) {
 # ---------------------------------------------------------
 # Assuming script is run from simulations/sim_20_er_thompson/
 source("../../code_r/data_generator.R")
-source("../../code_r/block_coordinate_optim_thompson.R")
+source("../../code_r/cluster_thompson.R")
 # The Thompson optimization script depends on multiple block components 
 source("../../code_r/selection_block_greedy_screening.R")
 source("../../code_r/clustering_block_knowncov.R")
@@ -85,7 +85,7 @@ start_time <- Sys.time()
 
 res <- tryCatch(
     {
-        block_coordinate_optim_thompson(
+        cluster_thompson(
             X, K,
             n_iter = 100,
             C = 0.5,

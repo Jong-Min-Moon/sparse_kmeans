@@ -49,7 +49,7 @@ opt <- list(
 # Adjust paths as needed based on deployment structure
 # If running FROM 'code_r':
 source("sdp_kmeans_bandit_unknowncov.R")
-source("block_coordinate_optim_thompson.R")
+source("cluster_thompson.R")
 # Dependencies sourced inside these files:
 # source("sdp_kmeans.R")
 # source("utils.R")
