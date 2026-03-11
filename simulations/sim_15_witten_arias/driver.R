@@ -16,7 +16,7 @@ if (length(args) > 0) {
 }
 
 # Source Code
-source("../../code_r/sparse_symmetric_data_generator.R")
+source("../../code_r/data_generator.R")
 source("../../code_r/competitors_modernized.R")
 source("../../code_r/get_cluster_acc.R")
 
@@ -38,7 +38,7 @@ cat(sprintf("--- Simulation Run sim_15_witten_arias (Job ID: %d) ---\n", job_id)
 cat(sprintf("Params: p=%d, n=%d, sep=%.1f, rho=%.2f\n", p, n, separation, rho))
 
 # 1. Initialize Generator
-generator <- sparse_symmetric_data_generator(
+generator <- get_specification_chaingraph(
     support = support,
     separation = separation,
     dimension = p,
@@ -50,7 +50,7 @@ generator <- sparse_symmetric_data_generator(
 # 2. Generate Data
 current_seed <- 2025 + job_id
 set.seed(current_seed)
-data_res <- generate_data_from_generator(generator, n, seed = current_seed)
+data_res <- generate_data_from_specification(generator, n, seed = current_seed)
 X <- data_res$X
 true_labels <- data_res$labels
 

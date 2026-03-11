@@ -9,7 +9,7 @@ library(doParallel)
 library(glmnet)
 
 # Source all components
-source("../../code_r/sparse_symmetric_data_generator.R")
+source("../../code_r/data_generator.R")
 source("../../code_r/block_coordinate_optim_deterministic_unknowncov.R")
 source("../../code_r/ESSC.R")
 source("../../code_r/ISEE_residual_lasso.R")
@@ -44,7 +44,7 @@ flip <- FALSE
 cat("--- MATLAB Parity Simulation (p=100, n=500, sep=3, rho=0.2) ---\n")
 
 # 1. Initialize Generator
-generator <- sparse_symmetric_data_generator(
+generator <- get_specification_chaingraph(
     support = support,
     separation = separation,
     dimension = dimension,
@@ -54,7 +54,7 @@ generator <- sparse_symmetric_data_generator(
 )
 
 # 2. Generate Data (RNG seed logic is handled inside for reproducibility)
-data_res <- generate_data_from_generator(generator, sample_size, seed = 42)
+data_res <- generate_data_from_specification(generator, sample_size, seed = 42)
 X <- data_res$X
 cluster_true <- data_res$labels
 

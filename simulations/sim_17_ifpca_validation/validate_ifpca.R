@@ -11,7 +11,7 @@ if (length(script_name) > 0 && file.exists(script_name)) {
     setwd(dirname(normalizePath(script_name)))
 }
 
-source("../../code_r/sparse_symmetric_data_generator.R")
+source("../../code_r/data_generator.R")
 source("../../code_r/ifpca.R")
 source("../../code_r/get_cluster_acc.R")
 
@@ -40,7 +40,7 @@ if (n_cores < 1) n_cores <- 1
 cl <- makeCluster(n_cores)
 registerDoParallel(cl)
 
-generator <- sparse_symmetric_data_generator(
+generator <- get_specification_chaingraph(
     support = support,
     separation = separation,
     dimension = p,
@@ -51,13 +51,13 @@ generator <- sparse_symmetric_data_generator(
 
 start_time <- Sys.time()
 
-results <- foreach(job_id = 1:n_runs, .combine = rbind, .packages = c("clue"), .export = c("sparse_symmetric_data_generator", "generate_data_from_generator", "if_pca", "get_cluster_acc")) %dopar% {
+results <- foreach(job_id = 1:n_runs, .combine = rbind, .packages = c("clue"), .export = c("get_specification_chaingraph", "generate_data_from_specification", "if_pca", "get_cluster_acc")) %dopar% {
     # Set isolated seed for reproducibility
     current_seed <- 2025 + job_id
     set.seed(current_seed)
 
     # Generate Data
-    data_res <- generate_data_from_generator(generator, n, seed = current_seed)
+    data_res <- generate_data_from_specification(generator, n, seed = current_seed)
     X <- data_res$X
     true_labels <- data_res$labels
 

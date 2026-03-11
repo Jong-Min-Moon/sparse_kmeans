@@ -12,7 +12,7 @@ if (length(script_name) > 0 && file.exists(script_name)) {
     setwd(dirname(normalizePath(script_name)))
 }
 
-source("../../code_r/sparse_symmetric_data_generator.R")
+source("../../code_r/data_generator.R")
 source("methods_wrapper.R")
 source("accuracy_utils.R")
 

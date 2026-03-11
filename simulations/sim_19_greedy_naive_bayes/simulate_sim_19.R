@@ -50,7 +50,7 @@ if (length(args) > 0) {
 current_dir <- getwd()
 relative_path_prefix <- "../../code_r/"
 
-source(paste0(relative_path_prefix, "sparse_symmetric_data_generator.R"))
+source(paste0(relative_path_prefix, "data_generator.R"))
 source(paste0(relative_path_prefix, "block_coordinate_optim_greedy.R"))
 source(paste0(relative_path_prefix, "selection_block_greedy_screening.R"))
 source(paste0(relative_path_prefix, "clustering_block_knowncov.R"))
@@ -74,7 +74,7 @@ cat(sprintf("--- Simulation Run sim_19_greedy_naive_bayes (Job ID: %d, Sep: %.1f
 
 set.seed(2025 + job_id)
 
-generator <- sparse_symmetric_data_generator(
+generator <- get_specification_chaingraph(
     support = support,
     separation = separation,
     dimension = p,
@@ -83,7 +83,7 @@ generator <- sparse_symmetric_data_generator(
     flip = flip
 )
 
-data_res <- generate_data_from_generator(generator, n, seed = 2025 + job_id)
+data_res <- generate_data_from_specification(generator, n, seed = 2025 + job_id)
 X <- data_res$X
 true_labels <- data_res$labels
 

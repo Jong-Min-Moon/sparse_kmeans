@@ -1,5 +1,5 @@
 # Source Generator
-source("../../code_r/sparse_symmetric_data_generator.R")
+source("../../code_r/data_generator.R")
 library(ggplot2)
 library(dplyr)
 
@@ -17,7 +17,7 @@ separation <- 6
 
 set.seed(2025)
 
-generator <- sparse_symmetric_data_generator(
+generator <- get_specification_chaingraph(
     support = support,
     separation = separation,
     dimension = p,
@@ -26,7 +26,7 @@ generator <- sparse_symmetric_data_generator(
     flip = flip
 )
 
-data_res <- generate_data_from_generator(generator, n, seed = 2025)
+data_res <- generate_data_from_specification(generator, n, seed = 2025)
 X <- data_res$X
 true_labels <- data_res$labels
 

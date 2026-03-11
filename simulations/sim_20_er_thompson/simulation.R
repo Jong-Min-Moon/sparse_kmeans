@@ -33,7 +33,7 @@ if (!dir.exists(output_dir)) {
 # Source Code
 # ---------------------------------------------------------
 # Assuming script is run from simulations/sim_20_er_thompson/
-source("../../code_r/sparse_symmetric_data_generator.R")
+source("../../code_r/data_generator.R")
 source("../../code_r/block_coordinate_optim_thompson.R")
 # The Thompson optimization script depends on multiple block components 
 source("../../code_r/selection_block_greedy_screening.R")

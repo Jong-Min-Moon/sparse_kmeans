@@ -25,7 +25,7 @@ if (length(args) > 0) {
 
 # Source Code (Adjusted paths for simulations/sim08.../)
 # Assuming sim08 is at the same depth as sim07
-source("../../code_r/sparse_symmetric_data_generator.R")
+source("../../code_r/data_generator.R")
 source("../../code_r/block_coordinate_optim_greedy_unknowncov_SAM.R")
 source("../../code_r/ESSC.R")
 source("../../code_r/ISEE_residual_lasso.R")
@@ -57,7 +57,7 @@ cat(sprintf("Params: p=%d, n=%d, sep=%.1f, rho=%.2f\n", p, n, separation, rho))
 cat(sprintf("Method: Permutation FDR (Target=%.2f, Perms=%d)\n", fdr_target, n_perms))
 
 # 1. Initialize Generator
-generator <- sparse_symmetric_data_generator(
+generator <- get_specification_chaingraph(
     support = support,
     separation = separation,
     dimension = p,
@@ -68,7 +68,7 @@ generator <- sparse_symmetric_data_generator(
 
 # 2. Generate Data
 set.seed(2025 + job_id)
-data_res <- generate_data_from_generator(generator, n, seed = 2025 + job_id)
+data_res <- generate_data_from_specification(generator, n, seed = 2025 + job_id)
 X <- data_res$X
 true_labels <- data_res$labels
 

@@ -25,7 +25,7 @@ if (length(args) > 0) {
 }
 
 # Source Code (Adjusted paths for simulations/sim_v3_oracle_isee/)
-source("../../code_r/sparse_symmetric_data_generator.R")
+source("../../code_r/data_generator.R")
 source("../../code_r/block_coordinate_optim_thompson_unknowncov_v3.R")
 source("../../code_r/selection_block_greedy_screening.R")
 source("../../code_r/ESSC.R")
@@ -71,7 +71,7 @@ cat(sprintf("Params: p=%d, n=%d, sep=%.1f, rho=%.2f\n", p, n, separation, rho))
 cat(sprintf("Method: Thompson Sampling v3 (Oracle ISEE on Iter 1)\n"))
 
 # 1. Initialize Generator
-generator <- sparse_symmetric_data_generator(
+generator <- get_specification_chaingraph(
     support = support,
     separation = separation,
     dimension = p,
@@ -82,7 +82,7 @@ generator <- sparse_symmetric_data_generator(
 
 # 2. Generate Data
 set.seed(2025 + job_id)
-data_res <- generate_data_from_generator(generator, n, seed = 2025 + job_id)
+data_res <- generate_data_from_specification(generator, n, seed = 2025 + job_id)
 X <- data_res$X
 true_labels <- data_res$labels
 

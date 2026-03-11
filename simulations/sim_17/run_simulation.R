@@ -12,7 +12,7 @@ if (length(script_name) > 0 && file.exists(script_name)) {
     setwd(dirname(normalizePath(script_name)))
 }
 
-source("../../code_r/sparse_symmetric_data_generator.R")
+source("../../code_r/data_generator.R")
 source("methods_wrapper.R")
 source("accuracy_utils.R")
 
@@ -49,7 +49,7 @@ for (sep in separations) {
     cat(sprintf("\n--- Starting jobs for separation = %d ---\n", sep))
 
     # Initialize Generator once per separation
-    generator <- sparse_symmetric_data_generator(
+    generator <- get_specification_chaingraph(
         support = support,
         separation = sep,
         dimension = p,
@@ -65,7 +65,7 @@ for (sep in separations) {
         .combine = rbind,
         .packages = c("clue", "sparcl", "MASS", "methods"),
         .export = c(
-            "sparse_symmetric_data_generator", "generate_data_from_generator",
+            "get_specification_chaingraph", "generate_data_from_specification",
             "run_all_methods", "compute_all_accuracies", "run_witten",
             "run_arias", "if_pca", "get_cluster_acc", "hill_climb", "Alternate"
         )
@@ -75,7 +75,7 @@ for (sep in separations) {
         set.seed(current_seed)
 
         # 2. Generate Data Exactly Once Per Replication
-        data_res <- generate_data_from_generator(generator, n, seed = current_seed)
+        data_res <- generate_data_from_specification(generator, n, seed = current_seed)
         X <- data_res$X
 
 

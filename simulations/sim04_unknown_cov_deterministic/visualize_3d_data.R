@@ -1,5 +1,5 @@
 # Non-Isotropic Visualization
-source("D:/GitHub/sparse_kmeans/code_r/sparse_symmetric_data_generator.R")
+source("D:/GitHub/sparse_kmeans/code_r/data_generator.R")
 
 # Parameters: p=3, n=500, rho=0.8 (Stronger for visual effect), sep=6
 p <- 3
@@ -8,7 +8,7 @@ rho <- 0.45
 sep <- 8
 
 cat("Generating 3D data with strong correlation...\n")
-generator <- sparse_symmetric_data_generator(
+generator <- get_specification_chaingraph(
     support = 1:3, # Features 1 and 2 are signal
     separation = sep,
     dimension = p,
@@ -17,7 +17,7 @@ generator <- sparse_symmetric_data_generator(
     flip = FALSE
 )
 
-data_res <- generate_data_from_generator(generator, n, seed = 42)
+data_res <- generate_data_from_specification(generator, n, seed = 42)
 X <- t(data_res$X) # n x p
 labels <- data_res$labels
 

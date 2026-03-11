@@ -1,7 +1,7 @@
 # Plot magnitude of mu_1 - mu_2 for Erdos Renyi Data
 # Setting based on simulations/sim_20_er_thompson/simulation.R
 
-source("../../code_r/sparse_symmetric_data_generator.R")
+source("../../code_r/data_generator.R")
 
 # Data Generation Parameters from simulation.R
 p <- 200

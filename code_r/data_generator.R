@@ -1,6 +1,6 @@
 #' Sparse Symmetric Data Generator
 #'
-#' Replicates the logic of bandit/sparse_symmetric_data_generator.m
+#' Replicates the logic of bandit/get_specification_chaingraph.m
 #'
 #' @param support Indices of signal features (e.g. 1:10)
 #' @param separation Distance between cluster means
@@ -9,7 +9,7 @@
 #' @param conditional_correlation The rho value (correlation/precision parameter)
 #' @param flip Whether to treat the matrix as covariance instead of precision
 #' @export
-sparse_symmetric_data_generator <- function(support, separation, dimension, precision_sparsity, conditional_correlation, flip = FALSE) {
+get_specification_chaingraph <- function(support, separation, dimension, precision_sparsity, conditional_correlation, flip = FALSE) {
     # 1. Generate Sparse Precision Matrix
     sparse_precision_matrix <- diag(1, dimension)
 
@@ -75,20 +75,21 @@ sparse_symmetric_data_generator <- function(support, separation, dimension, prec
     ))
 }
 
-#' Generate data using the generator
-#' @param generator Result from sparse_symmetric_data_generator
+#' Generate data using the specification
+#' @param specification Result from get_specification_chaingraph
 #' @param n Sample size
 #' @param seed Optional seed for reproducibility
 #' @export
-generate_data_from_generator <- function(generator, n, seed = NULL) {
+generate_data_from_specification <- function(specification, n, seed = NULL) {
     if (!is.null(seed)) set.seed(seed)
 
-    X1 <- MASS::mvrnorm(n / 2, generator$mu1, generator$covariance_matrix)
-    X2 <- MASS::mvrnorm(n / 2, generator$mu2, generator$covariance_matrix)
+    X1 <- MASS::mvrnorm(n / 2, specification$mu1, specification$covariance_matrix)
+    X2 <- MASS::mvrnorm(n / 2, specification$mu2, specification$covariance_matrix)
     X <- t(rbind(X1, X2))
     labels <- c(rep(1, n / 2), rep(2, n / 2))
     return(list(X = X, labels = labels))
 }
+
 
 #' Generate Data based on Erdos-Renyi Random Graph Model (Model 1)
 #'
@@ -103,39 +104,39 @@ generate_erdos_renyi_data <- function(n, p, separation = NULL, s = 10) {
     Omega_tilde <- matrix(0, nrow = p, ncol = p)
     num_upper <- p * (p - 1) / 2
     delta <- rbinom(num_upper, 1, 0.05)
-    
+
     # u_ij ~ Unif[0.5, 1] U [-1, -0.5]
     signs <- sample(c(-1, 1), num_upper, replace = TRUE)
     mags <- runif(num_upper, 0.5, 1)
     u_ij <- signs * mags
-    
+
     Omega_tilde[upper.tri(Omega_tilde)] <- delta * u_ij
-    
+
     # Symmetrize
     Omega_tilde_sym <- Omega_tilde + t(Omega_tilde)
-    
+
     # 2. Positive definiteness
     eigen_out <- eigen(Omega_tilde_sym, symmetric = TRUE, only.values = TRUE)
     phi_min <- min(eigen_out$values)
     shift <- max(-phi_min, 0) + 0.05
     Omega_star_unstd <- Omega_tilde_sym + diag(shift, p)
-    
+
     # 3. Standardize to have unit diagonals
     d_inv_sqrt <- 1 / sqrt(diag(Omega_star_unstd))
     Omega_star <- t(Omega_star_unstd * d_inv_sqrt) * d_inv_sqrt
-    
+
     # Ensure perfect symmetry
     Omega_star <- (Omega_star + t(Omega_star)) / 2
-    
+
     # Covariance matrix
     Sigma <- solve(Omega_star)
     Sigma <- (Sigma + t(Sigma)) / 2
-    
+
     # 4. Means to achieve desired separation
     support <- 1:s
     Sigma_S0 <- Sigma[support, support]
     sum_Sigma_S0 <- sum(Sigma_S0)
-    
+
     # separation is the Mahalanobis distance between two classes
     # mu1* = 0, mu2* = - Omega^{-1} beta* = - Sigma beta*
     # The base vector is (1, ..., 1) on the support.
@@ -147,27 +148,27 @@ generate_erdos_renyi_data <- function(n, p, separation = NULL, s = 10) {
     } else {
         magnitude <- separation / sqrt(sum_Sigma_S0)
     }
-    
+
     beta_star <- rep(0, p)
     beta_star[support] <- magnitude
-    
+
     mu1 <- rep(0, p)
-    mu2 <- as.numeric(- (Sigma %*% beta_star))
-    
+    mu2 <- as.numeric(-(Sigma %*% beta_star))
+
     # 5. Generate data
     n1 <- sum(rbinom(n, 1, 0.5))
     n2 <- n - n1
-    
+
     # Handle cases where n1 or n2 is 0 or 1 safely
     X1 <- if (n1 > 0) MASS::mvrnorm(n1, mu1, Sigma) else matrix(nrow = 0, ncol = p)
     X2 <- if (n2 > 0) MASS::mvrnorm(n2, mu2, Sigma) else matrix(nrow = 0, ncol = p)
-    
+
     if (n1 == 1) X1 <- matrix(X1, nrow = 1)
     if (n2 == 1) X2 <- matrix(X2, nrow = 1)
-    
+
     X <- t(rbind(X1, X2))
     labels <- c(rep(1, n1), rep(2, n2))
-    
+
     return(list(
         X = X,
         labels = labels,

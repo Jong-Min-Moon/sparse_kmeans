@@ -48,7 +48,7 @@ if (length(args) > 0) {
 }
 
 # Source Code
-source("../../code_r/sparse_symmetric_data_generator.R")
+source("../../code_r/data_generator.R")
 source("../../code_r/block_coordinate_optim_thompson.R")
 source("../../code_r/selection_block_greedy_screening.R")
 source("../../code_r/clustering_block_knowncov.R")
@@ -72,7 +72,7 @@ cat(sprintf("--- Simulation Run sim14_thompson (Job ID: %d, Sep: %.1f, P-Val: %.
 
 set.seed(2025 + job_id)
 
-generator <- sparse_symmetric_data_generator(
+generator <- get_specification_chaingraph(
     support = support,
     separation = separation,
     dimension = p,
@@ -81,7 +81,7 @@ generator <- sparse_symmetric_data_generator(
     flip = flip
 )
 
-data_res <- generate_data_from_generator(generator, n, seed = 2025 + job_id)
+data_res <- generate_data_from_specification(generator, n, seed = 2025 + job_id)
 X <- data_res$X
 true_labels <- data_res$labels
 
