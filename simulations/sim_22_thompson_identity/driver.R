@@ -3,9 +3,9 @@
 # ==============================================================================
 # Objective:
 # This script executes a single replicate of a high-dimensional simulation study
-# evaluating the performance of block coordinate optimization with Thompson Sampling 
-# (`cluster_thompson`). The performance is assessed on a symmetric Gaussian 
-# mixture model specifically employing an identity covariance structure to isolate 
+# evaluating the performance of block coordinate optimization with Thompson Sampling
+# (`cluster_thompson`). The performance is assessed on a symmetric Gaussian
+# mixture model specifically employing an identity covariance structure to isolate
 # behavior under isotropic noise conditions (uncorrelated features).
 #
 # Generative Statistical Model:
@@ -13,9 +13,9 @@
 # K = 2 (Number of true underlying clusters).
 # The active feature set defining structural differences is S0 = {1 ... 10}.
 # Separation between the two centroids is defined to satisfy: || mu* - (-mu*) ||^2 = 16.
-# 
+#
 # Formally, the data generation implies:
-# X ~ N(mu*, I) for Group 1 
+# X ~ N(mu*, I) for Group 1
 # X ~ N(-mu*, I) for Group 2
 #
 # where mu*_j = sqrt(0.4) for j in S0 and 0 otherwise.
@@ -26,17 +26,17 @@
 # ------------------------------------------------------------------------------
 # Loading the requisite mathematical and structural manipulation libraries
 library(methods)
-library(MASS)        # Utilized natively for multivariate normal sampling (mvrnorm)
-library(mclust)      # Utilized for stability indexing (Adjusted Rand Index capabilities)
-library(Matrix)      # High-performance sparse mapping matrices 
-library(foreach)     # Parallel loop structuring
-library(doParallel)  # Local multithread backends
-library(glmnet)      # Lasso implementation dependencies (Used by downstream methods)
-library(kernlab)     # Support vector machines and kernel tools
+library(MASS) # Utilized natively for multivariate normal sampling (mvrnorm)
+library(mclust) # Utilized for stability indexing (Adjusted Rand Index capabilities)
+library(Matrix) # High-performance sparse mapping matrices
+library(foreach) # Parallel loop structuring
+library(doParallel) # Local multithread backends
+library(glmnet) # Lasso implementation dependencies (Used by downstream methods)
+library(kernlab) # Support vector machines and kernel tools
 library(matrixStats) # Vectorized row/column execution speeds
-library(RSpectra)    # Efficient generalized eigenvalue approximations 
-library(CVXR)        # Convex optimization engines
-library(cluster)     # Clustering methodologies 
+library(RSpectra) # Efficient generalized eigenvalue approximations
+library(CVXR) # Convex optimization engines
+library(cluster) # Clustering methodologies
 
 # ------------------------------------------------------------------------------
 # 2. Command Line Arguments & Replicate Indexing
@@ -47,7 +47,9 @@ args <- commandArgs(trailingOnly = TRUE)
 # Default parameter configurations mapped natively if no arguments are provided.
 # job_id acts as the unique identifier and seed determinator for the replicate.
 job_id <- 1
-separation <- 4  # Targets the condition || mu* - (-mu*) ||^2 = 16 where 4^2 = 16
+separation <- 4 # Targets the condition || mu* - (-mu*) ||^2 = 16 where 4^2 = 16
+pval <- 0.01
+n_step_admm <- 3000
 
 # Extract dynamically exported values matching the submission wrapper environment
 if (length(args) > 0) {
@@ -59,6 +61,14 @@ if (length(args) > 0) {
         if (args[i] == "--sep" && i < length(args)) {
             val <- suppressWarnings(as.numeric(args[i + 1]))
             if (!is.na(val)) separation <- val
+        }
+        if (args[i] == "--pval" && i < length(args)) {
+            val <- suppressWarnings(as.numeric(args[i + 1]))
+            if (!is.na(val)) pval <- val
+        }
+        if (args[i] == "--n_step_admm" && i < length(args)) {
+            val <- suppressWarnings(as.integer(args[i + 1]))
+            if (!is.na(val)) n_step_admm <- val
         }
     }
 }
@@ -79,10 +89,10 @@ source("../../code_r/get_cluster_acc.R")
 # ------------------------------------------------------------------------------
 # 4. Global Simulation Parameters Configuration
 # ------------------------------------------------------------------------------
-p <- 5000         # p: High-dimensional structural feature parameter 
-n <- 200          # n: Constrained observation limit, mimicking challenging p >> n scenarios
-K <- 2            # K: Fixed predefined partition mapping structures
-support <- 1:10   # S0: Defining the set of purely informative indices
+p <- 5000 # p: High-dimensional structural feature parameter
+n <- 200 # n: Constrained observation limit, mimicking challenging p >> n scenarios
+K <- 2 # K: Fixed predefined partition mapping structures
+support <- 1:10 # S0: Defining the set of purely informative indices
 
 # Trace executing context gracefully to standard output arrays
 cat(sprintf("--- Simulation Run sim_22_thompson_identity (Job ID: %d, Sep: %.1f) ---\n", job_id, separation))
@@ -97,8 +107,8 @@ cat("Instantiating isotropic high-dimensional geometric distributions...\n")
 
 # Request exact dataset covariance characteristics bounded by the identity generator
 generator_spec <- get_specification_identity(
-    support = support, 
-    separation = separation, 
+    support = support,
+    separation = separation,
     dimension = p
 )
 
@@ -107,7 +117,7 @@ generator_spec <- get_specification_identity(
 # ------------------------------------------------------------------------------
 # This isolates purely the conceptual difference matrix representing || mu* - (-mu*) ||^2.
 # As defined, || mu* - (-mu*) ||^2 = || 2 * mu* ||^2 = 4 * || mu* ||^2
-# If |S0| = 10, and mu*_j = sqrt(0.4), ||mu*||^2 = 10 * 0.4 = 4. 
+# If |S0| = 10, and mu*_j = sqrt(0.4), ||mu*||^2 = 10 * 0.4 = 4.
 # Therefore, 4 * 4 = 16. By definition, separation squared is tracked as 16.
 mu1 <- generator_spec$mu1 # Extrapolates to -mu* structurally
 mu2 <- generator_spec$mu2 # Extrapolates to +mu* structurally
@@ -127,32 +137,66 @@ data_res <- generate_data_from_specification(generator_spec, n, seed = 2026 + jo
 X <- data_res$X
 true_labels <- data_res$labels
 
-# Execution standardization isolating unit variance across independent axes
-# Scale maps row-based distributions automatically 
-X <- t(scale(t(X)))
+
 
 # ------------------------------------------------------------------------------
-# 6. Experimental Clustering Evaluation 
+# 6. Experimental Clustering Evaluation
 # ------------------------------------------------------------------------------
-cat("Launching `cluster_thompson` evaluation sequence...\n")
+cat("Launching `cluster_thompson` evaluation sequence with grid search over C...\n")
 start_time <- Sys.time()
 
-# We strictly enforce execution binding matching purely default parameterized heuristics.
-# The algorithm is supplied the known isotropic identity covariance matrix defined inside the spec.
-res <- tryCatch(
-    {
-        cluster_thompson(
-            X = X, 
-            K = K, 
-            covariance = generator_spec$covariance_matrix, 
-            true_cluster = true_labels
-        )
-    },
-    error = function(e) {
-        warning(paste("Thompson Clustering implementation experienced a critical crash:", e$message))
-        return(NULL) # Fail gracefully mapping output artifacts dynamically downstream
+best_res <- NULL
+best_sil <- -Inf
+best_C <- NA
+
+c_values <- c(0.3, 0.4, 0.5)
+
+for (c_val in c_values) {
+    cat(sprintf("\n--- Evaluating C = %.1f ---\n", c_val))
+    res_temp <- tryCatch(
+        {
+            cluster_thompson(
+                X = X,
+                K = K,
+                n_iter = 500,
+                C = c_val,
+                n_perms = 1000,
+                p_val_threshold = pval,
+                n_step_admm = n_step_admm,
+                covariance = NULL,
+                true_cluster = true_labels
+            )
+        },
+        error = function(e) {
+            warning(paste("Thompson Clustering implementation experienced a critical crash:", e$message))
+            return(NULL) # Fail gracefully mapping output artifacts dynamically downstream
+        }
+    )
+
+    if (!is.null(res_temp)) {
+        selected_indices <- which(res_temp$selected)
+        n_sel <- length(selected_indices)
+
+        if (n_sel > 0 && length(unique(res_temp$cluster)) > 1) {
+            dist_mat <- dist(t(X[selected_indices, , drop = FALSE]))
+            sil <- cluster::silhouette(res_temp$cluster, dist_mat)
+            avg_sil <- mean(sil[, 3])
+        } else {
+            avg_sil <- -1 # Invalid clustering or no features selected
+        }
+
+        cat(sprintf(">>> C = %.1f completed. Silhouette Index: %.4f (Selected Features: %d)\n", c_val, avg_sil, n_sel))
+
+        if (avg_sil > best_sil) {
+            best_sil <- avg_sil
+            best_res <- res_temp
+            best_C <- c_val
+        }
     }
-)
+}
+
+res <- best_res
+cat(sprintf("\n=== Selected Optimal C = %.1f (Silhouette Index: %.4f) ===\n", best_C, best_sil))
 
 end_time <- Sys.time()
 runtime <- as.numeric(difftime(end_time, start_time, units = "secs"))
@@ -172,24 +216,24 @@ recall <- NA
 precision <- NA
 
 if (!is.null(res)) {
-    # 7a. Clustering Misclassification Check 
+    # 7a. Clustering Misclassification Check
     # Mapped by get_cluster_acc resolving permutation assignment invariant matching natively.
     acc <- get_cluster_acc(res$cluster, true_labels)
     cat(sprintf("Classification Accuracy (Relative Match): %.4f\n", acc))
-    
+
     # 7b. Support Variable Target Intersection (Sparse Recovery Precision)
     selected_indices <- which(res$selected)
     n_selected <- length(selected_indices)
-    
+
     # Calculate exactly how many identified variables map successfully matching ground truth.
     tp <- length(intersect(selected_indices, support))
     fp <- length(setdiff(selected_indices, support))
     true_active <- length(support)
-    
-    # 7c. Methodological Structural Metrics 
+
+    # 7c. Methodological Structural Metrics
     recall <- if (true_active > 0) tp / true_active else 0
     precision <- if (n_selected > 0) tp / n_selected else 0
-    
+
     cat(sprintf("Variables Flagged By Framework: %d (True Pos: %d | False Pos: %d)\n", n_selected, tp, fp))
     cat(sprintf("Observed Precision Vector: %.4f | Recall Target Ratio: %.4f\n", precision, recall))
 } else {
@@ -202,25 +246,31 @@ if (!is.null(res)) {
 # Creates the physical output boundary natively handling file mapping hierarchies dynamically
 dir.create("results_raw", showWarnings = FALSE)
 
-# Generate a cohesive list object encapsulating simulation parameters explicitly 
+# Generate a cohesive list object encapsulating simulation parameters explicitly
 output_object <- list(
     job_id = job_id,
-    acc = acc,
+    sep = separation,
+    pval = pval,
+    accuracy = acc, # standardizing to match precision parameter logic tracking acc -> accuracy
+    L = n_selected, # matched exactly natively to sim14
+    best_C = best_C,
+    best_sil = best_sil,
     runtime = runtime,
-    n_selected = n_selected,
     tp = tp,
     fp = fp,
     recall = recall,
     precision = precision,
     params = list(
-        p = p, 
-        n = n, 
-        separation = separation
+        p = p,
+        n = n,
+        separation = separation,
+        pval = pval,
+        n_step_admm = n_step_admm
     )
 )
 
-final_path <- sprintf("results_raw/sim_id%d_sep%d.rds", job_id, separation)
+final_path <- sprintf("results_raw/sim_id%d_sep%d_pval%s.rds", job_id, separation, format(pval, nsmall = 3))
 
-# Flush binary sequence saving object explicitly tracking for remote extraction mapping 
+# Flush binary sequence saving object explicitly tracking for remote extraction mapping
 saveRDS(output_object, file = final_path)
 cat(sprintf("Results comprehensively saved and mapped against logical identifier -> %s\n", final_path))

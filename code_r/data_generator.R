@@ -83,8 +83,21 @@ get_specification_chaingraph <- function(support, separation, dimension, precisi
 generate_data_from_specification <- function(specification, n, seed = NULL) {
     if (!is.null(seed)) set.seed(seed)
 
-    X1 <- MASS::mvrnorm(n / 2, specification$mu1, specification$covariance_matrix)
-    X2 <- MASS::mvrnorm(n / 2, specification$mu2, specification$covariance_matrix)
+    # Fast path for identity covariance (p >> n makes eigen() slow inside mvrnorm)
+    if (specification$precision_sparsity == 0 && specification$rho == 0) {
+        p <- specification$dimension
+        # Base gaussian noise N(0, 1)
+        Z1 <- matrix(rnorm(n / 2 * p), nrow = n / 2, ncol = p)
+        Z2 <- matrix(rnorm(n / 2 * p), nrow = n / 2, ncol = p)
+
+        # Shift by means
+        X1 <- sweep(Z1, 2, specification$mu1, "+")
+        X2 <- sweep(Z2, 2, specification$mu2, "+")
+    } else {
+        X1 <- MASS::mvrnorm(n / 2, specification$mu1, specification$covariance_matrix)
+        X2 <- MASS::mvrnorm(n / 2, specification$mu2, specification$covariance_matrix)
+    }
+
     X <- t(rbind(X1, X2))
     labels <- c(rep(1, n / 2), rep(2, n / 2))
     return(list(X = X, labels = labels))

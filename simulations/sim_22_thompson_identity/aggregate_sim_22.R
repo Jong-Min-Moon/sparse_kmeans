@@ -35,16 +35,18 @@ results_list <- purrr::map(all_files, function(f) {
     # Isolate relevant scalars configured natively from the simulation framework driver
     data.frame(
         job_id = res_data$job_id,
-        accuracy = res_data$acc,
+        accuracy = res_data$accuracy,
         runtime = res_data$runtime,
-        n_selected = res_data$n_selected,
+        n_selected = res_data$L,
         tp = res_data$tp,
         fp = res_data$fp,
         recall = res_data$recall,
         precision = res_data$precision,
         p = res_data$params$p,
         n = res_data$params$n,
-        separation = res_data$params$separation
+        separation = res_data$params$separation,
+        pval = res_data$pval,
+        n_step_admm = res_data$params$n_step_admm
     )
 })
 
