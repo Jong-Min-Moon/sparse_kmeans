@@ -43,7 +43,7 @@
 #'     \item \code{acc_history}: (Optional) History of clustering accuracy across iterations if true_cluster is provided.
 #'   }
 #' @export
-cluster_thompson <- function(X, K, n_iter = 500, C = 0.5, n_perms = 300, p_val_threshold = 0.01, n_step_admm = 2000, covariance = NULL, true_cluster = NULL) {
+cluster_thompson <- function(X, K, n_iter = 500, C = 0.5, n_perms = 300, p_val_threshold = 0.05, n_step_admm = 2000, covariance = NULL, true_cluster = NULL) {
   # Requirement checks: Ensure optimization parameters are valid.
   if (!is.numeric(n_step_admm) || n_step_admm <= 0 || n_step_admm %% 1 != 0) stop("n_step_admm must be a positive integer.")
   if (!is.matrix(X)) stop("X must be a matrix")
