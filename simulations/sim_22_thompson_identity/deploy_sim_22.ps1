@@ -8,7 +8,8 @@ param(
     [string]$Username = "jongminm",
     [string]$Hostname = "discovery.usc.edu",
     [string]$RemoteBase = "~/sparse_kmeans_project",
-    [double[]]$Separations = @(4)
+    [double[]]$Separations = @(4),
+    [int[]]$Dimensions = @(5500, 6000, 6500, 7000, 7500, 8000, 8500, 9000, 9500, 10000)
 )
 
 $ErrorActionPreference = "Stop"
@@ -38,21 +39,43 @@ Write-Host "Submitting simulation array jobs to the Slurm scheduler..." -Foregro
 $submittedJobs = @()
 
 foreach ($sep in $Separations) {
-    Write-Host "Submitting simulation for sep: $sep..."
-    
-    # Export SEP to the submit.sh script automatically 
-    $sbatchCmd = "cd ${RemoteBase}/simulations/sim_22_thompson_identity && sbatch --output=logs/sim_id%a_sep${sep}.out --error=logs/sim_id%a_sep${sep}.err --export=ALL,SEP=$sep submit.sh"
-    
-    $output = ssh "${Username}@${Hostname}" $sbatchCmd 2>&1
-    
-    if ($LASTEXITCODE -eq 0 -and $output -match "Submitted batch job (\d+)") {
-        $jobId = $matches[1]
-        Write-Host " -> Successfully submitted Array Job ID: $jobId" -ForegroundColor Green
-        $submittedJobs += [PSCustomObject]@{ Sep = $sep; JobID = $jobId; Status = "Success" }
-    }
-    else {
-        Write-Error " -> Failed to submit job for separation condition $sep. Output: $output"
-        $submittedJobs += [PSCustomObject]@{ Sep = $sep; JobID = "N/A"; Status = "Failed" }
+    foreach ($p in $Dimensions) {
+        Write-Host "Submitting simulation for sep: $sep, p: $p..."
+        
+        # Export SEP and P to the submit.sh script automatically 
+        $sbatchCmd = "cd ${RemoteBase}/simulations/sim_22_thompson_identity && sbatch --output=logs/sim_id%a_sep${sep}_p${p}.out --error=logs/sim_id%a_sep${sep}_p${p}.err --export=ALL,SEP=$sep,P=$p submit.sh"
+        
+        $maxRetries = 5
+        $retryWait = 5
+        $attempt = 0
+        $success = $false
+        $output = ""
+        
+        while ($attempt -lt $maxRetries -and -not $success) {
+            $output = ssh "${Username}@${Hostname}" $sbatchCmd 2>&1
+            if ($LASTEXITCODE -eq 0 -and $output -match "Submitted batch job (\d+)") {
+                $success = $true
+            } else {
+                $attempt++
+                if ($attempt -lt $maxRetries) {
+                    Write-Host "SSH timeout or cluster rate limit hit. Retrying $attempt/$maxRetries in $retryWait seconds..." -ForegroundColor Yellow
+                    Start-Sleep -Seconds $retryWait
+                }
+            }
+        }
+        
+        if ($success) {
+            $jobId = $matches[1]
+            Write-Host " -> Successfully submitted Array Job ID: $jobId" -ForegroundColor Green
+            $submittedJobs += [PSCustomObject]@{ Sep = $sep; P = $p; JobID = $jobId; Status = "Success" }
+        }
+        else {
+            Write-Error " -> Failed to submit job for separation condition $sep, dimension $p after $maxRetries attempts. Output: $output"
+            $submittedJobs += [PSCustomObject]@{ Sep = $sep; P = $p; JobID = "N/A"; Status = "Failed" }
+        }
+        
+        # Add a brief pause to prevent SSH connection rate limiting/timeouts on the head node
+        Start-Sleep -Seconds 5
     }
 }
 

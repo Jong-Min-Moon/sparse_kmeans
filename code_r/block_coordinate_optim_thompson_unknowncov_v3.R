@@ -116,7 +116,7 @@ block_coordinate_optim_thompson_unknowncov_v3 <- function(X, K, n_iter = 100, C 
 
         # Run Greedy Screening (Permutation Test) on the subset
         # rewards_sub is a LOGICAL vector of length length(S_hat_now)
-        rewards_sub <- selection_block_greedy_screening(X_tilde_sub, cluster_est_now, fdr_level = NULL, n_perms = 10000, p_val_threshold = p_val_threshold)
+        rewards_sub <- select_greedily(X_tilde_sub, cluster_est_now, fdr_level = NULL, n_perms = 10000, p_val_threshold = p_val_threshold)
 
         # -------------------------------------------------------
         # B. Update Step

@@ -8,7 +8,7 @@
 #' @param n_perms Number of permutations for the test (default 10000)
 #' @param ... Additional arguments (ignored, but allowed for compatibility)
 #' @return Logical vector of selected features (length p)
-selection_block_greedy_screening <- function(X_tilde, cluster_est, fdr_level = 0.4, n_perms = 10000, p_val_threshold = 0.01, ...) {
+select_greedily <- function(X_tilde, cluster_est, fdr_level = 0.4, n_perms = 10000, p_val_threshold = 0.01, ...) {
   p <- nrow(X_tilde)
   n <- ncol(X_tilde)
 

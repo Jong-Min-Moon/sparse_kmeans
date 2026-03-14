@@ -19,7 +19,7 @@ if (!dir.exists(output_dir)) {
 }
 
 # Recursively locate all generated outputs matching the expected dataset extension
-all_files <- list.files(output_dir, pattern = "\\.rds$", full.names = TRUE)
+all_files <- list.files(output_dir, pattern = "\\.rds$", full.names = TRUE, recursive = TRUE)
 
 if (length(all_files) == 0) {
     stop("No properly executed .rds files found matching compilation targets in ", output_dir)
@@ -54,17 +54,21 @@ results_list <- purrr::map(all_files, function(f) {
 all_results <- bind_rows(results_list)
 
 # Compute descriptive summary statistical metrics representing true method performance behavior mathematically 
-summary_stats <- data.frame(
-    n_reps = nrow(all_results),
-    mean_accuracy = mean(all_results$accuracy, na.rm = TRUE),
-    sd_accuracy = sd(all_results$accuracy, na.rm = TRUE),
-    mean_tp = mean(all_results$tp, na.rm = TRUE),
-    mean_fp = mean(all_results$fp, na.rm = TRUE),
-    mean_n_selected = mean(all_results$n_selected, na.rm = TRUE),
-    mean_recall = mean(all_results$recall, na.rm = TRUE),
-    mean_precision = mean(all_results$precision, na.rm = TRUE),
-    mean_runtime = mean(all_results$runtime, na.rm = TRUE)
-)
+summary_stats <- all_results %>%
+    group_by(separation, p) %>%
+    summarize(
+        n_reps = n(),
+        mean_accuracy = mean(accuracy, na.rm = TRUE),
+        sd_accuracy = sd(accuracy, na.rm = TRUE),
+        mean_tp = mean(tp, na.rm = TRUE),
+        mean_fp = mean(fp, na.rm = TRUE),
+        mean_n_selected = mean(n_selected, na.rm = TRUE),
+        mean_recall = mean(recall, na.rm = TRUE),
+        mean_precision = mean(precision, na.rm = TRUE),
+        mean_runtime = mean(runtime, na.rm = TRUE),
+        .groups = "drop"
+    ) %>%
+    arrange(separation, p)
 
 write.csv(summary_stats, summary_file, row.names = FALSE)
 cat(sprintf("\nSummary aggregation outputs saved to %s\n", summary_file))

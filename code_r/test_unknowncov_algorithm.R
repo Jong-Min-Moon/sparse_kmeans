@@ -10,7 +10,7 @@ library(mclust)
 source("code_r/sdp_kmeans.R")
 source("code_r/ISEE_bicluster.R")
 source("code_r/get_intercept_residual_lasso.R")
-source("code_r/selection_block_greedy_screening.R")
+source("code_r/select_greedily.R")
 source("code_r/clustering_block_knowncov.R")
 source("code_r/block_coordinate_optim_greedy_unknowncov.R")
 

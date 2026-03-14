@@ -91,7 +91,7 @@ block_coordinate_optim_thompson_unknowncov_v3_1 <- function(X, K, n_iter = 100, 
         X_tilde_sub <- X_tilde[S_hat_now, , drop = FALSE]
 
         # Run Greedy Screening (Permutation Test) on the subset
-        rewards_sub <- selection_block_greedy_screening(X_tilde_sub, cluster_est_now, fdr_level = NULL, n_perms = 10000, p_val_threshold = p_val_threshold)
+        rewards_sub <- select_greedily(X_tilde_sub, cluster_est_now, fdr_level = NULL, n_perms = 10000, p_val_threshold = p_val_threshold)
 
         # -------------------------------------------------------
         # B. Update Step

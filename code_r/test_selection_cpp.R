@@ -3,7 +3,7 @@ library(stats)
 library(Rcpp)
 
 # Source the updated screening function
-source("code_r/selection_block_greedy_screening.R")
+source("code_r/select_greedily.R")
 
 # 1. Setup Data
 set.seed(42)
@@ -32,7 +32,7 @@ if (.Platform$OS.type == "windows") {
 # 4. Run with C++ Backend
 cat("\n--- Running with C++ Backend ---\n")
 t1 <- Sys.time()
-selected_cpp <- selection_block_greedy_screening(X, cluster_est, fdr_level = 0.4, n_perms = 1000)
+selected_cpp <- select_greedily(X, cluster_est, fdr_level = 0.4, n_perms = 1000)
 t2 <- Sys.time()
 cat(sprintf("C++ Time: %.4f s\n", as.numeric(difftime(t2, t1, units = "secs"))))
 

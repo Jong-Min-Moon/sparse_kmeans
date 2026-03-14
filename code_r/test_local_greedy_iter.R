@@ -5,7 +5,7 @@ library(Rcpp)
 # Source dependencies
 source("code_r/sdp_kmeans.R")
 source("code_r/utils.R")
-source("code_r/selection_block_greedy_screening.R")
+source("code_r/select_greedily.R")
 source("code_r/clustering_block_knowncov.R")
 source("code_r/block_coordinate_optim_greedy.R")
 
@@ -39,6 +39,6 @@ cat(sprintf("Final Clustering Accuracy: %.4f\n", max(mean(res$cluster == true_la
 cat(sprintf("Final Adjusted Rand Index: %.4f\n", mclust::adjustedRandIndex(res$cluster, true_labels)))
 
 # Check if selected features in that iteration were reasonable
-selected <- selection_block_greedy_screening(X, res$cluster, fdr_level = 0.4, n_perms = 1000)
+selected <- select_greedily(X, res$cluster, fdr_level = 0.4, n_perms = 1000)
 cat(sprintf("Features selected after 1 iteration: %d\n", sum(selected)))
 cat(sprintf("True features in selection: %d/%d\n", sum(selected[1:s]), s))

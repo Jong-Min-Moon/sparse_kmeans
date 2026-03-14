@@ -58,7 +58,7 @@ block_coordinate_optim_greedy <- function(X_tilde, K, n_iter = 100, stable_iter 
     # --- Selection Block ---
     # Now uses BH procedure with fdr_level
     t_sel_start <- Sys.time()
-    selected_features <- selection_block_greedy_screening(X_tilde, cluster_est_now, fdr_level)
+    selected_features <- select_greedily(X_tilde, cluster_est_now, fdr_level)
     t_sel_end <- Sys.time()
     cat(sprintf("Selection Block took: %.4f seconds\n", as.numeric(difftime(t_sel_end, t_sel_start, units = "secs"))))
 

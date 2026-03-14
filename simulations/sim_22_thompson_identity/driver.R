@@ -50,7 +50,8 @@ job_id <- 1
 separation <- 4 # Targets the condition || mu* - (-mu*) ||^2 = 16 where 4^2 = 16
 pval <- 0.01
 n_step_admm <- 3000
-
+p <- 5000 # Default High-dimensional structural feature parameter
+thompson_step <- 2000
 # Extract dynamically exported values matching the submission wrapper environment
 if (length(args) > 0) {
     for (i in seq_along(args)) {
@@ -69,6 +70,10 @@ if (length(args) > 0) {
         if (args[i] == "--n_step_admm" && i < length(args)) {
             val <- suppressWarnings(as.integer(args[i + 1]))
             if (!is.na(val)) n_step_admm <- val
+        }
+        if (args[i] == "--p" && i < length(args)) {
+            val <- suppressWarnings(as.integer(args[i + 1]))
+            if (!is.na(val)) p <- val
         }
     }
 }
@@ -89,7 +94,6 @@ source("../../code_r/get_cluster_acc.R")
 # ------------------------------------------------------------------------------
 # 4. Global Simulation Parameters Configuration
 # ------------------------------------------------------------------------------
-p <- 5000 # p: High-dimensional structural feature parameter
 n <- 200 # n: Constrained observation limit, mimicking challenging p >> n scenarios
 K <- 2 # K: Fixed predefined partition mapping structures
 support <- 1:10 # S0: Defining the set of purely informative indices
@@ -158,7 +162,7 @@ for (c_val in c_values) {
             cluster_thompson(
                 X = X,
                 K = K,
-                n_iter = 500,
+                n_iter = thompson_step,
                 C = c_val,
                 n_perms = 1000,
                 p_val_threshold = pval,
@@ -244,7 +248,8 @@ if (!is.null(res)) {
 # 8. Data Output Handlers
 # ------------------------------------------------------------------------------
 # Creates the physical output boundary natively handling file mapping hierarchies dynamically
-dir.create("results_raw", showWarnings = FALSE)
+out_dir <- sprintf("results_raw/p%d", p)
+dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 
 # Generate a cohesive list object encapsulating simulation parameters explicitly
 output_object <- list(
@@ -269,7 +274,7 @@ output_object <- list(
     )
 )
 
-final_path <- sprintf("results_raw/sim_id%d_sep%d_pval%s.rds", job_id, separation, format(pval, nsmall = 3))
+final_path <- sprintf("%s/sim_id%d_sep%d_pval%s.rds", out_dir, job_id, separation, format(pval, nsmall = 3))
 
 # Flush binary sequence saving object explicitly tracking for remote extraction mapping
 saveRDS(output_object, file = final_path)

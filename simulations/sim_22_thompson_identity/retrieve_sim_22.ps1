@@ -12,6 +12,6 @@ Write-Host "Retrieving scheduled simulation results back from HPC..." -Foregroun
 # Prepare local repository struct internally to absorb outputs natively
 mkdir.exe -p "${LocalDir}\results_raw" -ErrorAction SilentlyContinue
 
-scp -r "${Username}@${Hostname}:${RemoteDir}/*.rds" "${LocalDir}\results_raw\"
+scp -r "${Username}@${Hostname}:${RemoteDir}/*" "${LocalDir}\results_raw\"
 
 Write-Host "Sync process complete. You can now execute aggregate_sim_22.R globally." -ForegroundColor Green

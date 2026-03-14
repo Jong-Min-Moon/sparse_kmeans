@@ -163,7 +163,7 @@ block_coordinate_optim_warmstart_tvs <- function(X, K,
         X_tilde_sub <- X_tilde[S_hat_tvs, , drop = FALSE]
 
         # Reward calculation: standard Greedy Screening (as implemented in TVS)
-        rewards_sub <- selection_block_greedy_screening(X_tilde_sub, cluster_est_now, fdr_level = NULL, n_perms = 10000, p_val_threshold = p_val_threshold)
+        rewards_sub <- select_greedily(X_tilde_sub, cluster_est_now, fdr_level = NULL, n_perms = 10000, p_val_threshold = p_val_threshold)
 
         # 2. Update Step
         alpha_vec[S_hat_tvs] <- alpha_vec[S_hat_tvs] + as.numeric(rewards_sub)
