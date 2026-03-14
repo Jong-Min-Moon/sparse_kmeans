@@ -6,9 +6,10 @@
 #' @param cluster_est Current cluster assignments (vector of length n)
 #' @param fdr_level False Discovery Rate level (default 0.4)
 #' @param n_perms Number of permutations for the test (default 10000)
+#' @param normalize Logical. Whether to normalize the data (default TRUE)
 #' @param ... Additional arguments (ignored, but allowed for compatibility)
 #' @return Logical vector of selected features (length p)
-select_greedily <- function(X_tilde, cluster_est, fdr_level = 0.4, n_perms = 10000, p_val_threshold = 0.01, ...) {
+select_greedily <- function(X_tilde, cluster_est, fdr_level = 0.4, n_perms = 10000, p_val_threshold = 0.01, normalize = TRUE, ...) {
   p <- nrow(X_tilde)
   n <- ncol(X_tilde)
 
@@ -35,6 +36,19 @@ select_greedily <- function(X_tilde, cluster_est, fdr_level = 0.4, n_perms = 100
   }
 
   # 1. Observed Statistic
+  if (normalize) {
+    cat("featurewise minmax scaling...\n")
+    X_tilde <- t(X_tilde)
+    mins <- matrixStats::colMins(X_tilde)
+    maxs <- matrixStats::colMaxs(X_tilde)
+    ranges <- maxs - mins
+
+    # Avoid division by zero
+    ranges[ranges == 0] <- 1
+
+    X_tilde <- scale(X_tilde, center = mins, scale = ranges)
+    X_tilde <- t(X_tilde)
+  }
   cat("Calculating observed statistics...\n")
   obs_stat <- calc_diff_means(X_tilde, cluster_est)
 
