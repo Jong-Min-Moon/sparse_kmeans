@@ -149,7 +149,7 @@ cluster_thompson <- function(X, K, n_iter = 500, C = 0.5, n_perms = 1000, p_val_
     # The selection block simulates the null hypothesis (features do not drive the clustering)
     # by permuting the cluster labels and measuring test statistic differentials.
     # Output is a logical vector of accepted features (TRUE = Good discriminator).
-    rewards_sub <- select_greedily(
+    rewards_sub <- reward_thompson(
       X_tilde_sub,
       cluster_est_now,
       fdr_level = NULL, # do not use FDR control, to ensure independence across feature indices
