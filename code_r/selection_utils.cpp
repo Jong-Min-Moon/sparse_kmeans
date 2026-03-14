@@ -32,14 +32,15 @@ inline double safe_log_abs(double x) {
 //' @param n_perms Number of permutations
 //' @return Vector of counts (length p) where perm_stat >= obs_stat
 // [[Rcpp::export]]
-IntegerVector fast_perm_test_cpp(NumericMatrix X, NumericVector obs_stat,
+List fast_perm_test_cpp(NumericMatrix X, NumericVector obs_stat,
                                  IntegerVector indicator, double factor1,
-                                 NumericVector factor2, int n_perms) {
+                                 NumericVector factor2, int n_perms, double p_val_threshold) {
   int p = X.nrow();
   int n = X.ncol();
 
   // Result counts initialized to zero
-  IntegerVector global_counts(p, 0);
+  std::vector<int> global_counts(p, 0);
+  std::vector<std::vector<double>> all_perm_stats(p, std::vector<double>(n_perms));
 
 #ifdef _OPENMP
 #pragma omp parallel
@@ -73,6 +74,7 @@ IntegerVector fast_perm_test_cpp(NumericMatrix X, NumericVector obs_stat,
 
         // 3. Compute stat: |Sum1 * (1/n1 + 1/n2) - Sum_total/n2|
         double perm_stat = std::abs(sum1 * factor1 - factor2[i]);
+        all_perm_stats[i][b] = perm_stat;
 
         double log_perm = safe_log_abs(perm_stat);
         double log_obs = safe_log_abs(obs_stat[i]);
@@ -107,6 +109,7 @@ IntegerVector fast_perm_test_cpp(NumericMatrix X, NumericVector obs_stat,
           sum1 += X(i, j);
       }
       double perm_stat = std::abs(sum1 * factor1 - factor2[i]);
+      all_perm_stats[i][b] = perm_stat;
       double log_perm = safe_log_abs(perm_stat);
       double log_obs = safe_log_abs(obs_stat[i]);
       if (log_perm >= log_obs)
@@ -115,7 +118,26 @@ IntegerVector fast_perm_test_cpp(NumericMatrix X, NumericVector obs_stat,
   }
 #endif
 
-  return global_counts;
+  NumericVector p_values(p);
+  NumericVector percentile_values(p);
+
+  double q = 1.0 - p_val_threshold;
+  int k = static_cast<int>(std::ceil(q * n_perms)) - 1;
+  k = std::max(0, std::min(k, n_perms - 1));
+
+  for (int i = 0; i < p; ++i) {
+    p_values[i] = (global_counts[i] + 1.0) / (n_perms + 1.0);
+    
+    std::nth_element(
+        all_perm_stats[i].begin(),
+        all_perm_stats[i].begin() + k,
+        all_perm_stats[i].end()
+    );
+    percentile_values[i] = all_perm_stats[i][k];
+  }
+
+  return List::create(Named("p_value") = p_values,
+                      Named("percentile_value") = percentile_values);
 }
 
 // [[Rcpp::export]]
@@ -269,14 +291,16 @@ extern "C" SEXP count_matrix_exceedances_wrapper(SEXP statsSEXP,
 
 extern "C" SEXP fast_perm_test_wrapper(SEXP XSEXP, SEXP obs_statSEXP,
                                        SEXP indicatorSEXP, SEXP factor1SEXP,
-                                       SEXP factor2SEXP, SEXP n_permsSEXP) {
+                                       SEXP factor2SEXP, SEXP n_permsSEXP,
+                                       SEXP p_val_thresholdSEXP) {
   NumericMatrix X(XSEXP);
   NumericVector obs_stat(obs_statSEXP);
   IntegerVector indicator(indicatorSEXP);
   double factor1 = as<double>(factor1SEXP);
   NumericVector factor2(factor2SEXP);
   int n_perms = as<int>(n_permsSEXP);
+  double p_val_threshold = as<double>(p_val_thresholdSEXP);
 
   return Rcpp::wrap(
-      fast_perm_test_cpp(X, obs_stat, indicator, factor1, factor2, n_perms));
+      fast_perm_test_cpp(X, obs_stat, indicator, factor1, factor2, n_perms, p_val_threshold));
 }

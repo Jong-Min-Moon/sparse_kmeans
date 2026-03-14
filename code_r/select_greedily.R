@@ -94,28 +94,34 @@ select_greedily <- function(X_tilde, cluster_est, fdr_level = 0.4, n_perms = 100
 
   base_indicator <- as.integer(c(rep(1, n_g1), rep(0, n_g2)))
 
-  # Call C++: returns vector of counts (length p)
+  # Call C++: returns list with p_value and percentile_value
   use_cpp <- !is.null(lib_path) && length(lib_path) == 1 && nzchar(lib_path) && file.exists(lib_path)
 
   if (use_cpp) {
-    counts <- .Call(
+    res <- .Call(
       "fast_perm_test_wrapper",
       as.matrix(X_tilde),
       as.numeric(obs_stat),
       base_indicator,
       as.numeric(factor1),
       as.numeric(factor2),
-      as.integer(n_perms)
+      as.integer(n_perms),
+      as.numeric(p_val_threshold)
     )
+    p_values <- res$p_value
+    percentile_val <- res$percentile_value
   } else {
     # Re-implementing original R logic as fallback
     M <- replicate(n_perms, sample(base_indicator))
     sum1_perms <- X_tilde %*% M
     perm_stats <- abs(sum1_perms * factor1 - factor2)
     counts <- rowSums(perm_stats >= obs_stat)
+    p_values <- (counts + 1) / (n_perms + 1)
+    
+    q <- 1.0 - p_val_threshold
+    k <- max(1, min(ceiling(q * n_perms), n_perms))
+    percentile_val <- apply(perm_stats, 1, function(x) sort(x, partial = k)[k])
   }
-
-  p_values <- (counts + 1) / (n_perms + 1)
 
   # 4. BH Adjustment
   adj_p_values <- p.adjust(p_values, method = "BH")
@@ -131,12 +137,11 @@ select_greedily <- function(X_tilde, cluster_est, fdr_level = 0.4, n_perms = 100
     ))
   } else {
     # Raw P-value Threshold (matching user preference)
-    p_val_thresh <- if (exists("p_val_threshold")) p_val_threshold else 0.01
-    selected <- p_values <= p_val_thresh
+    selected <- p_values <= p_val_threshold
     n_selected <- sum(selected)
     cat(sprintf(
       "%d entries survived (P-val < %.4f) | Min raw-p: %.4e | P-val method: Permutation (%d)\n",
-      n_selected, p_val_thresh, min(p_values), n_perms
+      n_selected, p_val_threshold, min(p_values), n_perms
     ))
   }
 
