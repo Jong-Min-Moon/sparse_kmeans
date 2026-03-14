@@ -40,12 +40,7 @@ ssh "${Username}@${Hostname}" $prepCmd
 Write-Host "Compiling C++ source files on the HPC..." -ForegroundColor Cyan
 # Ensure we load a valid compiler/R module before running R CMD SHLIB.
 # Assuming standard HPC module setup (e.g. gcc and R)
-$compileCmd = @"
-module purge
-module load gcc/11.3.0 R/4.2.2 2>/dev/null || true # Fallbacks if exact module names differ
-cd ${RemoteBase}/code_r
-R CMD SHLIB selection_utils.cpp -o selection_utils.so
-"@
+$compileCmd = "module purge; module load gcc rstats/4.5.1 || module load rstats; cd ${RemoteBase}/code_r && R CMD SHLIB selection_utils.cpp -o selection_utils.so"
 ssh "${Username}@${Hostname}" $compileCmd
 
 Write-Host "Compilation complete. Shared object selection_utils.so should be ready." -ForegroundColor Green

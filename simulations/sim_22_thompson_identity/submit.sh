@@ -18,4 +18,4 @@ mkdir -p results_raw/p$P
 
 # Run Driver mapped to exported variables
 # Pass the SEPARATION explicitly if provided, otherwise default args inside
-Rscript driver.R --job_id $SLURM_ARRAY_TASK_ID --sep $SEP --p $P
+Rscript driver.R --job_id $SLURM_ARRAY_TASK_ID --sep $SEP --p $P --pval 0.5

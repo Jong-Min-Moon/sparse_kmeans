@@ -84,7 +84,7 @@ if (length(args) > 0) {
 # Source the core algorithmic implementations from the repository architecture
 source("../../code_r/data_generator.R")
 source("../../code_r/cluster_thompson.R")
-source("../../code_r/selection_block_greedy_screening.R")
+source("../../code_r/select_greedily.R")
 source("../../code_r/clustering_block_knowncov.R")
 source("../../code_r/sdp_kmeans.R")
 source("../../code_r/utils.R")
