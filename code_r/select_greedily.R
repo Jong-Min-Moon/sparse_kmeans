@@ -4,7 +4,7 @@
 #'
 #' @param X_tilde Data matrix (p x n)
 #' @param cluster_est Current cluster assignments (vector of length n)
-#' @param fdr_level False Discovery Rate level for BH procedure (default 0.4)
+#' @param fdr_level False Discovery Rate level (default 0.4)
 #' @param n_perms Number of permutations for the test (default 10000)
 #' @param ... Additional arguments (ignored, but allowed for compatibility)
 #' @return Logical vector of selected features (length p)
@@ -85,8 +85,13 @@ select_greedily <- function(X_tilde, cluster_est, fdr_level = 0.4, n_perms = 100
 
   if (use_cpp) {
     counts <- .Call(
-      "fast_perm_test_wrapper", as.matrix(X_tilde), as.numeric(obs_stat),
-      base_indicator, as.numeric(factor1), as.numeric(factor2), as.integer(n_perms)
+      "fast_perm_test_wrapper",
+      as.matrix(X_tilde),
+      as.numeric(obs_stat),
+      base_indicator,
+      as.numeric(factor1),
+      as.numeric(factor2),
+      as.integer(n_perms)
     )
   } else {
     # Re-implementing original R logic as fallback

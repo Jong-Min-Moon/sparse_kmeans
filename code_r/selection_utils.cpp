@@ -10,6 +10,16 @@
 
 using namespace Rcpp;
 
+#include <cmath>
+#include <limits>
+
+inline double safe_log_abs(double x) {
+    double ax = std::abs(x);
+    if (ax == 0.0)
+        return -std::numeric_limits<double>::infinity();
+    return std::log(ax);
+}
+
 // [[Rcpp::plugins(openmp)]]
 
 //' High-performance permutation test for greedy screening
@@ -64,7 +74,10 @@ IntegerVector fast_perm_test_cpp(NumericMatrix X, NumericVector obs_stat,
         // 3. Compute stat: |Sum1 * (1/n1 + 1/n2) - Sum_total/n2|
         double perm_stat = std::abs(sum1 * factor1 - factor2[i]);
 
-        if (perm_stat >= obs_stat[i]) {
+        double log_perm = safe_log_abs(perm_stat);
+        double log_obs = safe_log_abs(obs_stat[i]);
+
+        if (log_perm >= log_obs) {
           local_counts[i] += 1;
         }
       }
@@ -94,7 +107,9 @@ IntegerVector fast_perm_test_cpp(NumericMatrix X, NumericVector obs_stat,
           sum1 += X(i, j);
       }
       double perm_stat = std::abs(sum1 * factor1 - factor2[i]);
-      if (perm_stat >= obs_stat[i])
+      double log_perm = safe_log_abs(perm_stat);
+      double log_obs = safe_log_abs(obs_stat[i]);
+      if (log_perm >= log_obs)
         global_counts[i] += 1;
     }
   }
