@@ -9,7 +9,7 @@ param(
     [string]$Hostname = "discovery.usc.edu",
     [string]$RemoteBase = "~/sparse_kmeans_project",
     [double[]]$Separations = @(4),
-    [int[]]$Dimensions = @(5500, 6000, 6500, 7000, 7500, 8000, 8500, 9000, 9500, 10000)
+    [int[]]$Dimensions = @(5000, 7000, 10000)
 )
 
 $ErrorActionPreference = "Stop"
@@ -26,15 +26,31 @@ ssh "${Username}@${Hostname}" "mkdir -p ${RemoteBase}/simulations/sim_22_thompso
 Write-Host "Transferring simulation files..." -ForegroundColor Cyan
 scp "${SimDir}\driver.R" "${SimDir}\submit.sh" "${Username}@${Hostname}:${RemoteBase}/simulations/sim_22_thompson_identity/"
 
-# 3. Transfer Library Files
+# 3. Transfer Library Files and C++ source
 Write-Host "Transferring library dependencies natively..." -ForegroundColor Cyan
 scp "${CodeDir}\*.R" "${Username}@${Hostname}:${RemoteBase}/code_r/"
+scp "${CodeDir}\*.cpp" "${Username}@${Hostname}:${RemoteBase}/code_r/"
 
 # 4. Clean up, convert line endings recursively, and Submit
 Write-Host "Preparing HPC environment..." -ForegroundColor Cyan
 $prepCmd = "cd ${RemoteBase}/simulations/sim_22_thompson_identity && rm -rf logs results_raw results_aggregated *.out *.err && mkdir -p logs results_raw results_aggregated && dos2unix *.sh *.R 2>/dev/null && chmod +x *.sh"
 ssh "${Username}@${Hostname}" $prepCmd
 
+# 5. Compile C++/Rcpp dependencies on the HPC
+Write-Host "Compiling C++ source files on the HPC..." -ForegroundColor Cyan
+# Ensure we load a valid compiler/R module before running R CMD SHLIB.
+# Assuming standard HPC module setup (e.g. gcc and R)
+$compileCmd = @"
+module purge
+module load gcc/11.3.0 R/4.2.2 2>/dev/null || true # Fallbacks if exact module names differ
+cd ${RemoteBase}/code_r
+R CMD SHLIB selection_utils.cpp -o selection_utils.so
+"@
+ssh "${Username}@${Hostname}" $compileCmd
+
+Write-Host "Compilation complete. Shared object selection_utils.so should be ready." -ForegroundColor Green
+
+# 6. Submit simulation array jobs to the Slurm scheduler
 Write-Host "Submitting simulation array jobs to the Slurm scheduler..." -ForegroundColor Cyan
 $submittedJobs = @()
 
@@ -55,7 +71,8 @@ foreach ($sep in $Separations) {
             $output = ssh "${Username}@${Hostname}" $sbatchCmd 2>&1
             if ($LASTEXITCODE -eq 0 -and $output -match "Submitted batch job (\d+)") {
                 $success = $true
-            } else {
+            }
+            else {
                 $attempt++
                 if ($attempt -lt $maxRetries) {
                     Write-Host "SSH timeout or cluster rate limit hit. Retrying $attempt/$maxRetries in $retryWait seconds..." -ForegroundColor Yellow

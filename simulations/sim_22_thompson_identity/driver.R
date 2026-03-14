@@ -164,7 +164,7 @@ for (c_val in c_values) {
                 K = K,
                 n_iter = thompson_step,
                 C = c_val,
-                n_perms = 1000,
+                n_perms = 5000,
                 p_val_threshold = pval,
                 n_step_admm = n_step_admm,
                 covariance = NULL,
