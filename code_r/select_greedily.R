@@ -117,7 +117,7 @@ select_greedily <- function(X_tilde, cluster_est, fdr_level = 0.4, n_perms = 100
     perm_stats <- abs(sum1_perms * factor1 - factor2)
     counts <- rowSums(perm_stats >= obs_stat)
     p_values <- (counts + 1) / (n_perms + 1)
-    
+
     q <- 1.0 - p_val_threshold
     k <- max(1, min(ceiling(q * n_perms), n_perms))
     percentile_val <- apply(perm_stats, 1, function(x) sort(x, partial = k)[k])
@@ -140,8 +140,8 @@ select_greedily <- function(X_tilde, cluster_est, fdr_level = 0.4, n_perms = 100
     selected <- p_values <= p_val_threshold
     n_selected <- sum(selected)
     cat(sprintf(
-      "%d entries survived (P-val < %.4f) | Min raw-p: %.4e | P-val method: Permutation (%d)\n",
-      n_selected, p_val_threshold, min(p_values), n_perms
+      "%d entries survived (P-val < %.4f) | Min raw-p: %.4e | Min percentile: %.5e| P-val method: Permutation (%d)\n",
+      n_selected, p_val_threshold, min(p_values), min(percentile_val), n_perms
     ))
   }
 
