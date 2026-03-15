@@ -90,6 +90,7 @@ source("../../code_r/sdp_kmeans.R")
 source("../../code_r/utils.R")
 source("../../code_r/ESSC.R")
 source("../../code_r/get_cluster_acc.R")
+source("../../code_r/reward_thompson.R")
 
 # ------------------------------------------------------------------------------
 # 4. Global Simulation Parameters Configuration
@@ -153,7 +154,7 @@ best_res <- NULL
 best_sil <- -Inf
 best_C <- NA
 
-c_values <- c(0.3, 0.4, 0.5)
+c_values <- c(0.5, 0.4, 0.3)
 
 for (c_val in c_values) {
     cat(sprintf("\n--- Evaluating C = %.1f ---\n", c_val))
