@@ -11,7 +11,7 @@ source("../../code_r/sdp_kmeans.R")
 source("../../code_r/utils.R")
 source("../../code_r/selection_block_greedy_screening.R")
 source("../../code_r/clustering_block_knowncov.R")
-source("../../code_r/block_coordinate_optim_greedy.R")
+source("../../code_r/cluster_greedy.R")
 
 # Use parallel threads for the solver (matching --cpus-per-task=4)
 Sys.setenv(OMP_NUM_THREADS = 4)
@@ -62,7 +62,7 @@ true_labels <- c(rep(1, n1), rep(2, n2))
 
 # Run Algorithm
 t_start <- Sys.time()
-res <- block_coordinate_optim_greedy(X, K, n_iter = 100, stable_iter = 10, fdr_level = 0.4)
+res <- cluster_greedy(X, K, n_iter = 100, stable_iter = 10, fdr_level = 0.4)
 t_end <- Sys.time()
 runtime <- as.numeric(difftime(t_end, t_start, units = "secs"))
 

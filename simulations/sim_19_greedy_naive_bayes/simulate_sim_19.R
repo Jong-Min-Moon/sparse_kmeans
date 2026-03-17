@@ -51,7 +51,7 @@ current_dir <- getwd()
 relative_path_prefix <- "../../code_r/"
 
 source(paste0(relative_path_prefix, "data_generator.R"))
-source(paste0(relative_path_prefix, "block_coordinate_optim_greedy.R"))
+source(paste0(relative_path_prefix, "cluster_greedy.R"))
 source(paste0(relative_path_prefix, "selection_block_greedy_screening.R"))
 source(paste0(relative_path_prefix, "clustering_block_knowncov.R"))
 source(paste0(relative_path_prefix, "sdp_kmeans.R"))
@@ -94,7 +94,7 @@ start_time <- Sys.time()
 res <- tryCatch(
     {
         # Provide `true_labels` explicitly to trace accuracy each iteration
-        block_coordinate_optim_greedy(
+        cluster_greedy(
             X_tilde = X,
             K = K,
             n_iter = n_iter_greedy,

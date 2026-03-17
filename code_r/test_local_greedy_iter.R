@@ -7,7 +7,7 @@ source("code_r/sdp_kmeans.R")
 source("code_r/utils.R")
 source("code_r/select_greedily.R")
 source("code_r/clustering_block_knowncov.R")
-source("code_r/block_coordinate_optim_greedy.R")
+source("code_r/cluster_greedy.R")
 
 # 1. Setup Data
 set.seed(42)
@@ -30,7 +30,7 @@ X[1:s, true_labels == 2] <- X[1:s, true_labels == 2] - delta
 cat("\n--- Running 1 Iteration of Greedy Optimizer locally ---\n")
 # Using n_iter=1 to stop after first loop
 # stable_iter is large so it doesn't stop prematurely by stability logic
-res <- block_coordinate_optim_greedy(X, K, n_iter = 1, stable_iter = 100, fdr_level = 0.4)
+res <- cluster_greedy(X, K, n_iter = 1, stable_iter = 100, fdr_level = 0.4)
 
 cat("\n--- Finished 1 Iteration ---\n")
 cat(sprintf("Iterations run: %d\n", res$iter))
