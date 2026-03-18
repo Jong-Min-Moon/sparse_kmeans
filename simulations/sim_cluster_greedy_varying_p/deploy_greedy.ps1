@@ -8,7 +8,7 @@ param(
     [string]$Username = "jongminm",
     [string]$Hostname = "discovery.usc.edu",
     [string]$RemoteBase = "~/sparse_kmeans_project",
-    [int[]]$Dimensions = @(5000, 6000, 7000, 8000, 9000),
+    [int[]]$Dimensions = @(9000, 10000),
     [double]$FDR = 0.4
 )
 
