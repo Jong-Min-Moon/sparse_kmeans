@@ -108,6 +108,7 @@ cluster_greedy <- function(X_tilde, K, n_iter = 100, stable_iter = 10, fdr_level
 
   return(list(
     cluster = cluster_est_now,
+    selected = selected_features,
     iter = iternum,
     rand_vec = rand_vec,
     time = total_time
