@@ -29,7 +29,6 @@
         width=4.4cm,
         height=4.4cm,
         grid=major,
-        xlabel={Dimension ($p$)},
         ylabel={Clustering Accuracy},
         % font=\scriptsize, % This key is invalid in this context
         tick label style={font=\scriptsize},
@@ -53,12 +52,17 @@
             {colorSdp, dashed, mark=triangle, mark options={solid}, thick}
         },
         ymin=0.46, ymax=1,
-        xmin=-250, xmax=5250,
         xmin=-250, xmax=5250
     ]
 
     % --- Plot 1: Iterative vs Non-iterative ---
-    \nextgroupplot[title={Known covariance\\(a) Initialization}]
+    \nextgroupplot[
+        title={Known covariance\\(a) Initialization},
+        xlabel={Dimension ($p / 10^3$)},
+        scaled x ticks=false,
+        xtick={1000, 2000, 3000, 4000, 5000},
+        xticklabels={1, 2,3,4, 5}
+    ]
         % Spec
         \addplot+[color=colorSpec, solid, ultra thick] table [x=dim, y=spec, col sep=comma] {simul_result/iso_sep4_extended.csv};
         \label{p1:spec}
@@ -80,30 +84,37 @@
         \label{p1:sdp_non}
 
     % --- Plot 2: SDP vs Competitors ---
-    \nextgroupplot[title={Known covariance\\(b) Comparison}]
+    \nextgroupplot[
+        title={Known covariance\\(b) Comparison}, 
+        xmax=16250,
+        xlabel={Dimension ($p / 10^3$)},
+        scaled x ticks=false,
+        xtick={2000, 4000, 6000, 8000, 10000, 12000, 14000, 16000},
+        xticklabels={2, 4, 6, 8, 10, 12, 14, 16}
+    ]
         % SDP (Reference) - Redundant label if we reuse p1:sdp logic in legend, or new label?
         % We'll plot it but might not need a new label if we use the generic one, but let's label it just in case.
-        \addplot+[color=colorSpec, solid, ultra thick] table [x=dim, y=spec, col sep=comma] {simul_result/iso_sep4_extended.csv};
+        \addplot+[color=colorSpec, solid, ultra thick] table [x=dim, y=spec, col sep=comma] {simul_result/iso_sep4_TVS.csv};
         
   
         % Competitors
-        \addplot+[color=colorArias, solid, mark=diamond*] table [x=dim, y=arias, col sep=comma] {simul_result/iso_sep4_extended.csv};
+        \addplot+[color=colorArias, solid, mark=diamond*] table [x=dim, y=arias, col sep=comma] {simul_result/iso_sep4_TVS.csv};
         \label{p2:arias}
 
-        \addplot+[color=colorIfpca, solid, mark=pentagon*] table [x=dim, y=ifpca, col sep=comma] {simul_result/iso_sep4_extended.csv};
+        \addplot+[color=colorIfpca, solid, mark=pentagon*] table [x=dim, y=ifpca, col sep=comma] {simul_result/iso_sep4_TVS.csv};
         \label{p2:ifpca}
 
-        \addplot+[color=colorWitten, solid, mark=star] table [x=dim, y=witten, col sep=comma] {simul_result/iso_sep4_extended.csv};
+        \addplot+[color=colorWitten, solid, mark=star] table [x=dim, y=witten, col sep=comma] {simul_result/iso_sep4_TVS.csv};
         \label{p2:witten}
 
-        \addplot+[color=colorChime, solid, mark=oplus*] table [x=dim, y=chime, col sep=comma] {simul_result/iso_sep4_extended.csv};
+        \addplot+[color=colorChime, solid, mark=oplus*] table [x=dim, y=chime, col sep=comma] {simul_result/iso_sep4_TVS.csv};
         \label{p2:chime}
 
-        \addplot+[color=colorTvs, solid, ultra thick, mark=x, mark size=2pt] table [x=dim, y=tvs, col sep=comma] {simul_result/iso_sep4_extended.csv};
+        \addplot+[color=colorTvs, solid, ultra thick, mark=x, mark size=2pt] table [x=dim, y=tvs, col sep=comma] {simul_result/iso_sep4_TVS.csv};
         \label{p2:tvs}
 
     % --- Plot 3: Non-isotropic Rho=0.2 ---
-    \nextgroupplot[title={Unknown covariance\\(c)  $\rho=0.2$}, xmin=25, xmax=425]
+    \nextgroupplot[title={Unknown covariance\\(c)  $\rho=0.2$}, xmin=25, xmax=425, xlabel={Dimension ($p$)}]
         % Main Method (ISEE/SDP equivalent)
         \addplot+[color=colorSpec, solid, ultra thick] table [x=dim, y=rho20_isee_dirty, col sep=comma] {simul_result/noniso_sep3.csv};
         %\label{p3:isee} % Reusing label/color from SDP? Or new label? Let's use SDP color.
@@ -116,7 +127,7 @@
         \addplot+[color=colorChime, solid, mark=oplus*] table [x=dim, y=rho20_chime, col sep=comma] {simul_result/noniso_sep3.csv};
 
     % --- Plot 4: Non-isotropic Rho=0.45 ---
-    \nextgroupplot[title={Unknown covariance\\(d)  $\rho=0.45$}, xmin=25, xmax=425]
+    \nextgroupplot[title={Unknown covariance\\(d)  $\rho=0.45$}, xmin=25, xmax=425, xlabel={Dimension ($p$)}]
         % Main Method
         \addplot+[color=colorSpec, solid, ultra thick] table [x=dim, y=rho45_isee_dirty, col sep=comma] {simul_result/noniso_sep3.csv};
         
@@ -142,8 +153,8 @@
                 column sep={2pt},
                 row sep=0pt
             ] {
-                \ref{p1:spec_non} (1) Spectral clustering & \ref{p1:spec} Greedy algorithm initialized by (1)  &
-                \ref{p2:tvs} TVS algorithm
+                \ref{p1:spec_non} (1) Spectral clustering & \ref{p1:spec} \underline{Greedy algorithm initialized by (1)}  &
+                \ref{p2:tvs} \underline{TVS algorithm}
                 &
                 \ref{p2:arias} SAS 
                 \\ 
