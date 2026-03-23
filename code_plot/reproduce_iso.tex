@@ -20,14 +20,14 @@
     % Define the group plot
     \begin{groupplot}[
         group style={
-            group size=4 by 1,
-            horizontal sep=0.3cm,
+            group size=3 by 1,
+            horizontal sep=1cm,
             vertical sep=1.5cm,
             x descriptions at=edge bottom,
             y descriptions at=edge left,
         },
-        width=4.4cm,
-        height=4.4cm,
+        width=5cm,
+        height=5cm,
         grid=major,
         ylabel={Clustering Accuracy},
         % font=\scriptsize, % This key is invalid in this context
@@ -57,11 +57,13 @@
 
     % --- Plot 1: Iterative vs Non-iterative ---
     \nextgroupplot[
-        title={Known covariance\\(a) Initialization},
+        title={Gaussian noise\\(a) Initialization},
         xlabel={Dimension ($p / 10^3$)},
         scaled x ticks=false,
         xtick={1000, 2000, 3000, 4000, 5000},
-        xticklabels={1, 2,3,4, 5}
+        xticklabels={1, 2,3,4, 5},
+        ytick={0.5, 0.6, 0.7, 0.8, 0.9, 1.0},
+        yticklabels={0.5, 0.6, 0.7, 0.8, 0.9, 1.0}
     ]
         % Spec
         \addplot+[color=colorSpec, solid, ultra thick] table [x=dim, y=spec, col sep=comma] {simul_result/iso_sep4_extended.csv};
@@ -85,12 +87,14 @@
 
     % --- Plot 2: SDP vs Competitors ---
     \nextgroupplot[
-        title={Known covariance\\(b) Comparison}, xmin = 750,
-        xmax=15250,
+        title={Gaussian noise\\(b) Comparison}, xmin = 750,
+        xmax=30250,
         xlabel={Dimension ($p / 10^3$)},
         scaled x ticks=false,
-        xtick={2000, 4000, 6000, 8000, 10000, 12000, 14000},
-        xticklabels={2, 4, 6, 8, 10, 12, 14}
+        xtick={5000, 10000, 15000, 20000, 25000, 30000},
+        xticklabels={5, 10, 15, 20, 25, 30},
+        ytick={0.5, 0.6, 0.7, 0.8, 0.9, 1.0},
+        yticklabels={0.5, 0.6, 0.7, 0.8, 0.9, 1.0}
     ]
         % SDP (Reference) - Redundant label if we reuse p1:sdp logic in legend, or new label?
         % We'll plot it but might not need a new label if we use the generic one, but let's label it just in case.
@@ -113,39 +117,21 @@
         \addplot+[color=colorTvs, solid, ultra thick, mark=x, mark size=2pt] table [x=dim, y=tvs, col sep=comma] {simul_result/iso_sep4_TVS.csv};
         \label{p2:tvs}
 
-    % --- Plot 3: Non-isotropic Rho=0.2 ---
-    \nextgroupplot[title={Unknown covariance\\(c)  $\rho=0.2$}, xmin=25, xmax=425, xlabel={Dimension ($p$)}]
-        % Main Method (ISEE/SDP equivalent)
-        \addplot+[color=colorSpec, solid, ultra thick] table [x=dim, y=rho20_isee_dirty, col sep=comma] {simul_result/noniso_sep3.csv};
-        %\label{p3:isee} % Reusing label/color from SDP? Or new label? Let's use SDP color.
-
-        % Competitors
-        % Competitors
-        \addplot+[color=colorArias, solid, mark=diamond*] table [x=dim, y=rho20_arias, col sep=comma] {simul_result/noniso_sep3.csv};
-        \addplot+[color=colorIfpca, solid, mark=pentagon*] table [x=dim, y=rho20_ifpca, col sep=comma] {simul_result/noniso_sep3.csv};
-        \addplot+[color=colorWitten, solid, mark=star] table [x=dim, y=rho20_witten, col sep=comma] {simul_result/noniso_sep3.csv};
-        \addplot+[color=colorChime, solid, mark=oplus*] table [x=dim, y=rho20_chime, col sep=comma] {simul_result/noniso_sep3.csv};
-
-    % --- Plot 4: Non-isotropic Rho=0.45 ---
-    \nextgroupplot[title={Unknown covariance\\(d)  $\rho=0.45$}, xmin=25, xmax=425, xlabel={Dimension ($p$)}]
-        % Main Method
-        \addplot+[color=colorSpec, solid, ultra thick] table [x=dim, y=rho45_isee_dirty, col sep=comma] {simul_result/noniso_sep3.csv};
-        
-        % Competitors
-        % Competitors
-        \addplot+[color=colorArias, solid, mark=diamond*] table [x=dim, y=rho45_arias, col sep=comma] {simul_result/noniso_sep3.csv};
-        \addplot+[color=colorIfpca, solid, mark=pentagon*] table [x=dim, y=rho45_ifpca, col sep=comma] {simul_result/noniso_sep3.csv};
-        \addplot+[color=colorWitten, solid, mark=star] table [x=dim, y=rho45_witten, col sep=comma] {simul_result/noniso_sep3.csv};
-        \addplot+[color=colorChime, solid, mark=oplus*] table [x=dim, y=rho45_chime, col sep=comma] {simul_result/noniso_sep3.csv};
-        % Glasso is present for 0.45 but not 0.20? Typically we show consistent sets. 
-        % Check file... rho45_glasso exists. rho20_glasso does NOT exist in columns (Step 217).
-        % Adding glasso for 0.45 only? Or skip to keep consistent? 
-        % I'll skip glasso to keep legend consistent unless requested.
+    % --- Plot 3: Placeholder ---
+    \nextgroupplot[title={t-distributed noise\\(c) Placeholder}, 
+        xmax=30250,
+xlabel={Dimension ($p / 10^3$)},
+scaled x ticks=false,
+xtick={5000, 10000, 15000, 20000, 25000, 30000},
+xticklabels={5, 10, 15, 20, 25, 30},
+ytick={0.5, 0.6, 0.7, 0.8, 0.9, 1.0},
+yticklabels={0.5, 0.6, 0.7, 0.8, 0.9, 1.0}
+    ]
 
     \end{groupplot}
 
     % --- Merged Global Legend ---
-    \node[anchor=north] at ($(group c1r1.south west)!0.5!(group c4r1.south east)$) [yshift=-1cm] {
+    \node[anchor=north] at ($(group c1r1.south west)!0.5!(group c3r1.south east)$) [yshift=-1cm] {
         \begin{tikzpicture}
             \matrix[
                 matrix of nodes,
