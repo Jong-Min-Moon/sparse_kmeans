@@ -79,23 +79,46 @@ get_specification_chaingraph <- function(support, separation, dimension, precisi
 #' @param specification Result from get_specification_chaingraph
 #' @param n Sample size
 #' @param seed Optional seed for reproducibility
+#' @param noise Type of noise, either "Gaussian" (default) or "t"
 #' @export
-generate_data_from_specification <- function(specification, n, seed = NULL) {
+generate_data_from_specification <- function(specification, n, seed = NULL, noise = "Gaussian") {
     if (!is.null(seed)) set.seed(seed)
+
+    if (!noise %in% c("Gaussian", "t")) {
+        stop("Unsupported noise type. Must be 'Gaussian' or 't'.")
+    }
 
     # Fast path for identity covariance (p >> n makes eigen() slow inside mvrnorm)
     if (specification$precision_sparsity == 0 && specification$rho == 0) {
         p <- specification$dimension
-        # Base gaussian noise N(0, 1)
-        Z1 <- matrix(rnorm(n / 2 * p), nrow = n / 2, ncol = p)
-        Z2 <- matrix(rnorm(n / 2 * p), nrow = n / 2, ncol = p)
+        if (noise == "Gaussian") {
+            # Base gaussian noise N(0, 1)
+            Z1 <- matrix(rnorm(n / 2 * p), nrow = n / 2, ncol = p)
+            Z2 <- matrix(rnorm(n / 2 * p), nrow = n / 2, ncol = p)
+        } else if (noise == "t") {
+            # Base t(6) noise
+            Z1 <- matrix(rt(n / 2 * p, df = 6), nrow = n / 2, ncol = p)
+            Z2 <- matrix(rt(n / 2 * p, df = 6), nrow = n / 2, ncol = p)
+        }
 
         # Shift by means
         X1 <- sweep(Z1, 2, specification$mu1, "+")
         X2 <- sweep(Z2, 2, specification$mu2, "+")
     } else {
-        X1 <- MASS::mvrnorm(n / 2, specification$mu1, specification$covariance_matrix)
-        X2 <- MASS::mvrnorm(n / 2, specification$mu2, specification$covariance_matrix)
+        if (noise == "Gaussian") {
+            X1 <- MASS::mvrnorm(n / 2, specification$mu1, specification$covariance_matrix)
+            X2 <- MASS::mvrnorm(n / 2, specification$mu2, specification$covariance_matrix)
+        } else if (noise == "t") {
+            p <- specification$dimension
+            Z1 <- matrix(rt(n / 2 * p, df = 6), nrow = n / 2, ncol = p)
+            Z2 <- matrix(rt(n / 2 * p, df = 6), nrow = n / 2, ncol = p)
+
+            eS <- eigen(specification$covariance_matrix, symmetric = TRUE)
+            ev <- pmax(eS$values, 0)
+
+            X1 <- sweep(Z1 %*% diag(sqrt(ev), p) %*% t(eS$vectors), 2, specification$mu1, "+")
+            X2 <- sweep(Z2 %*% diag(sqrt(ev), p) %*% t(eS$vectors), 2, specification$mu2, "+")
+        }
     }
 
     X <- t(rbind(X1, X2))
@@ -202,7 +225,7 @@ generate_erdos_renyi_data <- function(n, p, separation = NULL, s = 10) {
 #' @export
 get_specification_identity <- function(support, separation, dimension) {
     covariance_matrix <- diag(1, dimension)
-    
+
     # Calculate magnitude based on separation and identity covariance
     # For identity covariance, sum_Sigma_S0 is simply the size of the support
     sum_Sigma_S0 <- length(support)
@@ -219,7 +242,7 @@ get_specification_identity <- function(support, separation, dimension) {
     # The warning should be dynamic based on the separation parameter rather than fixed at 16.0
     # signal_strength should inherently equal separation^2
     expected_strength <- separation^2
-    
+
     if (abs(signal_strength - expected_strength) > 1e-5) {
         warning(sprintf("Signal strength deviates from %.5f. Computed value: %.5f", expected_strength, signal_strength))
     }
