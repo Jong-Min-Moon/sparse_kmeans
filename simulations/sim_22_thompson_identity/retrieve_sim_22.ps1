@@ -10,7 +10,7 @@ $RemoteDir = "${RemoteBase}/simulations/sim_22_thompson_identity/results_raw"
 Write-Host "Retrieving scheduled simulation results back from HPC..." -ForegroundColor Cyan
 
 # Prepare local repository struct internally to absorb outputs natively
-mkdir.exe -p "${LocalDir}\results_raw" -ErrorAction SilentlyContinue
+New-Item -ItemType Directory -Force -Path "${LocalDir}\results_raw" -ErrorAction SilentlyContinue | Out-Null
 
 scp -r "${Username}@${Hostname}:${RemoteDir}/*" "${LocalDir}\results_raw\"
 
