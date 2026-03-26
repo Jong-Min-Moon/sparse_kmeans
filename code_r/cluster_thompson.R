@@ -106,24 +106,21 @@ cluster_thompson <- function(X, K, n_iter = 500, C = 0.5, n_perms = 1000, p_val_
   cat("Running initial sampling from prior (Beta(1,1))...\n")
   # Expected result: Approx 50% of features selected if cutoff ~ 0.5
   theta_init <- rbeta(p, alpha_vec, beta_vec)
-  S_hat_now <- which(theta_init > cutoff)
+  S_hat_now <- theta_init > cutoff
 
   # Fallback: In high noise, the sampling might return an empty set.
   # We require at least some data to perform an initial naive cluster.
-  if (length(S_hat_now) == 0) {
+  if (sum(S_hat_now) == 0) {
     warning("Initialization selected 0 features. Forcing random selection of 10 features.")
-    S_hat_now <- sample(1:p, 10, replace = FALSE)
+    S_hat_now <- rep(FALSE, p)
+    S_hat_now[sample(1:p, 10, replace = FALSE)] <- TRUE
   }
 
-  cat(sprintf("Initial subset size: %d. Running initial clustering on subset...\n", length(S_hat_now)))
-
-  # Transform indexing list to a logical indicator vector for computational efficiency over matrices
-  current_selection_logical_init <- rep(FALSE, p)
-  current_selection_logical_init[S_hat_now] <- TRUE
+  cat(sprintf("Initial subset size: %d. Running initial clustering on subset...\n", sum(S_hat_now)))
 
   # Step 1.2: Obtain an initial coarse clustering using ADMM optimization over the SDP relaxation.
   # Rationale: We need initial labels (cluster_est_now) to evaluate whether features separate these labels well.
-  clustering_result_init <- run_clustering_block_knowncov(X_tilde, current_selection_logical_init, K, cluster_est_prev = numeric(n), covariance = covariance, max_iter = n_step_admm)
+  clustering_result_init <- run_clustering_block_knowncov(X_tilde, S_hat_now, K, cluster_est_prev = numeric(n), covariance = covariance, max_iter = n_step_admm)
   cluster_est_now <- clustering_result_init$cluster
 
 
@@ -164,13 +161,11 @@ cluster_thompson <- function(X, K, n_iter = 500, C = 0.5, n_perms = 1000, p_val_
     # Beta distribution naturally updates by adding successes to alpha and failures to beta.
     # Non-evaluated features remain at their current posterior distribution.
 
-    current_indices <- S_hat_now
-
     # Update alpha (successes) and beta (failures) based on logical reward outcomes
-    alpha_vec[current_indices] <- alpha_vec[current_indices] + as.numeric(rewards_sub)
-    beta_vec[current_indices] <- beta_vec[current_indices] + (1 - as.numeric(rewards_sub))
+    alpha_vec[S_hat_now] <- alpha_vec[S_hat_now] + as.numeric(rewards_sub)
+    beta_vec[S_hat_now] <- beta_vec[S_hat_now] + (1 - as.numeric(rewards_sub))
 
-    cat(sprintf("Rewarded arms: %d / %d selected in this subset\n", sum(rewards_sub), length(current_indices)))
+    cat(sprintf("Rewarded arms: %d / %d selected in this subset\n", sum(rewards_sub), sum(S_hat_now)))
 
     # Console Logging: Track the evolution of the strongest signals
     post_mean_temp <- alpha_vec / (alpha_vec + beta_vec)
@@ -181,7 +176,7 @@ cluster_thompson <- function(X, K, n_iter = 500, C = 0.5, n_perms = 1000, p_val_
 
     # Maintain historical log array mapping rewards to the global index scope (p)
     rewards_full <- rep(0, p)
-    rewards_full[current_indices] <- as.numeric(rewards_sub)
+    rewards_full[S_hat_now] <- as.numeric(rewards_sub)
     reward_history[[iternum]] <- rewards_full
 
     # -------------------------------------------------------
@@ -197,22 +192,20 @@ cluster_thompson <- function(X, K, n_iter = 500, C = 0.5, n_perms = 1000, p_val_
     theta_sample <- rbeta(p, alpha_vec, beta_vec)
 
     # Filter features where the sampled belief exceeds the theoretical confidence threshold
-    current_selection_logical <- theta_sample > cutoff
+    S_hat_next <- theta_sample > cutoff
+    n_selected <- sum(S_hat_next)
 
     # Convert to index list targeting the upcoming clustering iteration
-    S_hat_next <- which(current_selection_logical)
-    n_selected <- length(S_hat_next)
+    # <- which(current_selection_logical)
 
     cat(sprintf("Arms pulled (Features selected for next step): %d / %d\n", n_selected, p))
-    selected_history[[iternum]] <- current_selection_logical
+    selected_history[[iternum]] <- S_hat_next
 
     # Edge Case: Extreme variance or severe noise models may occasionally cull all features.
     # Revert to the last known stable state to prevent clustering failure matrices.
     if (n_selected == 0) {
       warning("No features selected. Keeping previous selection for clustering.")
       S_hat_next <- S_hat_now
-      current_selection_logical <- rep(FALSE, p)
-      current_selection_logical[S_hat_now] <- TRUE
     }
 
     # -------------------------------------------------------
@@ -223,7 +216,7 @@ cluster_thompson <- function(X, K, n_iter = 500, C = 0.5, n_perms = 1000, p_val_
     # SDP approaches are generally highly robust to non-convex local trap geometries typical in high dimensions.
 
     # Execute the clustering algorithm strictly over the active logical feature subset map
-    clustering_result <- run_clustering_block_knowncov(X_tilde, current_selection_logical, K, cluster_est_now, covariance = covariance, max_iter = n_step_admm)
+    clustering_result <- run_clustering_block_knowncov(X_tilde, S_hat_next, K, cluster_est_now, covariance = covariance, max_iter = n_step_admm)
 
     cluster_est_new <- clustering_result$cluster
     obj_val <- clustering_result$value
@@ -261,15 +254,13 @@ cluster_thompson <- function(X, K, n_iter = 500, C = 0.5, n_perms = 1000, p_val_
 
   # Apply identical decision theoretical threshold against the expected value.
   final_selection <- posterior_mean > cutoff
-  clustering_result <- run_clustering_block_knowncov(X_tilde, final_selection, K, cluster_est_now, covariance = covariance, max_iter = n_step_admm)
-  cluster_est_final <- clustering_result$cluster
   cat(sprintf("\n--- Final Selection ---\n"))
   cat(sprintf("Features selected: %d / %d\n", sum(final_selection), p))
 
   # Compile outputs mimicking standard statistical function return object formatting.
   out <- list(
-    cluster = cluster_est_final,
-    selected = final_selection,
+    cluster = cluster_est_now,
+    selected = S_hat_now,
     alpha = alpha_vec,
     beta = beta_vec,
     objective = obj_vec

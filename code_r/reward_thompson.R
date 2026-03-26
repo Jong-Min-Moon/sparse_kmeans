@@ -138,7 +138,7 @@ reward_thompson <- function(X_tilde, cluster_est, fdr_level = NULL, n_perms = 10
 
   # Fallback
   if (n_selected == 0) {
-    warning("No features selected by BH procedure. Selecting top 1 feature by p-value.")
+    warning("No features selected by permutation threshold. Selecting top 1 feature by p-value.")
     min_p_idx <- which.min(p_values)
     selected[min_p_idx] <- TRUE
   }
