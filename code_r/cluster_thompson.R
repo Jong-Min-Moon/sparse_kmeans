@@ -99,33 +99,32 @@ cluster_thompson <- function(X, K, n_iter = 500, C = 0.5, n_perms = 1000, p_val_
   }
 
   # =========================================================================
-  # BLOCK 1: WARM START / INITIALIZATION
+  # 0. INITIALIZATION
   # =========================================================================
 
   # Step 1.1: Draw an initial feature subset from the naive prior.
   cat("Running initial sampling from prior (Beta(1,1))...\n")
-  # Expected result: Approx 50% of features selected if cutoff ~ 0.5
   theta_init <- rbeta(p, alpha_vec, beta_vec)
   S_hat_now <- theta_init > cutoff
 
-  # Fallback: In high noise, the sampling might return an empty set.
+  # Fallback: If cutoff is too high, the sampling might return an empty set.
   # We require at least some data to perform an initial naive cluster.
   if (sum(S_hat_now) == 0) {
-    warning("Initialization selected 0 features. Forcing random selection of 10 features.")
+    warning("Initialization selected 0 variables. Forcing random selection of 10 variables.")
     S_hat_now <- rep(FALSE, p)
     S_hat_now[sample(1:p, 10, replace = FALSE)] <- TRUE
   }
 
-  cat(sprintf("Initial subset size: %d. Running initial clustering on subset...\n", sum(S_hat_now)))
+  cat(sprintf("Initial selected variables: %d. Running initial clustering on subset...\n", sum(S_hat_now)))
 
   # Step 1.2: Obtain an initial coarse clustering using ADMM optimization over the SDP relaxation.
-  # Rationale: We need initial labels (cluster_est_now) to evaluate whether features separate these labels well.
+  # Rationale: We need labels (cluster_est_now) to evaluate whether current variables are useful for clustering.
   clustering_result_init <- run_clustering_block_knowncov(X_tilde, S_hat_now, K, cluster_est_prev = numeric(n), covariance = covariance, max_iter = n_step_admm)
   cluster_est_now <- clustering_result_init$cluster
 
 
   # =========================================================================
-  # BLOCK 2: MAIN ALTERNATING OPTIMIZATION LOOP
+  # 1. MAIN ALTERNATING OPTIMIZATION LOOP
   # =========================================================================
   # Rationale: Iteratively refine both the feature selection and the cluster labels.
   # Fixing cluster labels -> Evaluate feature relevance -> Update subset -> Refine clustering labels on new subset.
@@ -133,10 +132,10 @@ cluster_thompson <- function(X, K, n_iter = 500, C = 0.5, n_perms = 1000, p_val_
     cat(sprintf("\n--- Iteration %d (Thompson Sampling) ---\n", iternum))
 
     # -------------------------------------------------------
-    # PHASE A: FEATURE REWARD EVALUATION (The "Bandit" Pull)
+    # PHASE A: FEATURE REWARD EVALUATION
     # -------------------------------------------------------
     # Rationale: We only evaluate features currently in our subset (S_hat_now).
-    # We apply a permutation test (Greedy Screening) to determine if a feature
+    # We apply a robust linear MMD permutation test (Schrab and Kim 2025, AISTATS) to determine if a feature
     # statistically distinguishes the *current* estimated clusters.
 
     # Isolate relevant subset of transformed data
@@ -149,7 +148,6 @@ cluster_thompson <- function(X, K, n_iter = 500, C = 0.5, n_perms = 1000, p_val_
     rewards_sub <- reward_thompson(
       X_tilde_sub,
       cluster_est_now,
-      fdr_level = NULL, # do not use FDR control, to ensure independence across feature indices
       n_perms = n_perms,
       p_val_threshold = p_val_threshold
     )

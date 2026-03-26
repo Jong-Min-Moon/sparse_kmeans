@@ -4,12 +4,12 @@
 #'
 #' @param X_tilde Data matrix (p x n)
 #' @param cluster_est Current cluster assignments (vector of length n)
-#' @param fdr_level False Discovery Rate level (default 0.4)
+#' @param n_corrupted Number of maximum corrupted samples that the test can tolerate (default 5)
 #' @param n_perms Number of permutations for the test (default 10000)
 #' @param normalize Logical. Whether to normalize the data (default TRUE)
 #' @param ... Additional arguments (ignored, but allowed for compatibility)
 #' @return Logical vector of selected features (length p)
-reward_thompson <- function(X_tilde, cluster_est, fdr_level = NULL, n_perms = 10000, p_val_threshold = 0.1, ...) {
+reward_thompson <- function(X_tilde, cluster_est, n_corrupted = 5, n_perms = 10000, p_val_threshold = 0.1, ...) {
   p <- nrow(X_tilde)
   n <- ncol(X_tilde)
 
@@ -17,7 +17,6 @@ reward_thompson <- function(X_tilde, cluster_est, fdr_level = NULL, n_perms = 10
   n_g2 <- n - n_g1
   min_n <- min(n_g1, n_g2)
   MMD_sensitivity <- 1 / min_n
-  r <- 5
   cat("MMD sensitivity: ", MMD_sensitivity, "\n")
   # Check for degenerate clusters
   if (min_n == 0) {
@@ -128,7 +127,7 @@ reward_thompson <- function(X_tilde, cluster_est, fdr_level = NULL, n_perms = 10
 
 
   # Raw P-value Threshold (matching user preference)
-  selected <- obs_stat >= (percentile_val + 2 * r * MMD_sensitivity)
+  selected <- obs_stat >= (percentile_val + 2 * n_corrupted * MMD_sensitivity)
   n_selected <- sum(selected)
   cat(sprintf(
     "%d entries survived (P-val < %.4f) | Min raw-p: %.4e | Min percentile: %.5e| P-val method: Permutation (%d)\n",
