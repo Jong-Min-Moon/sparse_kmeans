@@ -130,8 +130,8 @@ reward_thompson <- function(X_tilde, cluster_est, n_corrupted = 5, n_perms = 100
   selected <- obs_stat >= (percentile_val + 2 * n_corrupted * MMD_sensitivity)
   n_selected <- sum(selected)
   cat(sprintf(
-    "%d entries survived (P-val < %.4f) | Min raw-p: %.4e | Min percentile: %.5e| P-val method: Permutation (%d)\n",
-    n_selected, p_val_threshold, min(p_values), min(percentile_val), n_perms
+    "%d entries survived (P-val < %.4f) | Min raw-p: %.4e | Min percentile: %.5e| P-val method: Permutation (%d) | max corrupted allows: %d\n",
+    n_selected, p_val_threshold, min(p_values), min(percentile_val), n_perms, n_corrupted
   ))
 
 
