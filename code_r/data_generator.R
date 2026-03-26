@@ -96,6 +96,8 @@ generate_data_from_specification <- function(specification, n, seed = NULL, nois
             Z1 <- matrix(rnorm(n / 2 * p), nrow = n / 2, ncol = p)
             Z2 <- matrix(rnorm(n / 2 * p), nrow = n / 2, ncol = p)
         } else if (noise == "t") {
+            cat("t(6)-distributed noise scaled to unit variance...\n")
+
             # Base t(6) noise
             Z1 <- matrix(rt(n / 2 * p, df = 6), nrow = n / 2, ncol = p) / sqrt(1.5)
             Z2 <- matrix(rt(n / 2 * p, df = 6), nrow = n / 2, ncol = p) / sqrt(1.5)
