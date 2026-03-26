@@ -46,9 +46,7 @@ args <- commandArgs(trailingOnly = TRUE)
 
 # Default parameter configurations mapped natively if no arguments are provided.
 # job_id acts as the unique identifier and seed determinator for the replicate.
-job_id <- 1
 separation <- 4 # Targets the condition || mu* - (-mu*) ||^2 = 16 where 4^2 = 16
-pval <- 0.01
 n_step_admm <- 3000
 p <- 5000 # Default High-dimensional structural feature parameter
 thompson_step <- 2000
@@ -149,12 +147,11 @@ true_labels <- data_res$labels
 cat("Launching `cluster_thompson` evaluation sequence with grid search over C...\n")
 start_time <- Sys.time()
 
-best_res <- NULL
-best_sil <- -Inf
-best_C <- NA
-
 c_values <- c(0.5, 0.4, 0.3)
+results_list <- list()
+selected_list <- list()
 
+# 6a. Execute cluster_thompson for all C values
 for (c_val in c_values) {
     cat(sprintf("\n--- Evaluating C = %.1f ---\n", c_val))
     res_temp <- tryCatch(
@@ -177,19 +174,44 @@ for (c_val in c_values) {
         }
     )
 
+    results_list[[as.character(c_val)]] <- res_temp
     if (!is.null(res_temp)) {
-        selected_indices <- which(res_temp$selected)
-        n_sel <- length(selected_indices)
+        selected_list[[as.character(c_val)]] <- res_temp$selected
+    }
+}
 
-        if (n_sel > 0 && length(unique(res_temp$cluster)) > 1) {
-            dist_mat <- dist(t(X[selected_indices, , drop = FALSE]))
+# 6b. Merge selected features (Union across all successful C evaluations)
+if (length(selected_list) > 0) {
+    merged_selected <- Reduce(`|`, selected_list)
+    merged_indices <- which(merged_selected)
+    n_merged_sel <- length(merged_indices)
+    cat(sprintf("\nTotal unique features selected across all C values: %d\n", n_merged_sel))
+} else {
+    merged_selected <- rep(FALSE, p)
+    merged_indices <- integer(0)
+    n_merged_sel <- 0
+}
+
+# 6c. Recompute silhouette scores using the merged feature set
+best_res <- NULL
+best_sil <- -Inf
+best_C <- NA
+
+cat("\n--- Recomputing Silhouette Scores on Merged Feature Set ---\n")
+for (c_val in c_values) {
+    res_temp <- results_list[[as.character(c_val)]]
+
+    if (!is.null(res_temp)) {
+        # Compute silhouette strictly over the merged feature space union
+        if (n_merged_sel > 0 && length(unique(res_temp$cluster)) > 1) {
+            dist_mat <- dist(t(X[merged_indices, , drop = FALSE]))
             sil <- cluster::silhouette(res_temp$cluster, dist_mat)
             avg_sil <- mean(sil[, 3])
         } else {
             avg_sil <- -1 # Invalid clustering or no features selected
         }
 
-        cat(sprintf(">>> C = %.1f completed. Silhouette Index: %.4f (Selected Features: %d)\n", c_val, avg_sil, n_sel))
+        cat(sprintf(">>> C = %.1f completed. Silhouette Index: %.4f (Based on %d merged features), acc: %.4f\n", c_val, avg_sil, n_merged_sel, res_temp$acc_history[length(res_temp$acc_history)]))
 
         if (avg_sil > best_sil) {
             best_sil <- avg_sil
