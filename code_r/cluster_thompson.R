@@ -43,7 +43,7 @@
 #'     \item \code{acc_history}: (Optional) History of clustering accuracy across iterations if true_cluster is provided.
 #'   }
 #' @export
-cluster_thompson <- function(X, K, n_iter = 500, C = 0.5, n_perms = 1000, p_val_threshold = 0.01, n_step_admm = 4000, covariance = NULL, true_cluster = NULL) {
+cluster_thompson <- function(X, K, n_iter = 500, C = 0.5, n_perms = 1000, p_val_threshold = 0.01, n_corrupted = 5, n_step_admm = 4000, covariance = NULL, true_cluster = NULL) {
   # Requirement checks: Ensure optimization parameters are valid.
   if (!is.numeric(n_step_admm) || n_step_admm <= 0 || n_step_admm %% 1 != 0) stop("n_step_admm must be a positive integer.")
   if (!is.matrix(X)) stop("X must be a matrix")
@@ -149,7 +149,8 @@ cluster_thompson <- function(X, K, n_iter = 500, C = 0.5, n_perms = 1000, p_val_
       X_tilde_sub,
       cluster_est_now,
       n_perms = n_perms,
-      p_val_threshold = p_val_threshold
+      p_val_threshold = p_val_threshold,
+      n_corrupted = n_corrupted
     )
 
     # -------------------------------------------------------
@@ -241,19 +242,6 @@ cluster_thompson <- function(X, K, n_iter = 500, C = 0.5, n_perms = 1000, p_val_
     S_hat_now <- S_hat_next
   }
 
-  # =========================================================================
-  # BLOCK 3: FINAL SELECTION AND ARTIFACT COMPILATION
-  # =========================================================================
-
-  # Rationale: Final discriminative feature classification relies purely on the
-  # Expectation (Mean) of the final aggregate posterior Beta distributions, eliminating sampling variance noise.
-  # Under Beta(alpha, beta), E[X] = alpha / (alpha + beta)
-  posterior_mean <- alpha_vec / (alpha_vec + beta_vec)
-
-  # Apply identical decision theoretical threshold against the expected value.
-  final_selection <- posterior_mean > cutoff
-  cat(sprintf("\n--- Final Selection ---\n"))
-  cat(sprintf("Features selected: %d / %d\n", sum(final_selection), p))
 
   # Compile outputs mimicking standard statistical function return object formatting.
   out <- list(

@@ -118,7 +118,7 @@
         \label{p2:tvs}
 
     % --- Plot 3: Placeholder ---
-    \nextgroupplot[title={t-distributed noise\\(c) Placeholder}, 
+    \nextgroupplot[title={Laplace noise\\(c) Comparison}, 
         xmax=30250,
 xlabel={Dimension ($p / 10^3$)},
 scaled x ticks=false,
@@ -127,7 +127,19 @@ xticklabels={5, 10, 15, 20, 25, 30},
 ytick={0.5, 0.6, 0.7, 0.8, 0.9, 1.0},
 yticklabels={0.5, 0.6, 0.7, 0.8, 0.9, 1.0}
     ]
+        \addplot+[color=colorSpec, solid, ultra thick] table [x=dim, y=spec, col sep=comma] {simul_result/iso_sep4_TVS_LAP.csv};
 
+
+% Competitors
+\addplot+[color=colorArias, solid, mark=diamond*] table [x=dim, y=arias, col sep=comma] {simul_result/iso_sep4_TVS_LAP.csv};
+
+\addplot+[color=colorIfpca, solid, mark=pentagon*] table [x=dim, y=ifpca, col sep=comma] {simul_result/iso_sep4_TVS_LAP.csv};
+
+\addplot+[color=colorWitten, solid, mark=star] table [x=dim, y=witten, col sep=comma] {simul_result/iso_sep4_TVS_LAP.csv};
+
+\addplot+[color=colorChime, solid, mark=oplus*] table [x=dim, y=chime, col sep=comma] {simul_result/iso_sep4_TVS_LAP.csv};
+
+\addplot+[color=colorTvs, solid, ultra thick, mark=x, mark size=2pt] table [x=dim, y=tvs, col sep=comma] {simul_result/iso_sep4_TVS_LAP.csv};
     \end{groupplot}
 
     % --- Merged Global Legend ---
@@ -139,21 +151,9 @@ yticklabels={0.5, 0.6, 0.7, 0.8, 0.9, 1.0}
                 column sep={2pt},
                 row sep=0pt
             ] {
-                \ref{p1:spec_non} (1) Spectral clustering & \ref{p1:spec} \underline{Greedy algorithm initialized by (1)}  &
-                \ref{p2:tvs} \underline{TVS algorithm}
-                &
-                \ref{p2:arias} SAS 
-                \\ 
-             
-                 
-                
-                \ref{p1:hc_non} (2) Hierarchical clustering & \ref{p1:hc} Greedy algorithm initialized by (2) & 
-           \ref{p2:ifpca} IFPCA 
-           &     \ref{p2:witten} SKM 
-           &  \\
-                \ref{p1:sdp_non} (3) SDP K-means & \ref{p1:sdp} Greedy algorithm initialized by (3) &
-                \ref{p2:chime} CHIME 
-                 & & & & \\
+                \ref{p1:spec_non} (1) Spectral clustering & \ref{p1:spec} \underline{Greedy algorithm initialized by (1)} & \ref{p2:tvs} \underline{TVS algorithm} & \ref{p2:arias} SAS \\
+                \ref{p1:hc_non} (2) Hierarchical clustering & \ref{p1:hc} Greedy algorithm initialized by (2) & \ref{p2:ifpca} IFPCA & \ref{p2:witten} SKM \\
+                \ref{p1:sdp_non} (3) SDP K-means & \ref{p1:sdp} Greedy algorithm initialized by (3) & \ref{p2:chime} CHIME & \\
             };
         \end{tikzpicture}
     };

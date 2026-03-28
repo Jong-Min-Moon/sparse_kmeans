@@ -84,8 +84,8 @@ get_specification_chaingraph <- function(support, separation, dimension, precisi
 generate_data_from_specification <- function(specification, n, seed = NULL, noise = "Gaussian") {
     if (!is.null(seed)) set.seed(seed)
 
-    if (!noise %in% c("Gaussian", "t")) {
-        stop("Unsupported noise type. Must be 'Gaussian' or 't'.")
+    if (!noise %in% c("Gaussian", "t", "Laplace")) {
+        stop("Unsupported noise type. Must be 'Gaussian', 't', or 'Laplace'.")
     }
 
     # Fast path for identity covariance (p >> n makes eigen() slow inside mvrnorm)
@@ -101,6 +101,15 @@ generate_data_from_specification <- function(specification, n, seed = NULL, nois
             # Base t(6) noise
             Z1 <- matrix(rt(n / 2 * p, df = 6), nrow = n / 2, ncol = p) / sqrt(1.5)
             Z2 <- matrix(rt(n / 2 * p, df = 6), nrow = n / 2, ncol = p) / sqrt(1.5)
+        } else if (noise == "Laplace") {
+            cat("Laplace(0,1)/sqrt(2) distributed noise via inverse transform sampling...\n")
+
+            # Generate Laplace(0,1) noise: X = -sign(U) * log(1 - 2|U|) where U ~ Unif(-0.5, 0.5)
+            U1 <- matrix(runif(n / 2 * p, min = -0.5, max = 0.5), nrow = n / 2, ncol = p)
+            Z1 <- -sign(U1) * log(1 - 2 * abs(U1)) / sqrt(2)
+
+            U2 <- matrix(runif(n / 2 * p, min = -0.5, max = 0.5), nrow = n / 2, ncol = p)
+            Z2 <- -sign(U2) * log(1 - 2 * abs(U2)) / sqrt(2)
         }
 
         # Shift by means
@@ -114,6 +123,21 @@ generate_data_from_specification <- function(specification, n, seed = NULL, nois
             p <- specification$dimension
             Z1 <- matrix(rt(n / 2 * p, df = 6), nrow = n / 2, ncol = p)
             Z2 <- matrix(rt(n / 2 * p, df = 6), nrow = n / 2, ncol = p)
+
+            eS <- eigen(specification$covariance_matrix, symmetric = TRUE)
+            ev <- pmax(eS$values, 0)
+
+            X1 <- sweep(Z1 %*% diag(sqrt(ev), p) %*% t(eS$vectors), 2, specification$mu1, "+")
+            X2 <- sweep(Z2 %*% diag(sqrt(ev), p) %*% t(eS$vectors), 2, specification$mu2, "+")
+        } else if (noise == "Laplace") {
+            p <- specification$dimension
+
+            # Generate Laplace(0,1) noise
+            U1 <- matrix(runif(n / 2 * p, min = -0.5, max = 0.5), nrow = n / 2, ncol = p)
+            Z1 <- -sign(U1) * log(1 - 2 * abs(U1))
+
+            U2 <- matrix(runif(n / 2 * p, min = -0.5, max = 0.5), nrow = n / 2, ncol = p)
+            Z2 <- -sign(U2) * log(1 - 2 * abs(U2))
 
             eS <- eigen(specification$covariance_matrix, symmetric = TRUE)
             ev <- pmax(eS$values, 0)
