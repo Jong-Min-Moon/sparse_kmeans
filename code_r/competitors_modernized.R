@@ -10,20 +10,13 @@ run_witten <- function(X, K = 2, seed = NULL, return_list = FALSE) {
         set.seed(seed)
     }
 
-    # Ensure X is n x p (if it's p x n like in the data generator output with p=400, n=200)
-    if (nrow(X) > ncol(X) && ncol(X) > 0) {
-        # It might be p x n, let's just transpose it.
-        X <- t(X)
-    }
-
-    # Scale data as done in original code
+    # Scaled data as done in original code
     x_scaled <- scale(X, TRUE, TRUE)
 
     # The original code uses wbounds = seq(3, 7, length.out=15)
     suppressWarnings({
         suppressMessages({
-            # km.perm <- KMeansSparseCluster.permute(x_scaled, K = K, wbounds = seq(3, 7, length.out = 15), nperms = 5)
-            km.perm <- KMeansSparseCluster.permute(x_scaled, K = K, wbounds = seq(2, 5, length.out = 15), nperms = 3)
+            km.perm <- KMeansSparseCluster.permute(x_scaled, K = K, wbounds = seq(3, 7, length.out = 15), nperms = 5)
             km.out <- KMeansSparseCluster(x_scaled, K = K, wbounds = km.perm$bestw)
         })
     })
@@ -86,6 +79,7 @@ Alternate <- function(X, k, tot, initial_set, s, itermax, threshold) {
 hill_climb <- function(X, k, nbins = 50, nperms = 25, itermax = 100, threshold = 1e-5) {
     n <- dim(X)[1]
     p <- dim(X)[2]
+    nbins <- min(nbins, p) # Ensure nbins does not exceed number of features
 
     center0 <- colMeans(X)
     Xc0 <- t(apply(X, 1, function(x) x - center0))
@@ -118,7 +112,7 @@ hill_climb <- function(X, k, nbins = 50, nperms = 25, itermax = 100, threshold =
     outs <- list()
 
     for (i in 2:nbins) {
-        s <- floor(p - (i - 1) * stepsize)
+        s <- max(1, floor(p - (i - 1) * stepsize)) # Ensure at least 1 feature is selected
         initial_set <- which(rank0 > p - s)
         out <- Alternate(X, k, tot, initial_set, s, itermax, threshold)
         outs[[i]] <- out
@@ -152,12 +146,6 @@ hill_climb <- function(X, k, nbins = 50, nperms = 25, itermax = 100, threshold =
 run_arias <- function(X, K = 2, seed = NULL, return_list = FALSE) {
     if (!is.null(seed)) {
         set.seed(seed)
-    }
-
-    # Ensure X is n x p (if it's p x n like in the data generator output with p=400, n=200)
-    if (nrow(X) > ncol(X) && ncol(X) > 0) {
-        # It might be p x n, let's just transpose it.
-        X <- t(X)
     }
 
     res <- hill_climb(X, K, nbins = 50, nperms = 25, itermax = 100, threshold = 1e-5)
