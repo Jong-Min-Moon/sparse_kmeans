@@ -23,7 +23,7 @@ run_witten <- function(X, K = 2, seed = NULL, return_list = FALSE) {
     suppressWarnings({
         suppressMessages({
             # km.perm <- KMeansSparseCluster.permute(x_scaled, K = K, wbounds = seq(3, 7, length.out = 15), nperms = 5)
-            km.perm <- KMeansSparseCluster.permute(x_scaled, K = K, wbounds = seq(2, 5, length.out = 15), nperms = 5)
+            km.perm <- KMeansSparseCluster.permute(x_scaled, K = K, wbounds = seq(2, 5, length.out = 15), nperms = 3)
             km.out <- KMeansSparseCluster(x_scaled, K = K, wbounds = km.perm$bestw)
         })
     })

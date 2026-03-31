@@ -9,7 +9,7 @@ param(
     [string]$Hostname = "discovery.usc.edu",
     [string]$RemoteBase = "~/sparse_kmeans_project",
     [double[]]$Separations = @(4),
-    [int[]]$Dimensions = @(12000, 15000, 18000)
+    [int[]]$Dimensions = @(27000, 30000)
 )
 
 $ErrorActionPreference = "Stop"
