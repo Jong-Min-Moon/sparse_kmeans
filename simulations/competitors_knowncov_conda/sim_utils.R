@@ -3,7 +3,7 @@
 # Shared utility functions for competitors_unknowncov simulations
 # ------------------------------------------------------------------
 source("../../code_r/data_generator.R")
-source("../../code_r/methods_wrapper.R")
+source("methods_wrapper.R")
 source("accuracy_utils.R")
 
 #' Ensure directory exists
@@ -81,17 +81,18 @@ run_simulation_methods <- function(X, true_labels, K, p, n, sep, rho, job_id, se
         accuracy_ifpca = acc_out$acc_ifpca,
         ifpca_L = as.numeric(methods_out$ifpca$L),
         runtime_ifpca = as.numeric(methods_out$ifpca$runtime),
+        accuracy_bclust = acc_out$acc_bclust,
+        runtime_bclust = as.numeric(methods_out$bclust$runtime),
         accuracy_scvx = acc_out$acc_scvx,
-        runtime_scvx = if(!is.null(methods_out$scvx)) as.numeric(methods_out$scvx$runtime) else NA
+        runtime_scvx = as.numeric(methods_out$scvx$runtime)
     )
     
     log_msg <- sprintf(
-        "[%s] Rep %d, p = %d: Witten [feat = %s, acc = %.3f], Arias [feat = %s, acc = %.3f], IF-PCA [feat = %s, acc = %.3f], SCVX [acc = %.3f]\n",
+        "[%s] Rep %d, p = %d: Witten [feat = %s, acc = %.3f], Arias [feat = %s, acc = %.3f], IF-PCA [feat = %s, acc = %.3f]\n",
         format(Sys.time(), "%Y-%m-%d %H:%M:%S"), job_id, p,
         ifelse(is.na(methods_out$witten$L), "NA", as.character(methods_out$witten$L)), acc_out$acc_witten,
         ifelse(is.na(methods_out$arias$L), "NA", as.character(methods_out$arias$L)), acc_out$acc_arias,
-        ifelse(is.na(methods_out$ifpca$L), "NA", as.character(methods_out$ifpca$L)), acc_out$acc_ifpca,
-        acc_out$acc_scvx
+        ifelse(is.na(methods_out$ifpca$L), "NA", as.character(methods_out$ifpca$L)), acc_out$acc_ifpca
     )
     
     return(list(res_df = res_df, log_msg = log_msg))

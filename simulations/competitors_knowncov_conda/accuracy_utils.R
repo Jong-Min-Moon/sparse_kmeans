@@ -13,6 +13,7 @@ compute_all_accuracies <- function(methods_output, true_labels) {
     acc_witten <- NA
     acc_arias <- NA
     acc_ifpca <- NA
+    acc_bclust <- NA
     acc_scvx <- NA
 
     # Witten
@@ -29,9 +30,14 @@ compute_all_accuracies <- function(methods_output, true_labels) {
     if (!any(is.na(methods_output$ifpca$cluster))) {
         acc_ifpca <- get_cluster_acc(methods_output$ifpca$cluster, true_labels)
     }
-    
+
+    # B-Clust
+    if (!any(is.na(methods_output$bclust$cluster))) {
+        acc_bclust <- get_cluster_acc(methods_output$bclust$cluster, true_labels)
+    }
+
     # SCVX
-    if (exists("scvx", where = methods_output) && !any(is.na(methods_output$scvx$cluster))) {
+    if (!any(is.na(methods_output$scvx$cluster))) {
         acc_scvx <- get_cluster_acc(methods_output$scvx$cluster, true_labels)
     }
 
@@ -39,6 +45,7 @@ compute_all_accuracies <- function(methods_output, true_labels) {
         acc_witten = acc_witten,
         acc_arias = acc_arias,
         acc_ifpca = acc_ifpca,
+        acc_bclust = acc_bclust,
         acc_scvx = acc_scvx
     ))
 }
