@@ -1,19 +1,18 @@
 # ------------------------------------------------------------------
 # methods_wrapper.R
-# Provides a uniform interface for calling sparse K-means methods.
-# Now includes silhouette-based grid search for scvxclustr.
+# Provides a uniform interface for calling sparse K-means competitor methods.
+# Defines run_simulation_methods(), which merges method execution, accuracy
+# computation, and result formatting into a single pipeline step.
 # ------------------------------------------------------------------
-# Attempt to find the directory where this script resides for robust sourcing
-# This works whether sourced or run via Rscript
+
+# Resolve the directory of this script for robust relative sourcing
 script_dir <- "."
 if (exists("utils::getSrcDirectory")) {
     d <- utils::getSrcDirectory(function(x) {x})
     if (nchar(d) > 0) script_dir <- d
 }
 
-# If the above fails (e.g. run via Rscript directly), we can try to find the files in common locations
 if (!file.exists(file.path(script_dir, "competitors_modernized.R"))) {
-    # Try looking in code_r relative to root or current
     if (file.exists("code_r/competitors_modernized.R")) {
         script_dir <- "code_r"
     } else if (file.exists("../../code_r/competitors_modernized.R")) {
@@ -23,197 +22,143 @@ if (!file.exists(file.path(script_dir, "competitors_modernized.R"))) {
 
 source(file.path(script_dir, "competitors_modernized.R"))
 source(file.path(script_dir, "ifpca.R"))
+source(file.path(script_dir, "scvx_wrapper.R"))
+source(file.path(script_dir, "get_cluster_acc.R"))
 
-#' Run all spatial clustering methods on the same input data
+#' Safe single-method wrapper: returns NA list on failure
 #'
-#' @param X Data matrix (n samples x p features expected by generator, handled internally)
-#' @param K Number of clusters
-#' @param pvalcut p-value cut threshold for IF-PCA
-#' @param seed Random seed for reproducibility
-#' @return A list containing cluster assignments and runtime for each method
-run_all_methods <- function(X, K, pvalcut, seed) {
-    p <- ncol(X)
-    n <- nrow(X)
-
-    # ---------------------------
-    # 1. Witten's Sparse K-Means
-    # ---------------------------
-    st <- Sys.time()
-    witten_res <- tryCatch(
-        {
-            run_witten(X, K, seed = seed, return_list = TRUE)
-        },
-        error = function(e) {
-            warning(paste("Witten failed:", e$message))
-            list(cluster = rep(NA, n), L = NA)
-        }
-    )
-    rt_witten <- as.numeric(difftime(Sys.time(), st, units = "secs"))
-
-    # ---------------------------
-    # 2. Arias-Castro Sparse K-Means
-    # ---------------------------
-    st <- Sys.time()
-    arias_res <- tryCatch(
-        {
-            run_arias(X, K, seed = seed, return_list = TRUE)
-        },
-        error = function(e) {
-            warning(paste("Arias failed:", e$message))
-            list(cluster = rep(NA, n), L = NA)
-        }
-    )
-    rt_arias <- as.numeric(difftime(Sys.time(), st, units = "secs"))
-
-    # ---------------------------
-    # 3. IF-PCA
-    # ---------------------------
-    # IF-PCA strictly expects features in rows (p x n)
-    # Since X is provided as n x p, we always transpose.
-    X_ifpca <- t(X)
-
-    st <- Sys.time()
-    ifpca_res <- tryCatch(
-        {
-            if_pca(Data = X_ifpca, K = K, rep = 500, nullsimu = TRUE, pvalcut = pvalcut, kmeansrep = 20, per = 1, seed = seed)
-        },
-        error = function(e) {
-            warning(paste("IF-PCA failed:", e$message))
-            NULL
-        }
-    )
-    rt_ifpca <- as.numeric(difftime(Sys.time(), st, units = "secs"))
-
-    # ---------------------------
-    # 4. Sparse Convex Clustering (scvxclustr)
-    # ---------------------------
-    st_scvx <- Sys.time()
-    
-    # 4a. SCVX Weights and Step Size
-    n_val <- nrow(X)
-    assign("n", n_val, envir = .GlobalEnv) # scvxclustr internal dependency
-    
-    scvx_pipeline <- tryCatch({
-        # Weights matching user's established pattern
-        w_raw <- scvxclustr::dist_weight(t(X) / sqrt(p), phi = 0.5, dist.type = "euclidean", p = 2)
-        w <- cvxclustr::knn_weights(w_raw, k = 5, n = n_val)
-        nu_val <- scvxclustr::AMA_step_size(w, n = n_val) / 2
-        
-        # Grid Search Configuration (Widened for robustness)
-        g1_grid <- c(1, 10, 100)
-        g2_grid <- c(0.1, 1, 10)
-        
-        model_results <- list()
-        selected_list <- list()
-        
-        # 4b. Execute Grid
-        for (g1 in g1_grid) {
-            for (g2 in g2_grid) {
-                key <- paste0("g1_", g1, "_g2_", g2)
-                fit <- tryCatch({
-                    scvxclustr::scvxclust(as.matrix(X), w = w, Gamma1 = g1, Gamma2 = g2, 
-                                         Gamma2_weight = rep(1, p), method = "ama", nu = nu_val)
-                }, error = function(e) { NULL })
-                
-                if (!is.null(fit)) {
-                    # Extract Labels (1e-3 tolerance)
-                    V_mat <- fit$V[[1]]
-                    diffs <- apply(V_mat, 2, function(x) norm(as.matrix(x), "f"))
-                    conn_ix <- which(diffs < 1e-3)
-                    ix_all <- scvxclustr:::vec2tri(which(w > 0), n_val)
-                    A_adj <- Matrix::Matrix(0, n_val, n_val, sparse = TRUE)
-                    if (length(conn_ix) > 0) A_adj[(ix_all[conn_ix, 2] - 1) * n_val + ix_all[conn_ix, 1]] <- 1
-                    
-                    # IGRAH BUG WORKAROUND: graph.adjacency crashes on all-zero sparse matrix
-                    if (any(A_adj != 0)) {
-                        G <- igraph::graph.adjacency(A_adj, mode = 'upper')
-                        labels <- igraph::clusters(G)$membership
-                    } else {
-                        labels <- 1:n_val
-                    }
-                    
-                    # Extract Selected Features (1e-6 tolerance)
-                    U_mat <- fit$U[[1]]
-                    selected <- colSums(abs(U_mat)^2) > 1e-6
-                    
-                    model_results[[key]] <- list(cluster = labels, selected = selected, g1 = g1, g2 = g2)
-                    selected_list[[key]] <- selected
-                }
-            }
-        }
-        
-        # 4c. Model Selection (Silhouette on Union of Selected Features)
-        best_res <- NULL
-        best_sil <- -1
-        merged_selected <- rep(FALSE, p)
-        
-        if (length(selected_list) > 0) {
-            merged_selected <- Reduce(`|`, selected_list)
-            merged_indices <- which(merged_selected)
-            
-            if (length(merged_indices) > 0) {
-                # Precompute distance matrix on selected features for speed
-                dist_mat <- dist(as.matrix(X)[, merged_indices, drop = FALSE])
-                
-                for (key in names(model_results)) {
-                    res_temp <- model_results[[key]]
-                    if (length(unique(res_temp$cluster)) > 1 && length(unique(res_temp$cluster)) < n_val) {
-                        sil <- cluster::silhouette(res_temp$cluster, dist_mat)
-                        if (!is.null(sil) && !any(is.na(sil))) {
-                            avg_sil <- mean(sil[, 3])
-                            
-                            if (avg_sil > best_sil) {
-                                best_sil <- avg_sil
-                                best_res <- res_temp
-                                best_res$silhouette <- avg_sil
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        
-        if (is.null(best_res)) {
-            list(cluster = rep(NA, n_val), selected = merged_selected)
-        } else {
-            # Update selected to the union as per requirements
-            best_res$selected <- merged_selected
-            best_res
-        }
-        
-    }, error = function(e) {
-        cat(sprintf("   SCVX Master Error: %s\n", e$message))
-        list(cluster = rep(NA, n_val), selected = rep(FALSE, p))
+#' @param expr  Expression to evaluate
+#' @param name  Method name (for warning message)
+#' @param n     Number of observations (for NA fallback)
+#' @return Result of expr, or a list(cluster = rep(NA, n), L = NA) on error
+.try_method <- function(expr, name, n) {
+    tryCatch(expr, error = function(e) {
+        warning(sprintf("%s failed: %s", name, e$message))
+        list(cluster = rep(NA, n), L = NA)
     })
-    
-    rt_scvx <- as.numeric(difftime(Sys.time(), st_scvx, units = "secs"))
+}
 
-    # ---------------------------
-    # 5. Result Aggregation
-    # ---------------------------
-    return(list(
-        witten = list(
-            cluster = witten_res$cluster,
-            L = witten_res$L,
-            runtime = rt_witten
-        ),
-        arias = list(
-            cluster = arias_res$cluster,
-            L = arias_res$L,
-            runtime = rt_arias
-        ),
-        ifpca = list(
-            cluster = if (!is.null(ifpca_res)) ifpca_res$labels else rep(NA, n),
-            L = if (!is.null(ifpca_res)) ifpca_res$L else NA,
-            runtime = rt_ifpca
-        ),
-        scvx = list(
-            cluster = scvx_pipeline$cluster,
-            selected = if (!is.null(scvx_pipeline$selected)) scvx_pipeline$selected else rep(FALSE, p),
-            g1 = if (!is.null(scvx_pipeline$g1)) scvx_pipeline$g1 else NA,
-            g2 = if (!is.null(scvx_pipeline$g2)) scvx_pipeline$g2 else NA,
-            silhouette = if (!is.null(scvx_pipeline$silhouette)) scvx_pipeline$silhouette else NA,
-            runtime = rt_scvx
+#' .safe_acc: compute get_cluster_acc only when clusters are all non-NA
+.safe_acc <- function(cluster, true_labels) {
+    if (!any(is.na(cluster))) get_cluster_acc(cluster, true_labels) else NA
+}
+
+#' Run selected competitor methods and return a simulation result row
+#'
+#' This function merges what was previously split across run_all_methods()
+#' (in methods_wrapper.R) and run_simulation_methods() (in sim_utils.R).
+#' Caller gets back a flat data.frame row plus a formatted log message.
+#'
+#' @param X           Data matrix (n x p)
+#' @param true_labels Ground truth cluster vector (length n)
+#' @param K           Number of clusters
+#' @param p           Feature dimension (number of columns in X)
+#' @param n           Sample size (number of rows in X)
+#' @param sep         Separation parameter (stored in result, not used here)
+#' @param rho         Correlation parameter (stored in result, not used here)
+#' @param job_id      Replicate index (stored in result)
+#' @param seed        Random seed passed to each method
+#' @param methods     Character vector selecting which methods to run.
+#'                    Any subset of c("witten", "arias", "ifpca", "scvx").
+#'                    Defaults to all four.
+#' @return list(res_df = data.frame(...), log_msg = character(1))
+run_simulation_methods <- function(X, true_labels, K, p, n, sep, rho, job_id, seed,
+                                   methods = c("witten", "arias", "ifpca", "scvx")) {
+
+    pvalcut <- log(p) / p
+
+    # ---- 1. Witten's Sparse K-Means ----------------------------------------
+    if ("witten" %in% methods) {
+        st <- Sys.time()
+        witten_res <- .try_method(
+            run_witten(X, K, seed = seed, return_list = TRUE),
+            "Witten", n
         )
-    ))
+        rt_witten <- as.numeric(difftime(Sys.time(), st, units = "secs"))
+    } else {
+        witten_res <- list(cluster = rep(NA, n), L = NA)
+        rt_witten  <- NA
+    }
+
+    # ---- 2. Arias-Castro Sparse K-Means ------------------------------------
+    if ("arias" %in% methods) {
+        st <- Sys.time()
+        arias_res <- .try_method(
+            run_arias(X, K, seed = seed, return_list = TRUE),
+            "Arias", n
+        )
+        rt_arias <- as.numeric(difftime(Sys.time(), st, units = "secs"))
+    } else {
+        arias_res <- list(cluster = rep(NA, n), L = NA)
+        rt_arias  <- NA
+    }
+
+    # ---- 3. IF-PCA ---------------------------------------------------------
+    # IF-PCA expects features in rows (p x n); transpose from standard (n x p)
+    if ("ifpca" %in% methods) {
+        X_ifpca <- t(X)
+        st <- Sys.time()
+        ifpca_res <- tryCatch(
+            if_pca(Data = X_ifpca, K = K, rep = 500, nullsimu = TRUE,
+                   pvalcut = pvalcut, kmeansrep = 20, per = 1, seed = seed),
+            error = function(e) {
+                warning(paste("IF-PCA failed:", e$message))
+                NULL
+            }
+        )
+        rt_ifpca <- as.numeric(difftime(Sys.time(), st, units = "secs"))
+    } else {
+        ifpca_res <- NULL
+        rt_ifpca  <- NA
+    }
+
+    # ---- 4. Sparse Convex Clustering (scvxclustr) --------------------------
+    if ("scvx" %in% methods) {
+        scvx_res <- run_scvx(X, K, seed)
+        rt_scvx  <- scvx_res$runtime
+    } else {
+        scvx_res <- list(cluster = rep(NA, n), selected = rep(FALSE, p),
+                         g1 = NA, g2 = NA, silhouette = NA)
+        rt_scvx  <- NA
+    }
+
+    # ---- 5. Accuracy -------------------------------------------------------
+    acc_witten <- .safe_acc(witten_res$cluster, true_labels)
+    acc_arias  <- .safe_acc(arias_res$cluster,  true_labels)
+    acc_ifpca  <- .safe_acc(
+        if (!is.null(ifpca_res)) ifpca_res$labels else rep(NA, n),
+        true_labels
+    )
+    acc_scvx   <- .safe_acc(scvx_res$cluster,   true_labels)
+
+    # ---- 6. Result data.frame ----------------------------------------------
+    res_df <- data.frame(
+        job_id         = job_id,
+        p              = p,
+        n              = n,
+        sep            = sep,
+        rho            = rho,
+        accuracy_witten = acc_witten,
+        runtime_witten  = rt_witten,
+        accuracy_arias  = acc_arias,
+        runtime_arias   = rt_arias,
+        accuracy_ifpca  = acc_ifpca,
+        ifpca_L         = if (!is.null(ifpca_res)) as.numeric(ifpca_res$L) else NA,
+        runtime_ifpca   = rt_ifpca,
+        accuracy_scvx   = acc_scvx,
+        runtime_scvx    = rt_scvx
+    )
+
+    # ---- 7. Log message ----------------------------------------------------
+    log_msg <- sprintf(
+        "[%s] Rep %d, p = %d: Witten [feat = %s, acc = %.3f], Arias [feat = %s, acc = %.3f], IF-PCA [feat = %s, acc = %.3f], SCVX [acc = %.3f]\n",
+        format(Sys.time(), "%Y-%m-%d %H:%M:%S"), job_id, p,
+        ifelse(is.na(witten_res$L), "NA", as.character(witten_res$L)), acc_witten,
+        ifelse(is.na(arias_res$L),  "NA", as.character(arias_res$L)),  acc_arias,
+        ifelse(is.null(ifpca_res) || is.na(ifpca_res$L), "NA",
+               as.character(ifpca_res$L)),                             acc_ifpca,
+        acc_scvx
+    )
+
+    list(res_df = res_df, log_msg = log_msg)
 }
