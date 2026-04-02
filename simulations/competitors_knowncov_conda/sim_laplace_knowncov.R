@@ -16,15 +16,16 @@ if (length(script_name) > 0 && file.exists(script_name)) {
 source("sim_utils.R")
 
 # Fixed parameters
-n          <- 200
-n_runs     <- 10
+n <- 200
+n_runs <- 10
 separation <- 4
-p_seq      <- seq(3000, 12000, by = 3000)
+p_seq <- c(1000, seq(3000, 30000, by = 3000))
 noise_type <- "Laplace"
+methods <- c("witten", "arias", "ifpca", "scvx") # methods to benchmark
 
 # Setup directories & logging
-log_dir  <- "logs"
-res_dir  <- "results/laplace"
+log_dir <- "logs"
+res_dir <- "results/laplace"
 
 if (!dir.exists(log_dir)) dir.create(log_dir, recursive = TRUE, showWarnings = FALSE)
 if (!dir.exists(res_dir)) dir.create(res_dir, recursive = TRUE, showWarnings = FALSE)
@@ -53,22 +54,28 @@ for (p in p_seq) {
 
     results <- foreach(
         job_id = 1:n_runs,
-        .packages = c("clue", "sparcl", "MASS", "methods",
-                      "scvxclustr", "cvxclustr", "igraph", "Matrix", "cluster")
+        .packages = c(
+            "clue", "sparcl", "MASS", "methods",
+            "scvxclustr", "cvxclustr", "igraph", "Matrix", "cluster"
+        )
     ) %dopar% {
         # Reload utilities inside worker (parallel environment isolation)
         source("sim_utils.R")
 
-        # 1. Skip if already completed
-        if (check_progress(res_dir, job_id, p)) return(NULL)
+        # 1. Skip if already completed (validates method coverage, not just file existence)
+        if (check_progress(res_dir, job_id, p, methods = methods)) {
+            return(NULL)
+        }
 
         # 2. Reproducibility
         current_seed <- 2025 + job_id * 1000 + p
 
         # 3. Generate data under identity covariance
         data_res <- tryCatch(
-            generate_data_knowncov(n = n, p = p, sep = separation,
-                                   seed = current_seed, noise_type = noise_type),
+            generate_data_knowncov(
+                n = n, p = p, sep = separation,
+                seed = current_seed, noise_type = noise_type
+            ),
             error = function(e) {
                 log_progress(log_file, sprintf(
                     "Data Generation Error in rep %d, p = %d: %s\n", job_id, p, e$message
@@ -76,20 +83,22 @@ for (p in p_seq) {
                 NULL
             }
         )
-        if (is.null(data_res)) return(NULL)
+        if (is.null(data_res)) {
+            return(NULL)
+        }
 
         # 4. Evaluate competitor methods
         sim_out <- run_simulation_methods(
-            X           = data_res$X,
+            X = data_res$X,
             true_labels = data_res$true_labels,
-            K           = 2,
-            p           = p,
-            n           = n,
-            sep         = separation,
-            rho         = 0,   # identity covariance => zero correlation
-            job_id      = job_id,
-            seed        = current_seed, 
-            methods = c("scvx")
+            K = 2,
+            p = p,
+            n = n,
+            sep = separation,
+            rho = 0, # identity covariance => zero correlation
+            job_id = job_id,
+            seed = current_seed,
+            methods = methods
         )
 
         # 5. Checkpoint

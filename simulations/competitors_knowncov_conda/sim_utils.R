@@ -33,10 +33,40 @@ generate_data_knowncov <- function(n, p, sep, seed, noise_type) {
     return(list(X = t(res$X), true_labels = res$labels, spec = spec))
 }
 
-#' Check if result already exists (.rds checkpoint)
-check_progress <- function(results_dir, job_id, p) {
+#' Check if result already exists AND covers all requested methods.
+#'
+#' A checkpoint is considered valid only when every requested method has a
+#' numeric (non-logical) accuracy entry in the saved data.frame. This prevents
+#' silently re-using stale files written during a narrower methods subset
+#' (e.g. methods = c("scvx") only), which would leave NAs in the aggregation.
+#'
+#' @param results_dir  Directory containing checkpoint .rds files
+#' @param job_id       Replicate index
+#' @param p            Feature dimension
+#' @param methods      Character vector of methods that must be present
+#'                     (default: all four standard methods)
+#' @return TRUE if a valid, complete checkpoint exists; FALSE otherwise
+check_progress <- function(results_dir, job_id, p,
+                           methods = c("witten", "arias", "ifpca", "scvx")) {
     filename <- file.path(results_dir, sprintf("sim_job%d_p%d.rds", job_id, p))
-    return(file.exists(filename))
+    if (!file.exists(filename)) return(FALSE)
+
+    # Load and validate method coverage
+    d <- tryCatch(readRDS(filename), error = function(e) NULL)
+    if (is.null(d) || !is.data.frame(d)) return(FALSE)
+
+    for (m in methods) {
+        col <- paste0("accuracy_", m)
+        # If the column is missing OR stored as logical (== was never computed)
+        if (!col %in% names(d) || is.logical(d[[col]])) {
+            message(sprintf(
+                "[checkpoint] Stale file %s missing numeric results for '%s'. Will re-run.",
+                basename(filename), m
+            ))
+            return(FALSE)
+        }
+    }
+    return(TRUE)
 }
 
 #' Save a result data.frame as .rds
