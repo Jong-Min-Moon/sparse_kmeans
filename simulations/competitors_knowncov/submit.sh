@@ -6,7 +6,7 @@
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=16G
 #SBATCH --time=23:00:00
-#SBATCH --array=1-2
+#SBATCH --array=1-25
 
 # Load modules (standard for this HPC env)
 module purge
