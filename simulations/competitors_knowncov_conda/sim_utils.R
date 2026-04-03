@@ -47,7 +47,7 @@ generate_data_knowncov <- function(n, p, sep, seed, noise_type) {
 #'                     (default: all four standard methods)
 #' @return TRUE if a valid, complete checkpoint exists; FALSE otherwise
 check_progress <- function(results_dir, job_id, p,
-                           methods = c("witten", "arias", "ifpca", "scvx")) {
+                           methods = c("witten", "arias", "ifpca", "scvx", "cvs")) {
     filename <- file.path(results_dir, sprintf("sim_job%d_p%d.rds", job_id, p))
     if (!file.exists(filename)) return(FALSE)
 

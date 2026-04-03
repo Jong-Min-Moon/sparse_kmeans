@@ -112,8 +112,8 @@ data_res    <- generate_data_from_specification(generator_spec, n,
                                                 seed  = 2026 + job_id,
                                                 noise = noise)
 
-# data_res$X is n × p; cluster_greedy expects p × n
-X_tilde     <- t(data_res$X)   # p × n
+# data_res$X is already p × n; cluster_greedy expects p × n
+X_tilde     <- data_res$X      # p × n
 true_labels <- data_res$labels
 
 # ------------------------------------------------------------------------------

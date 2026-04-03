@@ -23,6 +23,7 @@ if (!file.exists(file.path(script_dir, "competitors_modernized.R"))) {
 source(file.path(script_dir, "competitors_modernized.R"))
 source(file.path(script_dir, "ifpca.R"))
 source(file.path(script_dir, "scvx_wrapper.R"))
+source(file.path(script_dir, "clustvarsel_wrapper.R"))
 source(file.path(script_dir, "get_cluster_acc.R"))
 
 #' Safe single-method wrapper: returns NA list on failure
@@ -59,11 +60,11 @@ source(file.path(script_dir, "get_cluster_acc.R"))
 #' @param job_id      Replicate index (stored in result)
 #' @param seed        Random seed passed to each method
 #' @param methods     Character vector selecting which methods to run.
-#'                    Any subset of c("witten", "arias", "ifpca", "scvx").
-#'                    Defaults to all four.
+#'                    Any subset of c("witten", "arias", "ifpca", "scvx", "cvs").
+#'                    Defaults to all five.
 #' @return list(res_df = data.frame(...), log_msg = character(1))
 run_simulation_methods <- function(X, true_labels, K, p, n, sep, rho, job_id, seed,
-                                   methods = c("witten", "arias", "ifpca", "scvx")) {
+                                   methods = c("witten", "arias", "ifpca", "scvx", "cvs")) {
 
     pvalcut <- log(p) / p
 
@@ -122,7 +123,20 @@ run_simulation_methods <- function(X, true_labels, K, p, n, sep, rho, job_id, se
         rt_scvx  <- NA
     }
 
-    # ---- 5. Accuracy -------------------------------------------------------
+    # ---- 5. clustvarsel (Scrucca & Raftery 2016) ---------------------------
+    if ("cvs" %in% methods) {
+        st <- Sys.time()
+        cvs_res <- .try_method(
+            run_clustvarsel(X, K, seed = seed),
+            "clustvarsel", n
+        )
+        rt_cvs <- as.numeric(difftime(Sys.time(), st, units = "secs"))
+    } else {
+        cvs_res <- list(cluster = rep(NA, n), L = NA, selected = rep(FALSE, p))
+        rt_cvs  <- NA
+    }
+
+    # ---- 6. Accuracy -------------------------------------------------------
     acc_witten <- .safe_acc(witten_res$cluster, true_labels)
     acc_arias  <- .safe_acc(arias_res$cluster,  true_labels)
     acc_ifpca  <- .safe_acc(
@@ -130,14 +144,15 @@ run_simulation_methods <- function(X, true_labels, K, p, n, sep, rho, job_id, se
         true_labels
     )
     acc_scvx   <- .safe_acc(scvx_res$cluster,   true_labels)
+    acc_cvs    <- .safe_acc(cvs_res$cluster,     true_labels)
 
-    # ---- 6. Result data.frame ----------------------------------------------
+    # ---- 7. Result data.frame ----------------------------------------------
     res_df <- data.frame(
-        job_id         = job_id,
-        p              = p,
-        n              = n,
-        sep            = sep,
-        rho            = rho,
+        job_id          = job_id,
+        p               = p,
+        n               = n,
+        sep             = sep,
+        rho             = rho,
         accuracy_witten = acc_witten,
         runtime_witten  = rt_witten,
         accuracy_arias  = acc_arias,
@@ -146,18 +161,22 @@ run_simulation_methods <- function(X, true_labels, K, p, n, sep, rho, job_id, se
         ifpca_L         = if (!is.null(ifpca_res)) as.numeric(ifpca_res$L) else NA,
         runtime_ifpca   = rt_ifpca,
         accuracy_scvx   = acc_scvx,
-        runtime_scvx    = rt_scvx
+        runtime_scvx    = rt_scvx,
+        accuracy_cvs    = acc_cvs,
+        cvs_L           = if (!is.null(cvs_res$L) && !is.na(cvs_res$L)) as.numeric(cvs_res$L) else NA,
+        runtime_cvs     = rt_cvs
     )
 
-    # ---- 7. Log message ----------------------------------------------------
+    # ---- 8. Log message ----------------------------------------------------
     log_msg <- sprintf(
-        "[%s] Rep %d, p = %d: Witten [feat = %s, acc = %.3f], Arias [feat = %s, acc = %.3f], IF-PCA [feat = %s, acc = %.3f], SCVX [acc = %.3f]\n",
+        "[%s] Rep %d, p = %d: Witten [feat=%s, acc=%.3f], Arias [feat=%s, acc=%.3f], IF-PCA [feat=%s, acc=%.3f], SCVX [acc=%.3f], CVS [feat=%s, acc=%.3f]\n",
         format(Sys.time(), "%Y-%m-%d %H:%M:%S"), job_id, p,
         ifelse(is.na(witten_res$L), "NA", as.character(witten_res$L)), acc_witten,
         ifelse(is.na(arias_res$L),  "NA", as.character(arias_res$L)),  acc_arias,
         ifelse(is.null(ifpca_res) || is.na(ifpca_res$L), "NA",
                as.character(ifpca_res$L)),                             acc_ifpca,
-        acc_scvx
+        acc_scvx,
+        ifelse(is.na(cvs_res$L), "NA", as.character(cvs_res$L)),      acc_cvs
     )
 
     list(res_df = res_df, log_msg = log_msg)

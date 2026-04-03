@@ -22,7 +22,7 @@ separation <- 4
 # p_seq      <- c(1000, seq(3000, 30000, by = 3000))
 p_seq <- c(1000)
 noise_type <- "Gaussian"
-methods <- c("witten", "arias", "ifpca", "scvx") # methods to benchmark
+methods <- c("witten", "arias", "ifpca", "scvx", "cvs") # methods to benchmark
 
 # Setup directories & logging
 log_dir <- "logs"
@@ -57,7 +57,8 @@ for (p in p_seq) {
         job_id = 1:n_runs,
         .packages = c(
             "clue", "sparcl", "MASS", "methods",
-            "scvxclustr", "cvxclustr", "igraph", "Matrix", "cluster"
+            "scvxclustr", "cvxclustr", "igraph", "Matrix", "cluster",
+            "mclust", "clustvarsel"
         )
     ) %dopar% {
         # Reload utilities inside worker (parallel environment isolation)
