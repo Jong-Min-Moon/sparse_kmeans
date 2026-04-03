@@ -8,7 +8,9 @@
 # Resolve the directory of this script for robust relative sourcing
 script_dir <- "."
 if (exists("utils::getSrcDirectory")) {
-    d <- utils::getSrcDirectory(function(x) {x})
+    d <- utils::getSrcDirectory(function(x) {
+        x
+    })
     if (nchar(d) > 0) script_dir <- d
 }
 
@@ -23,7 +25,7 @@ if (!file.exists(file.path(script_dir, "competitors_modernized.R"))) {
 source(file.path(script_dir, "competitors_modernized.R"))
 source(file.path(script_dir, "ifpca.R"))
 source(file.path(script_dir, "scvx_wrapper.R"))
-source(file.path(script_dir, "clustvarsel_wrapper.R"))
+# source(file.path(script_dir, "clustvarsel_wrapper.R"))
 source(file.path(script_dir, "get_cluster_acc.R"))
 
 #' Safe single-method wrapper: returns NA list on failure
@@ -64,8 +66,7 @@ source(file.path(script_dir, "get_cluster_acc.R"))
 #'                    Defaults to all five.
 #' @return list(res_df = data.frame(...), log_msg = character(1))
 run_simulation_methods <- function(X, true_labels, K, p, n, sep, rho, job_id, seed,
-                                   methods = c("witten", "arias", "ifpca", "scvx", "cvs")) {
-
+                                   methods = c("witten", "arias", "ifpca", "scvx")) {
     pvalcut <- log(p) / p
 
     # ---- 1. Witten's Sparse K-Means ----------------------------------------
@@ -78,7 +79,7 @@ run_simulation_methods <- function(X, true_labels, K, p, n, sep, rho, job_id, se
         rt_witten <- as.numeric(difftime(Sys.time(), st, units = "secs"))
     } else {
         witten_res <- list(cluster = rep(NA, n), L = NA)
-        rt_witten  <- NA
+        rt_witten <- NA
     }
 
     # ---- 2. Arias-Castro Sparse K-Means ------------------------------------
@@ -91,7 +92,7 @@ run_simulation_methods <- function(X, true_labels, K, p, n, sep, rho, job_id, se
         rt_arias <- as.numeric(difftime(Sys.time(), st, units = "secs"))
     } else {
         arias_res <- list(cluster = rep(NA, n), L = NA)
-        rt_arias  <- NA
+        rt_arias <- NA
     }
 
     # ---- 3. IF-PCA ---------------------------------------------------------
@@ -100,8 +101,10 @@ run_simulation_methods <- function(X, true_labels, K, p, n, sep, rho, job_id, se
         X_ifpca <- t(X)
         st <- Sys.time()
         ifpca_res <- tryCatch(
-            if_pca(Data = X_ifpca, K = K, rep = 500, nullsimu = TRUE,
-                   pvalcut = pvalcut, kmeansrep = 20, per = 1, seed = seed),
+            if_pca(
+                Data = X_ifpca, K = K, rep = 500, nullsimu = TRUE,
+                pvalcut = pvalcut, kmeansrep = 20, per = 1, seed = seed
+            ),
             error = function(e) {
                 warning(paste("IF-PCA failed:", e$message))
                 NULL
@@ -110,41 +113,31 @@ run_simulation_methods <- function(X, true_labels, K, p, n, sep, rho, job_id, se
         rt_ifpca <- as.numeric(difftime(Sys.time(), st, units = "secs"))
     } else {
         ifpca_res <- NULL
-        rt_ifpca  <- NA
+        rt_ifpca <- NA
     }
 
     # ---- 4. Sparse Convex Clustering (scvxclustr) --------------------------
     if ("scvx" %in% methods) {
         scvx_res <- run_scvx(X, K, seed)
-        rt_scvx  <- scvx_res$runtime
+        rt_scvx <- scvx_res$runtime
     } else {
-        scvx_res <- list(cluster = rep(NA, n), selected = rep(FALSE, p),
-                         g1 = NA, g2 = NA, silhouette = NA)
-        rt_scvx  <- NA
+        scvx_res <- list(
+            cluster = rep(NA, n), selected = rep(FALSE, p),
+            g1 = NA, g2 = NA, silhouette = NA
+        )
+        rt_scvx <- NA
     }
 
-    # ---- 5. clustvarsel (Scrucca & Raftery 2016) ---------------------------
-    if ("cvs" %in% methods) {
-        st <- Sys.time()
-        cvs_res <- .try_method(
-            run_clustvarsel(X, K, seed = seed),
-            "clustvarsel", n
-        )
-        rt_cvs <- as.numeric(difftime(Sys.time(), st, units = "secs"))
-    } else {
-        cvs_res <- list(cluster = rep(NA, n), L = NA, selected = rep(FALSE, p))
-        rt_cvs  <- NA
-    }
 
     # ---- 6. Accuracy -------------------------------------------------------
     acc_witten <- .safe_acc(witten_res$cluster, true_labels)
-    acc_arias  <- .safe_acc(arias_res$cluster,  true_labels)
-    acc_ifpca  <- .safe_acc(
+    acc_arias <- .safe_acc(arias_res$cluster, true_labels)
+    acc_ifpca <- .safe_acc(
         if (!is.null(ifpca_res)) ifpca_res$labels else rep(NA, n),
         true_labels
     )
-    acc_scvx   <- .safe_acc(scvx_res$cluster,   true_labels)
-    acc_cvs    <- .safe_acc(cvs_res$cluster,     true_labels)
+    acc_scvx <- .safe_acc(scvx_res$cluster, true_labels)
+    acc_cvs <- .safe_acc(cvs_res$cluster, true_labels)
 
     # ---- 7. Result data.frame ----------------------------------------------
     res_df <- data.frame(
@@ -172,11 +165,12 @@ run_simulation_methods <- function(X, true_labels, K, p, n, sep, rho, job_id, se
         "[%s] Rep %d, p = %d: Witten [feat=%s, acc=%.3f], Arias [feat=%s, acc=%.3f], IF-PCA [feat=%s, acc=%.3f], SCVX [acc=%.3f], CVS [feat=%s, acc=%.3f]\n",
         format(Sys.time(), "%Y-%m-%d %H:%M:%S"), job_id, p,
         ifelse(is.na(witten_res$L), "NA", as.character(witten_res$L)), acc_witten,
-        ifelse(is.na(arias_res$L),  "NA", as.character(arias_res$L)),  acc_arias,
+        ifelse(is.na(arias_res$L), "NA", as.character(arias_res$L)), acc_arias,
         ifelse(is.null(ifpca_res) || is.na(ifpca_res$L), "NA",
-               as.character(ifpca_res$L)),                             acc_ifpca,
+            as.character(ifpca_res$L)
+        ), acc_ifpca,
         acc_scvx,
-        ifelse(is.na(cvs_res$L), "NA", as.character(cvs_res$L)),      acc_cvs
+        ifelse(is.na(cvs_res$L), "NA", as.character(cvs_res$L)), acc_cvs
     )
 
     list(res_df = res_df, log_msg = log_msg)
