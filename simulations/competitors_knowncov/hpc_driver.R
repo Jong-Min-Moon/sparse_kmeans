@@ -18,7 +18,7 @@ job_id   <- 1
 p        <- 100
 sep      <- 4
 noise    <- "Gaussian"
-methods_to_run <- c("witten", "arias", "ifpca", "cvs") # SCVX excluded
+methods_to_run <- c("witten", "arias", "ifpca") # SCVX and CVS excluded
 
 if (length(args) > 0) {
     for (i in seq_along(args)) {

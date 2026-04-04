@@ -13,6 +13,7 @@
 \definecolor{colorWitten}{RGB}{86,180,233} % Sky Blue
 \definecolor{colorChime}{RGB}{240,228,66} % Yellow
 \definecolor{colorTvs}{RGB}{100,100,100}      % Dark Gray
+\definecolor{colorSas}{RGB}{166,86,40}           % Scientific Brown (Set1)
 
 \begin{document}
 
@@ -117,6 +118,9 @@
         \addplot+[color=colorTvs, solid, ultra thick, mark=x, mark size=2pt] table [x=dim, y=tvs, col sep=comma] {simul_result/iso_sep4_TVS.csv};
         \label{p2:tvs}
 
+        \addplot+[color=colorSas, solid, mark=triangle, mark options={solid}, thick] table [x=dim, y=arias, col sep=comma] {simul_result/iso_sep4_TVS.csv};
+        \label{p2:sas}
+
     % --- Plot 3: Placeholder ---
     \nextgroupplot[title={Laplace noise\\(c) Comparison}, 
         xmax=30250,
@@ -140,6 +144,8 @@ yticklabels={0.5, 0.6, 0.7, 0.8, 0.9, 1.0}
 \addplot+[color=colorChime, solid, mark=oplus*] table [x=dim, y=chime, col sep=comma] {simul_result/iso_sep4_TVS_LAP.csv};
 
 \addplot+[color=colorTvs, solid, ultra thick, mark=x, mark size=2pt] table [x=dim, y=tvs, col sep=comma] {simul_result/iso_sep4_TVS_LAP.csv};
+
+\addplot+[color=colorSas, solid, mark=triangle, mark options={solid}, thick] table [x=dim, y=arias, col sep=comma] {simul_result/iso_sep4_TVS_LAP.csv};
     \end{groupplot}
 
     % --- Merged Global Legend ---
@@ -153,7 +159,7 @@ yticklabels={0.5, 0.6, 0.7, 0.8, 0.9, 1.0}
             ] {
                 \ref{p1:spec_non} (1) Spectral clustering & \ref{p1:spec} \underline{Greedy algorithm initialized by (1)} & \ref{p2:tvs} \underline{TVS algorithm} & \ref{p2:scvx} SCVX \\
                 \ref{p1:hc_non} (2) Hierarchical clustering & \ref{p1:hc} Greedy algorithm initialized by (2) & \ref{p2:ifpca} IFPCA & \ref{p2:witten} SKM \\
-                \ref{p1:sdp_non} (3) SDP K-means & \ref{p1:sdp} Greedy algorithm initialized by (3) & \ref{p2:chime} CHIME & \\
+                \ref{p1:sdp_non} (3) SDP K-means & \ref{p1:sdp} Greedy algorithm initialized by (3) & \ref{p2:chime} CHIME & \ref{p2:sas} SAS \\
             };
         \end{tikzpicture}
     };

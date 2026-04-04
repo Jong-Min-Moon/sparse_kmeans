@@ -49,7 +49,7 @@ for (noise in noise_types) {
     # Summary by Dimension (p) and Separation (sep)
     # The columns derived from methods_wrapper.R are:
     # job_id, p, n, sep, rho, accuracy_witten, runtime_witten, accuracy_arias, runtime_arias, 
-    # accuracy_ifpca, ifpca_L, runtime_ifpca, accuracy_scvx, runtime_scvx, accuracy_cvs, cvs_L, runtime_cvs
+    # accuracy_ifpca, ifpca_L, runtime_ifpca, accuracy_scvx, runtime_scvx
     
     summary_stats <- all_results %>%
         group_by(p, sep) %>%
@@ -65,10 +65,6 @@ for (noise in noise_types) {
             mean_acc_ifpca = mean(accuracy_ifpca, na.rm = TRUE),
             sd_acc_ifpca = sd(accuracy_ifpca, na.rm = TRUE),
             mean_L_ifpca = mean(ifpca_L, na.rm = TRUE),
-            # CVS
-            mean_acc_cvs = mean(accuracy_cvs, na.rm = TRUE),
-            sd_acc_cvs = sd(accuracy_cvs, na.rm = TRUE),
-            mean_L_cvs = mean(cvs_L, na.rm = TRUE),
             .groups = "drop"
         ) %>%
         arrange(sep, p)
