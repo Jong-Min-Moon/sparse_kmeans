@@ -26,7 +26,7 @@ sdp_kmeans <- function(G, K, rho = 1.0, max_iter = 2000, tol = 1e-3, verbose = T
   # Linux/Unix: code_r/proj_simplex.so (needs to be compiled)
 
   if (.Platform$OS.type == "windows") {
-    possibilities <- c("code_r/proj_simplex.dll", "../../code_r/proj_simplex.dll", "../code_r/proj_simplex.dll")
+    possibilities <- c("code_r/proj_simplex.dll", "../../code_r/proj_simplex.dll", "../code_r/proj_simplex.dll", "../../../code_r/proj_simplex.dll")
     lib_path <- NULL
     for (path_try in possibilities) {
       if (length(path_try) > 0 && !is.na(path_try) && nzchar(path_try) && file.exists(path_try)) {
@@ -42,7 +42,7 @@ sdp_kmeans <- function(G, K, rho = 1.0, max_iter = 2000, tol = 1e-3, verbose = T
   } else {
     # Linux / Unix
     # Check potential locations
-    possibilities <- c("code_r/proj_simplex.so", "../../code_r/proj_simplex.so", "../code_r/proj_simplex.so")
+    possibilities <- c("code_r/proj_simplex.so", "../../code_r/proj_simplex.so", "../code_r/proj_simplex.so", "../../../code_r/proj_simplex.so")
     lib_path <- NULL
     for (path_try in possibilities) {
       if (length(path_try) > 0 && !is.na(path_try) && nzchar(path_try) && file.exists(path_try)) {
@@ -61,7 +61,7 @@ sdp_kmeans <- function(G, K, rho = 1.0, max_iter = 2000, tol = 1e-3, verbose = T
       tryCatch(
         {
           # Check for the source file in likely locations
-          src_possibilities <- c("code_r/proj_simplex.cpp", "../../code_r/proj_simplex.cpp", "../code_r/proj_simplex.cpp")
+          src_possibilities <- c("code_r/proj_simplex.cpp", "../../code_r/proj_simplex.cpp", "../code_r/proj_simplex.cpp", "../../../code_r/proj_simplex.cpp")
           src_path <- NULL
           for (sp in src_possibilities) {
             if (file.exists(sp)) {
@@ -70,7 +70,7 @@ sdp_kmeans <- function(G, K, rho = 1.0, max_iter = 2000, tol = 1e-3, verbose = T
             }
           }
 
-          if (is.null(src_path)) stop("Source file 'proj_simplex.cpp' not found in code_r/ or ../../code_r/")
+          if (is.null(src_path)) stop("Source file 'proj_simplex.cpp' not found in code_r/ or ../../code_r/ or ../../../code_r/")
 
           # Determine target lib path based on source location
           # If src is ../../code_r/proj_simplex.cpp, we should compile to ../../code_r/proj_simplex.so

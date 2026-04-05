@@ -19,6 +19,8 @@ if (!file.exists(file.path(script_dir, "competitors_modernized.R"))) {
         script_dir <- "code_r"
     } else if (file.exists("../../code_r/competitors_modernized.R")) {
         script_dir <- "../../code_r"
+    } else if (file.exists("../../../code_r/competitors_modernized.R")) {
+        script_dir <- "../../../code_r"
     }
 }
 
