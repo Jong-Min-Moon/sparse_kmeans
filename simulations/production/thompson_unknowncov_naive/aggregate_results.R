@@ -31,23 +31,30 @@ results_list <- purrr::map(all_files, function(f) {
     # Fail-safe catching mechanisms allowing incomplete chunks to gracefully crash rather than halting batch extraction
     res_data <- tryCatch(readRDS(f), error = function(e) NULL)
     if (is.null(res_data)) return(NULL)
+
+    safe_val <- function(x) {
+        if (is.null(x)) return(NA)
+        if (length(x) == 0) return(NA)
+        if (length(x) > 1) return(x[1]) # ensure length 1
+        return(x)
+    }
     
     # Isolate relevant scalars configured natively from the simulation framework driver
     data.frame(
-        job_id = res_data$job_id,
+        job_id = safe_val(res_data$job_id),
         noise = if (!is.null(res_data$noise)) res_data$noise else "Laplace",
-        accuracy = res_data$accuracy,
-        runtime = res_data$runtime,
-        n_selected = res_data$L,
-        tp = res_data$tp,
-        fp = res_data$fp,
-        recall = res_data$recall,
-        precision = res_data$precision,
-        p = res_data$params$p,
-        n = res_data$params$n,
-        separation = res_data$params$separation,
-        pval = res_data$pval,
-        n_step_admm = res_data$params$n_step_admm
+        accuracy = safe_val(res_data$accuracy),
+        runtime = safe_val(res_data$runtime),
+        n_selected = safe_val(res_data$L),
+        tp = safe_val(res_data$tp),
+        fp = safe_val(res_data$fp),
+        recall = safe_val(res_data$recall),
+        precision = safe_val(res_data$precision),
+        p = safe_val(res_data$params$p),
+        n = safe_val(res_data$params$n),
+        separation = safe_val(res_data$params$separation),
+        pval = safe_val(res_data$pval),
+        n_step_admm = safe_val(res_data$params$n_step_admm)
     )
 })
 

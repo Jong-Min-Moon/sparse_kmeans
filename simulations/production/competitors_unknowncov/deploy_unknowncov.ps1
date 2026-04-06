@@ -8,7 +8,7 @@ param(
     [string]$Hostname = "discovery.usc.edu",
     [string]$RemoteBase = "~/sparse_kmeans_project",
     [double[]]$Separations = @(6),
-    [int[]]$Dimensions = @(100, 200, 300, 400, 500, 600, 700, 800, 900, 1000),
+    [int[]]$Dimensions = @(1500, 2000),
     [string]$Noise = "Gaussian"
 )
 
