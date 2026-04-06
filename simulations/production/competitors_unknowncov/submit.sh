@@ -4,9 +4,9 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
-#SBATCH --mem=8G
+#SBATCH --mem=12G
 #SBATCH --time=12:00:00
-#SBATCH --array=1-100
+#SBATCH --array=1-100%16
 
 # Load modules (standard for this HPC env)
 module purge
