@@ -2,7 +2,7 @@
 \usepackage{pgfplots}
 \usepgfplotslibrary{groupplots}
 \usetikzlibrary{matrix, calc}
-\pgfplotsset{compat=1.18}
+\pgfplotsset{compat=1.14}
 
 % Define colors for pairs (Okabe-Ito)
 \definecolor{colorSpec}{RGB}{213,94,0}    % Vermilion
@@ -21,14 +21,14 @@
     % Define the group plot
     \begin{groupplot}[
         group style={
-            group size=3 by 1,
-            horizontal sep=1cm,
-            vertical sep=1.5cm,
+            group size=4 by 2,
+            horizontal sep=0.5cm,
+            vertical sep=1.8cm,
             x descriptions at=edge bottom,
             y descriptions at=edge left,
         },
-        width=5cm,
-        height=5cm,
+        width=4.4cm,
+        height=4.4cm,
         grid=major,
         ylabel={Clustering Accuracy},
         % font=\scriptsize, % This key is invalid in this context
@@ -56,15 +56,15 @@
         xmin=-250, xmax=5250
     ]
 
-    % --- Plot 1: Iterative vs Non-iterative ---
+    % --- Row 1 ---
+
+    % Plot 1: Isotropic Gauss Initialization
     \nextgroupplot[
-        title={Gaussian noise\\(a) Initialization},
-        xlabel={Dimension ($p / 10^3$)},
+        title={Chain graph\\(a) Gaussian, $n=200$},
+        xlabel={Dimension ($p / 10^{3}$)},
         scaled x ticks=false,
         xtick={1000, 2000, 3000, 4000, 5000},
-        xticklabels={1, 2,3,4, 5},
-        ytick={0.5, 0.6, 0.7, 0.8, 0.9, 1.0},
-        yticklabels={0.5, 0.6, 0.7, 0.8, 0.9, 1.0}
+        xticklabels={1, 2, 3, 4, 5},
     ]
         % Spec
         \addplot+[color=colorSpec, solid, ultra thick] table [x=dim, y=spec, col sep=comma] {simul_result/iso_sep4_extended.csv};
@@ -86,16 +86,14 @@
         \addplot+[color=colorSdp, dashed, mark=triangle, mark options={solid}] table [x=dim, y=noniter, col sep=comma] {simul_result/iso_sep4_extended.csv};
         \label{p1:sdp_non}
 
-    % --- Plot 2: SDP vs Competitors ---
+    % Plot 2: Isotropic Gauss Comparison
     \nextgroupplot[
-        title={Gaussian noise\\(b) Comparison}, xmin = 750,
-        xmax=30250,
-        xlabel={Dimension ($p / 10^3$)},
+        title={Chain graph\\(b) Laplace, $n=200$},
+        xmin=750, xmax=30250,
+        xlabel={Dimension ($p / 10^{3}$)},
         scaled x ticks=false,
         xtick={5000, 10000, 15000, 20000, 25000, 30000},
         xticklabels={5, 10, 15, 20, 25, 30},
-        ytick={0.5, 0.6, 0.7, 0.8, 0.9, 1.0},
-        yticklabels={0.5, 0.6, 0.7, 0.8, 0.9, 1.0}
     ]
         % SDP (Reference) - Redundant label if we reuse p1:sdp logic in legend, or new label?
         % We'll plot it but might not need a new label if we use the generic one, but let's label it just in case.
@@ -121,35 +119,88 @@
         \addplot+[color=colorSas, solid, mark=triangle, mark options={solid}, thick] table [x=dim, y=arias, col sep=comma] {simul_result/iso_sep4_TVS.csv};
         \label{p2:sas}
 
-    % --- Plot 3: Placeholder ---
-    \nextgroupplot[title={Laplace noise\\(c) Comparison}, 
+    % Plot 3: Isotropic Laplace Comparison
+    \nextgroupplot[
+        title={Laplace Isotropic\\(c) Comparison},
         xmax=30250,
-xlabel={Dimension ($p / 10^3$)},
-scaled x ticks=false,
-xtick={5000, 10000, 15000, 20000, 25000, 30000},
-xticklabels={5, 10, 15, 20, 25, 30},
-ytick={0.5, 0.6, 0.7, 0.8, 0.9, 1.0},
-yticklabels={0.5, 0.6, 0.7, 0.8, 0.9, 1.0}
+        xlabel={Dimension ($p / 10^{3}$)},
+        scaled x ticks=false,
+        xtick={5000, 10000, 15000, 20000, 25000, 30000},
+        xticklabels={5, 10, 15, 20, 25, 30},
     ]
         \addplot+[color=colorSpec, solid, ultra thick] table [x=dim, y=spec, col sep=comma] {simul_result/iso_sep4_TVS_LAP.csv};
+        \addplot+[color=colorSCVX, solid, mark=diamond*] table [x=dim, y=scvx, col sep=comma] {simul_result/iso_sep4_TVS_LAP.csv};
+        \addplot+[color=colorIfpca, solid, mark=pentagon*] table [x=dim, y=ifpca, col sep=comma] {simul_result/iso_sep4_TVS_LAP.csv};
+        \addplot+[color=colorWitten, solid, mark=star] table [x=dim, y=witten, col sep=comma] {simul_result/iso_sep4_TVS_LAP.csv};
+        \addplot+[color=colorChime, solid, mark=oplus*] table [x=dim, y=chime, col sep=comma] {simul_result/iso_sep4_TVS_LAP.csv};
+        \addplot+[color=colorTvs, solid, ultra thick, mark=x, mark size=2pt] table [x=dim, y=tvs, col sep=comma] {simul_result/iso_sep4_TVS_LAP.csv};
+        \addplot+[color=colorSas, solid, mark=triangle, mark options={solid}, thick] table [x=dim, y=arias, col sep=comma] {simul_result/iso_sep4_TVS_LAP.csv};
 
+    % Plot 4: Non-iso Gauss Chain (sep=6) Comparison
+    \nextgroupplot[
+        title={Non-iso Gauss\\(d) Chain, sep=6},
+        xmin=-250, xmax=5250,
+        xlabel={Dimension ($p / 10^{3}$)},
+        scaled x ticks=false,
+        xtick={1000, 2000, 3000, 4000, 5000},
+        xticklabels={1, 2, 3, 4, 5},
+    ]
+        \addplot+[color=colorSpec, solid, ultra thick] table [x=dim, y=spec, col sep=comma] {simul_result/noniso_sep6_chain_gauss.csv};
+        \addplot+[color=colorSCVX, solid, mark=diamond*] table [x=dim, y=scvx, col sep=comma] {simul_result/noniso_sep6_chain_gauss.csv};
+        \addplot+[color=colorIfpca, solid, mark=pentagon*] table [x=dim, y=ifpca, col sep=comma] {simul_result/noniso_sep6_chain_gauss.csv};
+        \addplot+[color=colorWitten, solid, mark=star] table [x=dim, y=witten, col sep=comma] {simul_result/noniso_sep6_chain_gauss.csv};
+        \addplot+[color=colorTvs, solid, ultra thick, mark=x, mark size=2pt] table [x=dim, y=tvs, col sep=comma] {simul_result/noniso_sep6_chain_gauss.csv};
+        \addplot+[color=colorSas, solid, mark=triangle, mark options={solid}, thick] table [x=dim, y=arias, col sep=comma] {simul_result/noniso_sep6_chain_gauss.csv};
 
-% Competitors
-\addplot+[color=colorSCVX, solid, mark=diamond*] table [x=dim, y=scvx, col sep=comma] {simul_result/iso_sep4_TVS_LAP.csv};
+    % --- Row 2 ---
 
-\addplot+[color=colorIfpca, solid, mark=pentagon*] table [x=dim, y=ifpca, col sep=comma] {simul_result/iso_sep4_TVS_LAP.csv};
+    % Plot 5: Placeholder Non-iso sep=4
+    \nextgroupplot[
+        title={Non-iso Comparison\\(e) sep=4},
+        xmin=-250, xmax=5250,
+        xlabel={Dimension ($p / 10^{3}$)},
+        scaled x ticks=false,
+        xtick={1000, 2000, 3000, 4000, 5000},
+        xticklabels={1, 2, 3, 4, 5},
+    ]
+        \addplot+[color=colorSpec, solid, ultra thick] table [x=dim, y=spec, col sep=comma] {simul_result/iso_sep4_extended.csv};
 
-\addplot+[color=colorWitten, solid, mark=star] table [x=dim, y=witten, col sep=comma] {simul_result/iso_sep4_TVS_LAP.csv};
+    % Plot 6: Placeholder 
+    \nextgroupplot[
+        title={Non-iso Comparison\\(f) sep=3},
+        xmin=-250, xmax=5250,
+        xlabel={Dimension ($p / 10^{3}$)},
+        scaled x ticks=false,
+        xtick={1000, 2000, 3000, 4000, 5000},
+        xticklabels={1, 2, 3, 4, 5},
+    ]
+        \addplot+[color=colorSpec, solid, ultra thick] table [x=dim, y=spec, col sep=comma] {simul_result/iso_sep4_extended.csv};
 
-\addplot+[color=colorChime, solid, mark=oplus*] table [x=dim, y=chime, col sep=comma] {simul_result/iso_sep4_TVS_LAP.csv};
+    % Plot 7: Placeholder
+    \nextgroupplot[
+        title={Non-iso Comparison\\(g) Placeholder},
+        xmin=-250, xmax=5250,
+        xlabel={Dimension ($p / 10^{3}$)},
+        scaled x ticks=false,
+        xtick={1000, 2000, 3000, 4000, 5000},
+        xticklabels={1, 2, 3, 4, 5},
+    ]
+        \addplot+[color=colorSpec, solid, ultra thick] table [x=dim, y=spec, col sep=comma] {simul_result/iso_sep4_extended.csv};
 
-\addplot+[color=colorTvs, solid, ultra thick, mark=x, mark size=2pt] table [x=dim, y=tvs, col sep=comma] {simul_result/iso_sep4_TVS_LAP.csv};
-
-\addplot+[color=colorSas, solid, mark=triangle, mark options={solid}, thick] table [x=dim, y=arias, col sep=comma] {simul_result/iso_sep4_TVS_LAP.csv};
+    % Plot 8: Placeholder
+    \nextgroupplot[
+        title={Non-iso Comparison\\(h) Placeholder},
+        xmin=-250, xmax=5250,
+        xlabel={Dimension ($p / 10^{3}$)},
+        scaled x ticks=false,
+        xtick={1000, 2000, 3000, 4000, 5000},
+        xticklabels={1, 2, 3, 4, 5},
+    ]
+        \addplot+[color=colorSpec, solid, ultra thick] table [x=dim, y=spec, col sep=comma] {simul_result/iso_sep4_extended.csv};
     \end{groupplot}
 
     % --- Merged Global Legend ---
-    \node[anchor=north] at ($(group c1r1.south west)!0.5!(group c3r1.south east)$) [yshift=-1cm] {
+    \node[anchor=north] at ($(group c1r2.south west)!0.5!(group c4r2.south east)$) [yshift=-1cm] {
         \begin{tikzpicture}
             \matrix[
                 matrix of nodes,
@@ -157,9 +208,9 @@ yticklabels={0.5, 0.6, 0.7, 0.8, 0.9, 1.0}
                 column sep={2pt},
                 row sep=0pt
             ] {
-                \ref{p1:spec_non} (1) Spectral clustering & \ref{p1:spec} \underline{Greedy algorithm initialized by (1)} & \ref{p2:tvs} \underline{TVS algorithm} & \ref{p2:scvx} SCVX \\
-                \ref{p1:hc_non} (2) Hierarchical clustering & \ref{p1:hc} Greedy algorithm initialized by (2) & \ref{p2:ifpca} IFPCA & \ref{p2:witten} SKM \\
-                \ref{p1:sdp_non} (3) SDP K-means & \ref{p1:sdp} Greedy algorithm initialized by (3) & \ref{p2:chime} CHIME & \ref{p2:sas} SAS \\
+                 \ref{p1:spec} \underline{Greedy algorithm} & \ref{p2:tvs} \underline{TVS algorithm} & \ref{p2:scvx} SCVX 
+                  \ref{p2:ifpca} IFPCA & \ref{p2:witten} SKM 
+               \ref{p2:chime} CHIME & \ref{p2:sas} SAS \\
             };
         \end{tikzpicture}
     };
