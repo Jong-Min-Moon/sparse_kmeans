@@ -9,8 +9,8 @@ param(
     [string]$Hostname = "discovery.usc.edu",
     [string]$RemoteBase = "~/sparse_kmeans_project",
     [double[]]$Separations = @(6),
-    [int[]]$Dimensions = @(4000, 5000),
-    [string]$Noise = "Gaussian"
+    [int[]]$Dimensions = @(3000, 5000),
+    [string]$Noise = "Laplace"
 )
 
 $ErrorActionPreference = "Stop"
