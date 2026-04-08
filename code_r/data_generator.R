@@ -135,9 +135,11 @@ generate_data_from_specification <- function(specification, n, seed = NULL, nois
             # Generate Laplace(0,1) noise
             U1 <- matrix(runif(n / 2 * p, min = -0.5, max = 0.5), nrow = n / 2, ncol = p)
             Z1 <- -sign(U1) * log(1 - 2 * abs(U1))
+            Z1 <- Z1 / sqrt(2)
 
             U2 <- matrix(runif(n / 2 * p, min = -0.5, max = 0.5), nrow = n / 2, ncol = p)
             Z2 <- -sign(U2) * log(1 - 2 * abs(U2))
+            Z2 <- Z2 / sqrt(2)
 
             eS <- eigen(specification$covariance_matrix, symmetric = TRUE)
             ev <- pmax(eS$values, 0)
