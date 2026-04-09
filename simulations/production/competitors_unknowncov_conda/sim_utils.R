@@ -49,7 +49,7 @@ generate_data_unknowncov <- function(n, p, sep, seed, noise_type) {
 #'                     (default: all four standard methods)
 #' @return TRUE if a valid, complete checkpoint exists; FALSE otherwise
 check_progress <- function(results_dir, job_id, p,
-                           methods = c("witten", "arias", "ifpca", "scvx", "cvs")) {
+                           methods = c("scvx")) {
     filename <- file.path(results_dir, sprintf("sim_job%d_p%d.rds", job_id, p))
     if (!file.exists(filename)) return(FALSE)
 
@@ -61,10 +61,6 @@ check_progress <- function(results_dir, job_id, p,
         col <- paste0("accuracy_", m)
         # If the column is missing OR stored as logical (== was never computed)
         if (!col %in% names(d) || is.logical(d[[col]])) {
-            message(sprintf(
-                "[checkpoint] Stale file %s missing numeric results for '%s'. Will re-run.",
-                basename(filename), m
-            ))
             return(FALSE)
         }
     }
@@ -79,12 +75,24 @@ save_result <- function(res_df, results_dir, job_id, p) {
 }
 
 #' Append a progress message to log file (safe for parallel writes)
-log_progress <- function(log_file, msg) {
+log_progress <- function(log_file, msg, console_only = FALSE) {
+    if (is.null(msg) || msg == "") return()
+    
+    # Always print to console
     cat(msg)
-    suppressWarnings(
-        tryCatch(
-            cat(msg, file = log_file, append = TRUE),
-            error = function(e) NULL
+    
+    # Append to file if requested and provided
+    if (!console_only && !is.null(log_file) && log_file != "") {
+        suppressWarnings(
+            tryCatch(
+                {
+                    # Use a connection to be slightly more robust
+                    con <- file(log_file, open = "a")
+                    cat(msg, file = con)
+                    close(con)
+                },
+                error = function(e) NULL
+            )
         )
-    )
+    }
 }

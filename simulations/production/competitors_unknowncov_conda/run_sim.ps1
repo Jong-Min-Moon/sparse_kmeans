@@ -1,25 +1,37 @@
 # run_sim.ps1
 # Launch unknowncov_conda simulations using the correct conda R environment.
 #
-# Usage — must invoke with ExecutionPolicy Bypass since script signing is off:
+# Usage:
 #   powershell -ExecutionPolicy Bypass -File ".\run_sim.ps1" laplace
 #   powershell -ExecutionPolicy Bypass -File ".\run_sim.ps1" gaussian
-#   powershell -ExecutionPolicy Bypass -File ".\run_sim.ps1"   # both
+#   powershell -ExecutionPolicy Bypass -File ".\run_sim.ps1" both
 #
-# param() MUST be the first non-comment statement in a .ps1 file.
 param(
     [ValidateSet("laplace", "gaussian", "both", "")]
     [string]$Sim = ""
 )
 
-$CondaEnv = "r_legacy_sim"
-$Root     = $PSScriptRoot   # always the directory containing this script
+$CondaEnvDir = "C:\Users\jongmin\miniconda3\envs\r_legacy_sim"
+$RscriptExe  = "$CondaEnvDir\Scripts\Rscript.exe"
+$Root        = $PSScriptRoot
+
+# Prepend conda env paths so Rscript.exe can find its DLLs (fixes 0xC0000135)
+$OrigPath = $env:PATH
+$env:PATH = "$CondaEnvDir;$CondaEnvDir\Scripts;$CondaEnvDir\Library\bin;$CondaEnvDir\Library\mingw-w64\bin;$CondaEnvDir\lib\R\bin\x64;$OrigPath"
 
 function Invoke-Sim {
-    param([string]$Script, [string]$Label)
-    Write-Host "`n==> Running $Label simulation..." -ForegroundColor Cyan
-    # --no-capture-output streams R's cat() output live to this console
-    conda run --no-capture-output -n $CondaEnv Rscript "$Script"
+    param([string]$ScriptPath, [string]$Label)
+
+    $ScriptName = Split-Path $ScriptPath -Leaf
+    Write-Host "`n==> Running $Label simulation ($ScriptName)..." -ForegroundColor Cyan
+
+    Push-Location $Root
+    try {
+        & $RscriptExe $ScriptName
+    } finally {
+        Pop-Location
+    }
+
     if ($LASTEXITCODE -ne 0) {
         Write-Host "ERROR: $Label simulation failed (exit code $LASTEXITCODE)." -ForegroundColor Red
     } else {
@@ -27,11 +39,20 @@ function Invoke-Sim {
     }
 }
 
-switch ($Sim.ToLower()) {
-    "laplace"  { Invoke-Sim "$Root\sim_laplace_unknowncov.R"  "Laplace" }
-    "gaussian" { Invoke-Sim "$Root\sim_gaussian_unknowncov.R" "Gaussian" }
+$SimType = if ([string]::IsNullOrWhiteSpace($Sim)) { "both" } else { $Sim.ToLower() }
+
+switch ($SimType) {
+    "laplace"  { 
+        Invoke-Sim (Join-Path $Root "sim_laplace_unknowncov.R") "Laplace" 
+    }
+    "gaussian" { 
+        Invoke-Sim (Join-Path $Root "sim_gaussian_unknowncov.R") "Gaussian" 
+    }
+    "both"     {
+        Invoke-Sim (Join-Path $Root "sim_laplace_unknowncov.R") "Laplace"
+        Invoke-Sim (Join-Path $Root "sim_gaussian_unknowncov.R") "Gaussian"
+    }
     default    {
-        Invoke-Sim "$Root\sim_laplace_unknowncov.R"  "Laplace"
-        Invoke-Sim "$Root\sim_gaussian_unknowncov.R" "Gaussian"
+        Write-Host "Unknown simulation type: $Sim" -ForegroundColor Yellow
     }
 }
