@@ -75,11 +75,27 @@ get_specification_chaingraph <- function(support, separation, dimension, precisi
     ))
 }
 
-#' Generate data using the specification
-#' @param specification Result from get_specification_chaingraph
-#' @param n Sample size
-#' @param seed Optional seed for reproducibility
-#' @param noise Type of noise, either "Gaussian" (default) or "t"
+#' Generate data from a specification object
+#'
+#' Samples \code{n} observations from a two-class Gaussian (or heavy-tailed)
+#' mixture defined by a specification object. Compatible with specifications
+#' produced by \code{get_specification_chaingraph}, \code{get_specification_identity},
+#' and \code{get_specification_erdos_renyi}.
+#'
+#' If \code{covariance_matrix} is absent from the specification but
+#' \code{precision_matrix} is present, the covariance is derived internally via
+#' a numerically stabilised matrix inversion.
+#'
+#' @param specification A specification list with at minimum: \code{dimension},
+#'   \code{mu1}, \code{mu2}, and either \code{covariance_matrix} or
+#'   \code{precision_matrix}. Identity-covariance specs additionally need
+#'   \code{precision_sparsity} and \code{rho} set to \code{0}.
+#' @param n Total sample size (split equally between the two classes).
+#' @param seed Optional integer seed for reproducibility.
+#' @param noise Noise distribution: \code{"Gaussian"} (default), \code{"t"}
+#'   (t(6) scaled to unit variance), or \code{"Laplace"}.
+#' @return A list with \code{X} (p x n data matrix) and \code{labels}
+#'   (integer vector of length n with values 1 or 2).
 #' @export
 generate_data_from_specification <- function(specification, n, seed = NULL, noise = "Gaussian") {
     if (!is.null(seed)) set.seed(seed)
@@ -88,82 +104,117 @@ generate_data_from_specification <- function(specification, n, seed = NULL, nois
         stop("Unsupported noise type. Must be 'Gaussian', 't', or 'Laplace'.")
     }
 
-    # Fast path for identity covariance (p >> n makes eigen() slow inside mvrnorm)
-    if (specification$precision_sparsity == 0 && specification$rho == 0) {
-        p <- specification$dimension
+    # ------------------------------------------------------------------
+    # Resolve covariance matrix
+    #   Priority: covariance_matrix field > invert precision_matrix
+    #   isTRUE() guards against non-numeric precision_sparsity values
+    #   (e.g. "erdos_renyi") that would produce NA in a bare == comparison.
+    # ------------------------------------------------------------------
+    is_identity <- isTRUE(specification$precision_sparsity == 0) &&
+        isTRUE(specification$rho == 0)
+
+    if (!is_identity) {
+        if (!is.null(specification$covariance_matrix)) {
+            Sigma <- specification$covariance_matrix
+        } else if (!is.null(specification$precision_matrix)) {
+            # Derive Sigma from Omega with numerical symmetrisation
+            Sigma_raw <- solve(specification$precision_matrix)
+            Sigma <- (Sigma_raw + t(Sigma_raw)) / 2
+        } else {
+            stop("Specification must contain 'covariance_matrix' or 'precision_matrix'.")
+        }
+    }
+
+    p <- specification$dimension
+
+    # ------------------------------------------------------------------
+    # Helper: apply a symmetric PSD matrix square-root transform to
+    # an (n/2 x p) iid noise matrix Z via the spectral decomposition of Sigma.
+    # Returns Z %*% Sigma^{1/2}, i.e. rows are correlated realisations.
+    # ------------------------------------------------------------------
+    apply_sqrt_transform <- function(Z, eS) {
+        ev <- pmax(eS$values, 0)
+        Z %*% (eS$vectors %*% diag(sqrt(ev), p) %*% t(eS$vectors))
+    }
+
+    # ------------------------------------------------------------------
+    # Fast path: identity covariance — skip eigen() / solve() entirely.
+    # Only reached when precision_sparsity == 0 AND rho == 0 (numerically).
+    # ------------------------------------------------------------------
+    if (is_identity) {
         if (noise == "Gaussian") {
-            # Base gaussian noise N(0, 1)
             Z1 <- matrix(rnorm(n / 2 * p), nrow = n / 2, ncol = p)
             Z2 <- matrix(rnorm(n / 2 * p), nrow = n / 2, ncol = p)
         } else if (noise == "t") {
             cat("t(6)-distributed noise scaled to unit variance...\n")
-
-            # Base t(6) noise
             Z1 <- matrix(rt(n / 2 * p, df = 6), nrow = n / 2, ncol = p) / sqrt(1.5)
             Z2 <- matrix(rt(n / 2 * p, df = 6), nrow = n / 2, ncol = p) / sqrt(1.5)
-        } else if (noise == "Laplace") {
+        } else { # Laplace
             cat("Laplace(0,1)/sqrt(2) distributed noise via inverse transform sampling...\n")
-
-            # Generate Laplace(0,1) noise: X = -sign(U) * log(1 - 2|U|) where U ~ Unif(-0.5, 0.5)
             U1 <- matrix(runif(n / 2 * p, min = -0.5, max = 0.5), nrow = n / 2, ncol = p)
             Z1 <- -sign(U1) * log(1 - 2 * abs(U1)) / sqrt(2)
-
             U2 <- matrix(runif(n / 2 * p, min = -0.5, max = 0.5), nrow = n / 2, ncol = p)
             Z2 <- -sign(U2) * log(1 - 2 * abs(U2)) / sqrt(2)
         }
-
-        # Shift by means
         X1 <- sweep(Z1, 2, specification$mu1, "+")
         X2 <- sweep(Z2, 2, specification$mu2, "+")
+
+        # ------------------------------------------------------------------
+        # General path: arbitrary covariance structure (chain graph, ER, etc.)
+        # ------------------------------------------------------------------
     } else {
         if (noise == "Gaussian") {
-            X1 <- MASS::mvrnorm(n / 2, specification$mu1, specification$covariance_matrix)
-            X2 <- MASS::mvrnorm(n / 2, specification$mu2, specification$covariance_matrix)
-        } else if (noise == "t") {
-            p <- specification$dimension
-            Z1 <- matrix(rt(n / 2 * p, df = 6), nrow = n / 2, ncol = p)
-            Z2 <- matrix(rt(n / 2 * p, df = 6), nrow = n / 2, ncol = p)
+            # mvrnorm handles the Cholesky decomposition internally
+            X1 <- MASS::mvrnorm(n / 2, specification$mu1, Sigma)
+            X2 <- MASS::mvrnorm(n / 2, specification$mu2, Sigma)
+        } else {
+            # Both t and Laplace share the same eigen-based colouring:
+            #   X = Z %*% Sigma^{1/2} + mu
+            # Compute the spectral decomposition once.
+            eS <- eigen(Sigma, symmetric = TRUE)
 
-            eS <- eigen(specification$covariance_matrix, symmetric = TRUE)
-            ev <- pmax(eS$values, 0)
+            if (noise == "t") {
+                # t(6) scaled to unit variance: Var[t(6)/sqrt(6/4)] = 1
+                Z1 <- matrix(rt(n / 2 * p, df = 6), nrow = n / 2, ncol = p) / sqrt(1.5)
+                Z2 <- matrix(rt(n / 2 * p, df = 6), nrow = n / 2, ncol = p) / sqrt(1.5)
+            } else { # Laplace
+                # Laplace(0,1) via inverse CDF; divide by sqrt(2) for unit variance
+                U1 <- matrix(runif(n / 2 * p, min = -0.5, max = 0.5), nrow = n / 2, ncol = p)
+                Z1 <- -sign(U1) * log(1 - 2 * abs(U1)) / sqrt(2)
+                U2 <- matrix(runif(n / 2 * p, min = -0.5, max = 0.5), nrow = n / 2, ncol = p)
+                Z2 <- -sign(U2) * log(1 - 2 * abs(U2)) / sqrt(2)
+            }
 
-            X1 <- sweep(Z1 %*% diag(sqrt(ev), p) %*% t(eS$vectors), 2, specification$mu1, "+")
-            X2 <- sweep(Z2 %*% diag(sqrt(ev), p) %*% t(eS$vectors), 2, specification$mu2, "+")
-        } else if (noise == "Laplace") {
-            p <- specification$dimension
-
-            # Generate Laplace(0,1) noise
-            U1 <- matrix(runif(n / 2 * p, min = -0.5, max = 0.5), nrow = n / 2, ncol = p)
-            Z1 <- -sign(U1) * log(1 - 2 * abs(U1))
-            Z1 <- Z1 / sqrt(2)
-
-            U2 <- matrix(runif(n / 2 * p, min = -0.5, max = 0.5), nrow = n / 2, ncol = p)
-            Z2 <- -sign(U2) * log(1 - 2 * abs(U2))
-            Z2 <- Z2 / sqrt(2)
-
-            eS <- eigen(specification$covariance_matrix, symmetric = TRUE)
-            ev <- pmax(eS$values, 0)
-
-            X1 <- sweep(Z1 %*% diag(sqrt(ev), p) %*% t(eS$vectors), 2, specification$mu1, "+")
-            X2 <- sweep(Z2 %*% diag(sqrt(ev), p) %*% t(eS$vectors), 2, specification$mu2, "+")
+            X1 <- sweep(apply_sqrt_transform(Z1, eS), 2, specification$mu1, "+")
+            X2 <- sweep(apply_sqrt_transform(Z2, eS), 2, specification$mu2, "+")
         }
     }
 
     X <- t(rbind(X1, X2))
-    labels <- c(rep(1, n / 2), rep(2, n / 2))
+    labels <- c(rep(1L, n / 2), rep(2L, n / 2))
     return(list(X = X, labels = labels))
 }
 
 
-#' Generate Data based on Erdos-Renyi Random Graph Model (Model 1)
+#' Erdos-Renyi Graph Specification Generator
 #'
-#' @param n Sample size
-#' @param p Number of variables
-#' @param separation Distance between cluster means
-#' @param s Number of nonzero entries in the discriminant vector (default 10)
-#' @return A list containing X (data matrix, p x n) and labels
+#' Constructs and returns a specification object for the Erdos-Renyi random
+#' graph model (Model 1) without sampling any observations. The returned object
+#' is fully compatible with \code{generate_data_from_specification}.
+#'
+#' @param p Number of variables (dimension)
+#' @param separation Desired Mahalanobis distance between cluster means.
+#'   If \code{NULL}, magnitude is set to 1 and separation is computed from the
+#'   graph structure.
+#' @param s Number of signal features (nonzero entries in the discriminant
+#'   vector). Defaults to 10.
+#' @return A list with fields: \code{support}, \code{separation},
+#'   \code{dimension}, \code{precision_sparsity}, \code{rho},
+#'   \code{precision_matrix}, \code{covariance_matrix}, \code{magnitude},
+#'   \code{mu1}, \code{mu2}.
 #' @export
-generate_erdos_renyi_data <- function(n, p, separation = NULL, s = 10) {
+get_specification_erdos_renyi <- function(p, separation = NULL, s = 10) {
+    set.seed(2026)
     # 1. Generate Omega_tilde
     Omega_tilde <- matrix(0, nrow = p, ncol = p)
     num_upper <- p * (p - 1) / 2
@@ -179,7 +230,7 @@ generate_erdos_renyi_data <- function(n, p, separation = NULL, s = 10) {
     # Symmetrize
     Omega_tilde_sym <- Omega_tilde + t(Omega_tilde)
 
-    # 2. Positive definiteness
+    # 2. Positive definiteness correction
     eigen_out <- eigen(Omega_tilde_sym, symmetric = TRUE, only.values = TRUE)
     phi_min <- min(eigen_out$values)
     shift <- max(-phi_min, 0) + 0.05
@@ -192,20 +243,18 @@ generate_erdos_renyi_data <- function(n, p, separation = NULL, s = 10) {
     # Ensure perfect symmetry
     Omega_star <- (Omega_star + t(Omega_star)) / 2
 
-    # Covariance matrix
+    # 4. Covariance matrix
     Sigma <- solve(Omega_star)
     Sigma <- (Sigma + t(Sigma)) / 2
 
-    # 4. Means to achieve desired separation
+    # 5. Means to achieve desired separation
     support <- 1:s
     Sigma_S0 <- Sigma[support, support]
     sum_Sigma_S0 <- sum(Sigma_S0)
 
-    # separation is the Mahalanobis distance between two classes
-    # mu1* = 0, mu2* = - Omega^{-1} beta* = - Sigma beta*
-    # The base vector is (1, ..., 1) on the support.
-    # Its Mahalanobis distance is sqrt( t(base) %*% Sigma %*% base ) = sqrt(sum(Sigma_S0))
-    # To achieve desired separation (Mahalanobis distance), we scale it.
+    # separation is the Mahalanobis distance between two classes.
+    # mu1 = 0, mu2 = -Sigma * beta_star  where beta_star = magnitude * e_support
+    # Mahalanobis distance = sqrt(t(beta_star) %*% Sigma %*% beta_star) = magnitude * sqrt(sum_Sigma_S0)
     if (is.null(separation)) {
         magnitude <- 1
         separation <- sqrt(sum_Sigma_S0)
@@ -219,29 +268,18 @@ generate_erdos_renyi_data <- function(n, p, separation = NULL, s = 10) {
     mu1 <- rep(0, p)
     mu2 <- as.numeric(-(Sigma %*% beta_star))
 
-    # 5. Generate data
-    n1 <- sum(rbinom(n, 1, 0.5))
-    n2 <- n - n1
-
-    # Handle cases where n1 or n2 is 0 or 1 safely
-    X1 <- if (n1 > 0) MASS::mvrnorm(n1, mu1, Sigma) else matrix(nrow = 0, ncol = p)
-    X2 <- if (n2 > 0) MASS::mvrnorm(n2, mu2, Sigma) else matrix(nrow = 0, ncol = p)
-
-    if (n1 == 1) X1 <- matrix(X1, nrow = 1)
-    if (n2 == 1) X2 <- matrix(X2, nrow = 1)
-
-    X <- t(rbind(X1, X2))
-    labels <- c(rep(1, n1), rep(2, n2))
-
     return(list(
-        X = X,
-        labels = labels,
+        support = support,
+        separation = separation,
+        dimension = p,
+        # "erdos_renyi" prevents the identity fast-path in generate_data_from_specification
+        precision_sparsity = "erdos_renyi",
+        rho = NA_real_,
         precision_matrix = Omega_star,
         covariance_matrix = Sigma,
-        mu1 = mu1,
-        mu2 = mu2,
-        n1 = n1,
-        n2 = n2
+        magnitude = magnitude,
+        mu1 = as.numeric(mu1),
+        mu2 = as.numeric(mu2)
     ))
 }
 
