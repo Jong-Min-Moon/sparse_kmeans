@@ -245,7 +245,13 @@ cluster_greedy_ISEE <- function(X, K, n_iter = 200, n_perms = 5000, fdr_target =
             Sigma_full[s_hat, s_hat] <- Sigma_hat_small
         }
 
-        res_cluster <- run_clustering_block_knowncov(X_tilde, s_hat, K, cluster_est_now, covariance = Sigma_full)
+        # Convert integer indices to a logical vector (matching the contract of
+        # run_clustering_block_knowncov, which expects a logical selected_features
+        # vector — consistent with how cluster_greedy.R uses select_greedily()).
+        selected_features <- logical(p)
+        selected_features[s_hat] <- TRUE
+
+        res_cluster <- run_clustering_block_knowncov(X_tilde, selected_features, K, cluster_est_now, covariance = Sigma_full)
         cluster_est_new <- res_cluster$cluster
 
         # --- Evaluation & Convergence ---
