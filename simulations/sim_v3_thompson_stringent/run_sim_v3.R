@@ -31,7 +31,7 @@ if (length(args) > 0) {
 # Source Code (Adjusted paths)
 source("../../code_r/data_generator.R")
 source("../../code_r/block_coordinate_optim_thompson_unknowncov_v3.R")
-source("../../code_r/block_coordinate_optim_greedy_unknowncov_SAM.R")
+source("../../code_r/cluster_greedy_ISEE.R")
 source("../../code_r/ESSC.R")
 source("../../code_r/ISEE_residual_lasso.R")
 source("../../code_r/get_intercept_residual_lasso.R")

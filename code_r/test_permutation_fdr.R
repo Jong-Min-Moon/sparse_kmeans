@@ -1,5 +1,5 @@
 # Test Permutation FDR
-source("block_coordinate_optim_greedy_unknowncov_SAM.R")
+source("cluster_greedy_ISEE.R")
 
 # Mock dependencies if not loaded
 # Assuming 'block_coordinate_optim_deterministic_unknowncov.R' and others are sourced in real env
@@ -74,7 +74,7 @@ cat("\n--- Testing Full Function (Stubbed) ---\n")
 tryCatch(
     {
         # We use a mocked run just to see if it crashes
-        res_full <- block_coordinate_optim_greedy_unknowncov_SAM(X, K, n_iter = 2, n_perms = 5)
+        res_full <- cluster_greedy_ISEE(X, K, n_iter = 2, n_perms = 5)
         cat("Function ran successfully.\n")
     },
     error = function(e) {

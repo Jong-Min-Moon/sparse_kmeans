@@ -164,7 +164,7 @@ get_permutation_fdr_threshold <- function(stats_obs, X_tilde, cluster_labels, Om
 #' @param n_perms Number of permutations for FDR control (default 5000)
 #' @param fdr_target Target FDR level (default 0.4)
 #' @export
-block_coordinate_optim_greedy_unknowncov_SAM <- function(X, K, n_iter = 200, n_perms = 5000, fdr_target = 0.4, stable_iter = 5, true_labels = NULL) {
+cluster_greedy_ISEE <- function(X, K, n_iter = 200, n_perms = 5000, fdr_target = 0.4, stable_iter = 5, true_labels = NULL) {
     # variable initialization
     p <- nrow(X)
     n <- ncol(X)

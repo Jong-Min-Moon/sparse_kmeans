@@ -26,7 +26,7 @@ if (length(args) > 0) {
 # Source Code (Adjusted paths for simulations/sim08.../)
 # Assuming sim08 is at the same depth as sim07
 source("../../code_r/data_generator.R")
-source("../../code_r/block_coordinate_optim_greedy_unknowncov_SAM.R")
+source("../../code_r/cluster_greedy_ISEE.R")
 source("../../code_r/ESSC.R")
 source("../../code_r/ISEE_residual_lasso.R")
 source("../../code_r/get_intercept_residual_lasso.R")
@@ -75,7 +75,7 @@ true_labels <- data_res$labels
 # ---------------------------------------------------------
 # Run Algorithm (Permutation Based)
 # ---------------------------------------------------------
-cat("Running block_coordinate_optim_greedy_unknowncov_SAM...\n")
+cat("Running cluster_greedy_ISEE...\n")
 
 # Register Parallel (Standard)
 num_cores <- parallel::detectCores() - 1
@@ -86,7 +86,7 @@ if (Sys.getenv("SLURM_CPUS_PER_TASK") != "") {
 doParallel::registerDoParallel(cores = min(num_cores, 10))
 
 start_time <- Sys.time()
-res <- block_coordinate_optim_greedy_unknowncov_SAM(
+res <- cluster_greedy_ISEE(
     X = X,
     K = 2,
     n_iter = 100,
