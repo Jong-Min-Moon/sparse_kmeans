@@ -23,19 +23,18 @@ if (length(args) > 0) {
     }
 }
 
-# Source Code (Adjusted paths for simulations/sim07.../)
-# Assuming sim07 is at the same depth as sim06
-source("../../code_r/data_generator.R")
-source("../../code_r/cluster_greedy_ISEE.R")
-source("../../code_r/ESSC.R")
-source("../../code_r/ISEE_residual_lasso.R")
-source("../../code_r/get_intercept_residual_lasso.R")
-source("../../code_r/get_cov_small.R")
-source("../../code_r/ISEE_bicluster.R")
-source("../../code_r/clustering_block_knowncov.R")
-source("../../code_r/sdp_kmeans.R")
-source("../../code_r/get_cluster_acc.R")
-source("../../code_r/utils.R")
+# Source Code (Adjusted paths for production/unknowncov_greedy_isee/)
+source("../../../code_r/data_generator.R")
+source("../../../code_r/cluster_greedy_ISEE.R")
+source("../../../code_r/ESSC.R")
+source("../../../code_r/ISEE_residual_lasso.R")
+source("../../../code_r/get_intercept_residual_lasso.R")
+source("../../../code_r/get_cov_small.R")
+source("../../../code_r/ISEE_bicluster.R")
+source("../../../code_r/clustering_block_knowncov.R")
+source("../../../code_r/sdp_kmeans.R")
+source("../../../code_r/get_cluster_acc.R")
+source("../../../code_r/utils.R")
 
 # ---------------------------------------------------------
 # Data Generation Parameters

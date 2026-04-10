@@ -24,12 +24,13 @@ load_cpp_backend <- function() {
     dll_name <- "selection_utils"
     ext <- .Platform$dynlib.ext
 
-    # Paths to check
+    # Paths to check — covers scripts at 1, 2, and 3 directory levels below repo root
     paths <- c(
         file.path(".", paste0(dll_name, ext)),
         file.path("code_r", paste0(dll_name, ext)),
+        file.path("../code_r", paste0(dll_name, ext)),
         file.path("../../code_r", paste0(dll_name, ext)),
-        file.path("../code_r", paste0(dll_name, ext))
+        file.path("../../../code_r", paste0(dll_name, ext))
     )
 
     loaded <- FALSE

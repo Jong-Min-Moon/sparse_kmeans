@@ -9,7 +9,7 @@ REMOTE_BASE=${3:-"~/sparse_kmeans_project"}
 # Get the directory where the script is located
 LOCAL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-REMOTE_SIM_DIR="${REMOTE_BASE}/simulations/sim07_SAM_sep3"
+REMOTE_SIM_DIR="${REMOTE_BASE}/simulations/production/unknowncov_greedy_isee"
 REMOTE_RESULTS_DIR="${REMOTE_SIM_DIR}/results"
 LOCAL_OUTPUT_DIR="${LOCAL_DIR}/output"
 

@@ -12,8 +12,8 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-$LocalDir = "d:\GitHub\sparse_kmeans\simulations\sim07_SAM_sep3"
-$RemoteSimDir = "${RemoteBase}/simulations/sim07_SAM_sep3"
+$LocalDir = "d:\GitHub\sparse_kmeans\simulations\production\unknowncov_greedy_isee"
+$RemoteSimDir = "${RemoteBase}/simulations/production/unknowncov_greedy_isee"
 $RemoteResultsDir = "${RemoteSimDir}/results"
 $LocalOutputDir = "${LocalDir}\output"
 
