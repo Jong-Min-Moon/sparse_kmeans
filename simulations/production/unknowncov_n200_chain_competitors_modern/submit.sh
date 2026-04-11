@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=competitors_unknowncov
+#SBATCH --job-name=unknowncov_n200_chain_competitors_modern
 #SBATCH --partition=main
 #SBATCH --nodes=1
 #SBATCH --ntasks=1

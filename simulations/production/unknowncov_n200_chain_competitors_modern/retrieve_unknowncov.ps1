@@ -6,7 +6,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-$SimName = "competitors_unknowncov"
+$SimName = "unknowncov_n200_chain_competitors_modern"
 $LocalDir = "d:\GitHub\sparse_kmeans\simulations\production\$SimName"
 $RemoteDir = "${RemoteBase}/simulations/production/${SimName}"
 

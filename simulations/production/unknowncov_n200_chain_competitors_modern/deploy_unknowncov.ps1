@@ -14,7 +14,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-$SimName = "competitors_unknowncov"
+$SimName = "unknowncov_n200_chain_competitors_modern"
 $SimDir = "d:\GitHub\sparse_kmeans\simulations\production\$SimName"
 $CodeDir = "d:\GitHub\sparse_kmeans\code_r"
 
