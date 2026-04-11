@@ -71,6 +71,9 @@
         % pure greedy
         \addplot+[color=colorSpec, solid, ultra thick] table [x=dim, y=spec, col sep=comma] {simul_result/noniso_sep6_chain_gauss.csv};
 
+		% greedy_isee
+        \addplot+[color=colorSpec, dotted, ultra thick, mark=square, mark options={solid}] table [x=dim, y=greedy_isee, col sep=comma] {simul_result/noniso_sep6_chain_gauss.csv};
+        
         \addplot+[color=colorSCVX, solid, mark=diamond*] table [x=dim, y=scvx, col sep=comma] {simul_result/noniso_sep6_chain_gauss.csv};
 
         \addplot+[color=colorIfpca, solid, mark=pentagon*] table [x=dim, y=ifpca, col sep=comma] {simul_result/noniso_sep6_chain_gauss.csv};
@@ -91,10 +94,11 @@
         xtick={1000, 2000, 3000, 4000, 5000},
         xticklabels={1, 2, 3, 4, 5},
     ]
-        % SDP (Reference) - Redundant label if we reuse p1:sdp logic in legend, or new label?
-        % We'll plot it but might not need a new label if we use the generic one, but let's label it just in case.
+ 
          \addplot+[color=colorSpec, solid, ultra thick] table [x=dim, y=spec, col sep=comma] {simul_result/noniso_sep6_chain_laplace.csv};
  
+          \addplot+[color=colorSpec, dotted, ultra thick, mark=square, mark options={solid}] table [x=dim, y=greedy_isee, col sep=comma] {simul_result/noniso_sep6_chain_laplace.csv};
+          
  \addplot+[color=colorSCVX, solid, mark=diamond*] table [x=dim, y=scvx, col sep=comma] {simul_result/noniso_sep6_chain_laplace.csv};
  
  \addplot+[color=colorIfpca, solid, mark=pentagon*] table [x=dim, y=ifpca, col sep=comma] {simul_result/noniso_sep6_chain_laplace.csv};
@@ -118,7 +122,7 @@
         xticklabels={100, 200, 300, 400},
     ]
 
-         \addplot+[color=colorSpec, solid, ultra thick] table [x=dim, y=spec, col sep=comma] {simul_result/noniso_sep6_chain_gauss_n500.csv};
+         \addplot+[color=colorSpec, dotted, ultra thick, mark=square, mark options={solid}] table [x=dim, y=greedy_isee, col sep=comma] {simul_result/noniso_sep6_chain_gauss_n500.csv};
 
 \addplot+[color=colorSCVX, solid, mark=diamond*] table [x=dim, y=scvx, col sep=comma] {simul_result/noniso_sep6_chain_gauss_n500.csv};
 
@@ -192,6 +196,7 @@ xticklabels={100, 200, 300, 400},
     \begin{axis}[hide axis, xmin=0, xmax=1, ymin=0, ymax=1, every axis plot/.append style={mark size=1.5pt}]
         % Spec
         \addplot+[color=colorSpec, solid, ultra thick] coordinates {(0,0)}; \label{alg:spec}
+        \addplot+[color=colorSpec, dotted, ultra thick, mark=square, mark options={solid}] coordinates {(0,0)}; \label{alg:greedy_isee}
         
         % Competitors
         \addplot+[color=colorSCVX, solid, mark=diamond*] coordinates {(0,0)}; \label{alg:scvx}
@@ -211,7 +216,7 @@ xticklabels={100, 200, 300, 400},
                 column sep={1pt},
                 row sep=0pt
             ] {
-                \ref{alg:spec} \underline{Greedy algorithm (naive)} & \ref{alg:tvs} \underline{TVS algorithm (naive)} & \ref{alg:scvx} SCVX & \ref{alg:ifpca} IFPCA \\
+                \ref{alg:spec} \underline{Greedy (naive)} & \ref{alg:greedy_isee} \underline{Greedy (ISEE)} & \ref{alg:tvs} \underline{TVS (naive)} & \ref{alg:scvx} SCVX & \ref{alg:ifpca} IFPCA \\
                 \ref{alg:witten} SKM & \ref{alg:chime} CHIME & \ref{alg:sas} SAS \\
             };
         \end{tikzpicture}

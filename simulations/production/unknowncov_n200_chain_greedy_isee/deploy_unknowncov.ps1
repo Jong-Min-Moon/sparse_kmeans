@@ -9,7 +9,7 @@ param(
     [string]$RemoteBase = "~/sparse_kmeans_project",
     [double[]]$Separations = @(6),
     [int[]]$Dimensions = @(1000, 2000, 3000, 4000, 5000),
-    [string]$Noise = "Gaussian"
+    [string]$Noise = "Laplace"
 )
 
 $ErrorActionPreference = "Stop"

@@ -9,16 +9,23 @@ param(
     [string]$RemoteBase = "~/sparse_kmeans_project"
 )
 
-$SimName = "unknowncov_n200_chain_greedy_isee"
-$SimDir = "d:\GitHub\sparse_kmeans\simulations\production\$SimName"
+$ErrorActionPreference = "Stop"
 
-Write-Host "Retrieving results from HPC..." -ForegroundColor Cyan
+$SimName = Split-Path -Leaf $PSScriptRoot
+$LocalDir = $PSScriptRoot
+$RemoteDir = "${RemoteBase}/simulations/production/${SimName}"
 
-# Use rsync if possible, otherwise scp
-# scp -r "${Username}@${Hostname}:${RemoteBase}/simulations/production/${SimName}/results_raw" "${SimDir}\"
+Write-Host "Retrieving simulation results and logs from HPC..." -ForegroundColor Cyan
 
-$rsyncCmd = "rsync -avz --progress ${Username}@${Hostname}:${RemoteBase}/simulations/production/${SimName}/results_raw/ ${SimDir}/results_raw/"
-Write-Host "Running: $rsyncCmd"
-Invoke-Expression $rsyncCmd
+# Ensure local directory structure exists
+New-Item -ItemType Directory -Force -Path "${LocalDir}\results_raw" -ErrorAction SilentlyContinue | Out-Null
+New-Item -ItemType Directory -Force -Path "${LocalDir}\logs" -ErrorAction SilentlyContinue | Out-Null
 
-Write-Host "Retrieval complete." -ForegroundColor Green
+Write-Host "Syncing results_raw..."
+# Using scp -r to pull the entire results_raw directory
+scp -r "${Username}@${Hostname}:${RemoteDir}/results_raw/*" "${LocalDir}/results_raw/"
+
+Write-Host "Syncing logs..."
+scp -r "${Username}@${Hostname}:${RemoteDir}/logs/*" "${LocalDir}/logs/"
+
+Write-Host "Retrieval complete. You can now execute aggregation scripts locally." -ForegroundColor Green
