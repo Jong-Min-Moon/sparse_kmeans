@@ -244,7 +244,10 @@ get_specification_erdos_renyi <- function(p, separation = NULL, s = 10) {
     # 1. Generate Omega_tilde
     Omega_tilde <- matrix(0, nrow = p, ncol = p)
     num_upper <- p * (p - 1) / 2
-    delta <- rbinom(num_upper, 1, 0.05)
+    # Constant average degree scaling (q = avg_degree / p) to prevent dilution
+    avg_degree <- 5
+    q <- min(avg_degree / p, 1)
+    delta <- rbinom(num_upper, 1, q)
 
     # u_ij ~ Unif[0.5, 1] U [-1, -0.5]
     signs <- sample(c(-1, 1), num_upper, replace = TRUE)
