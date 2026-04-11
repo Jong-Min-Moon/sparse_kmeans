@@ -165,8 +165,21 @@ generate_data_from_specification <- function(specification, n, seed = NULL, nois
     } else {
         if (noise == "Gaussian") {
             # mvrnorm handles the Cholesky decomposition internally
-            X1 <- MASS::mvrnorm(n / 2, specification$mu1, Sigma)
-            X2 <- MASS::mvrnorm(n / 2, specification$mu2, Sigma)
+            X1_raw <- MASS::mvrnorm(n / 2, specification$mu1, Sigma)
+            X2_raw <- MASS::mvrnorm(n / 2, specification$mu2, Sigma)
+
+            if (isTRUE(specification$precision_sparsity == "erdos_renyi")) {
+                var_vec <- if (!is.null(specification$variance_vector)) {
+                    specification$variance_vector
+                } else {
+                    diag(Sigma)
+                }
+                X1_raw <- sweep(X1_raw, 2, sqrt(var_vec), "/")
+                X2_raw <- sweep(X2_raw, 2, sqrt(var_vec), "/")
+            }
+
+            X1 <- X1_raw
+            X2 <- X2_raw
         } else {
             # Both t and Laplace share the same eigen-based colouring:
             #   X = Z %*% Sigma^{1/2} + mu
@@ -185,8 +198,21 @@ generate_data_from_specification <- function(specification, n, seed = NULL, nois
                 Z2 <- -sign(U2) * log(1 - 2 * abs(U2)) / sqrt(2)
             }
 
-            X1 <- sweep(apply_sqrt_transform(Z1, eS), 2, specification$mu1, "+")
-            X2 <- sweep(apply_sqrt_transform(Z2, eS), 2, specification$mu2, "+")
+            X1_raw <- apply_sqrt_transform(Z1, eS)
+            X2_raw <- apply_sqrt_transform(Z2, eS)
+
+            if (isTRUE(specification$precision_sparsity == "erdos_renyi")) {
+                var_vec <- if (!is.null(specification$variance_vector)) {
+                    specification$variance_vector
+                } else {
+                    diag(Sigma)
+                }
+                X1_raw <- sweep(X1_raw, 2, sqrt(var_vec), "/")
+                X2_raw <- sweep(X2_raw, 2, sqrt(var_vec), "/")
+            }
+
+            X1 <- sweep(X1_raw, 2, specification$mu1, "+")
+            X2 <- sweep(X2_raw, 2, specification$mu2, "+")
         }
     }
 
@@ -277,6 +303,7 @@ get_specification_erdos_renyi <- function(p, separation = NULL, s = 10) {
         rho = NA_real_,
         precision_matrix = Omega_star,
         covariance_matrix = Sigma,
+        variance_vector = diag(Sigma),
         magnitude = magnitude,
         mu1 = as.numeric(mu1),
         mu2 = as.numeric(mu2)
