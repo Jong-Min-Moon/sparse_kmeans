@@ -75,6 +75,59 @@ get_specification_chaingraph <- function(support, separation, dimension, precisi
     ))
 }
 
+#' AR(1) Precision Matrix Specification Generator
+#'
+#' Variation of the chain graph where the precision matrix assumes an AR(1)
+#' covariance structure: Omega_ij = rho^|i-j|.
+#'
+#' @param support Indices of signal features (e.g. 1:10)
+#' @param separation Distance between cluster means
+#' @param dimension Total number of features (p)
+#' @param rho The AR(1) decay parameter. Defaults to 0.8.
+#' @export
+get_specification_ar1 <- function(support, separation, dimension, rho = 0.8) {
+    # 1. Generate AR(1) Precision Matrix: Omega_ij = rho^|i-j|
+    sparse_precision_matrix <- matrix(0, dimension, dimension)
+    coords <- 1:dimension
+    # Efficient vectorized computation of rho^|i-j|
+    sparse_precision_matrix <- rho^abs(outer(coords, coords, "-"))
+
+    # 2. Covariance matrix (Invert Omega)
+    # Note: For this structure, the covariance matrix Sigma will be tridiagonal.
+    covariance_matrix <- solve(sparse_precision_matrix)
+    covariance_matrix <- (covariance_matrix + t(covariance_matrix)) / 2 # Ensure symmetry
+
+    # 3. Magnitude Calculation
+    # magnitude = separation / 2 / sqrt( sum( Sigma[support, support] ) )
+    Sigma_S0 <- covariance_matrix[support, support]
+    sum_Sigma_S0 <- sum(Sigma_S0)
+    magnitude <- separation / 2 / sqrt(sum_Sigma_S0)
+
+    # 4. Mean Vectors
+    sparse_pre_mean_one <- rep(0, dimension)
+    sparse_pre_mean_one[support] <- 1
+
+    sparse_pre_mean_0 <- magnitude * sparse_pre_mean_one
+    mean_0 <- covariance_matrix %*% sparse_pre_mean_0
+
+    mu1 <- -mean_0
+    mu2 <- mean_0
+
+    return(list(
+        support = support,
+        separation = separation,
+        dimension = dimension,
+        precision_sparsity = "ar1",
+        rho = rho,
+        precision_matrix = sparse_precision_matrix,
+        covariance_matrix = covariance_matrix,
+        magnitude = magnitude,
+        mu1 = as.numeric(mu1),
+        mu2 = as.numeric(mu2)
+    ))
+}
+
+
 #' Generate data from a specification object
 #'
 #' Samples \code{n} observations from a two-class Gaussian (or heavy-tailed)
@@ -168,15 +221,6 @@ generate_data_from_specification <- function(specification, n, seed = NULL, nois
             X1_raw <- MASS::mvrnorm(n / 2, specification$mu1, Sigma)
             X2_raw <- MASS::mvrnorm(n / 2, specification$mu2, Sigma)
 
-            if (isTRUE(specification$precision_sparsity == "erdos_renyi")) {
-                var_vec <- if (!is.null(specification$variance_vector)) {
-                    specification$variance_vector
-                } else {
-                    diag(Sigma)
-                }
-                X1_raw <- sweep(X1_raw, 2, sqrt(var_vec), "/")
-                X2_raw <- sweep(X2_raw, 2, sqrt(var_vec), "/")
-            }
 
             X1 <- X1_raw
             X2 <- X2_raw
@@ -201,15 +245,6 @@ generate_data_from_specification <- function(specification, n, seed = NULL, nois
             X1_raw <- apply_sqrt_transform(Z1, eS)
             X2_raw <- apply_sqrt_transform(Z2, eS)
 
-            if (isTRUE(specification$precision_sparsity == "erdos_renyi")) {
-                var_vec <- if (!is.null(specification$variance_vector)) {
-                    specification$variance_vector
-                } else {
-                    diag(Sigma)
-                }
-                X1_raw <- sweep(X1_raw, 2, sqrt(var_vec), "/")
-                X2_raw <- sweep(X2_raw, 2, sqrt(var_vec), "/")
-            }
 
             X1 <- sweep(X1_raw, 2, specification$mu1, "+")
             X2 <- sweep(X2_raw, 2, specification$mu2, "+")
@@ -221,97 +256,6 @@ generate_data_from_specification <- function(specification, n, seed = NULL, nois
     return(list(X = X, labels = labels))
 }
 
-
-#' Erdos-Renyi Graph Specification Generator
-#'
-#' Constructs and returns a specification object for the Erdos-Renyi random
-#' graph model (Model 1) without sampling any observations. The returned object
-#' is fully compatible with \code{generate_data_from_specification}.
-#'
-#' @param p Number of variables (dimension)
-#' @param separation Desired Mahalanobis distance between cluster means.
-#'   If \code{NULL}, magnitude is set to 1 and separation is computed from the
-#'   graph structure.
-#' @param s Number of signal features (nonzero entries in the discriminant
-#'   vector). Defaults to 10.
-#' @return A list with fields: \code{support}, \code{separation},
-#'   \code{dimension}, \code{precision_sparsity}, \code{rho},
-#'   \code{precision_matrix}, \code{covariance_matrix}, \code{magnitude},
-#'   \code{mu1}, \code{mu2}.
-#' @export
-get_specification_erdos_renyi <- function(p, separation = NULL, s = 10) {
-    set.seed(2026)
-    # 1. Generate Omega_tilde
-    Omega_tilde <- matrix(0, nrow = p, ncol = p)
-    num_upper <- p * (p - 1) / 2
-    # Constant average degree scaling (q = avg_degree / p) to prevent dilution
-    avg_degree <- 5
-    q <- min(avg_degree / p, 1)
-    delta <- rbinom(num_upper, 1, q)
-
-    # u_ij ~ Unif[0.5, 1] U [-1, -0.5]
-    signs <- sample(c(-1, 1), num_upper, replace = TRUE)
-    mags <- runif(num_upper, 0.5, 1)
-    u_ij <- signs * mags
-
-    Omega_tilde[upper.tri(Omega_tilde)] <- delta * u_ij
-
-    # Symmetrize
-    Omega_tilde_sym <- Omega_tilde + t(Omega_tilde)
-
-    # 2. Positive definiteness correction
-    eigen_out <- eigen(Omega_tilde_sym, symmetric = TRUE, only.values = TRUE)
-    phi_min <- min(eigen_out$values)
-    shift <- max(-phi_min, 0) + 0.05
-    Omega_star_unstd <- Omega_tilde_sym + diag(shift, p)
-
-    # 3. Standardize to have unit diagonals
-    d_inv_sqrt <- 1 / sqrt(diag(Omega_star_unstd))
-    Omega_star <- t(Omega_star_unstd * d_inv_sqrt) * d_inv_sqrt
-
-    # Ensure perfect symmetry
-    Omega_star <- (Omega_star + t(Omega_star)) / 2
-
-    # 4. Covariance matrix
-    Sigma <- solve(Omega_star)
-    Sigma <- (Sigma + t(Sigma)) / 2
-
-    # 5. Means to achieve desired separation
-    support <- 1:s
-    Sigma_S0 <- Sigma[support, support]
-    sum_Sigma_S0 <- sum(Sigma_S0)
-
-    # separation is the Mahalanobis distance between two classes.
-    # mu1 = 0, mu2 = -Sigma * beta_star  where beta_star = magnitude * e_support
-    # Mahalanobis distance = sqrt(t(beta_star) %*% Sigma %*% beta_star) = magnitude * sqrt(sum_Sigma_S0)
-    if (is.null(separation)) {
-        magnitude <- 1
-        separation <- sqrt(sum_Sigma_S0)
-    } else {
-        magnitude <- separation / sqrt(sum_Sigma_S0)
-    }
-
-    beta_star <- rep(0, p)
-    beta_star[support] <- magnitude
-
-    mu1 <- rep(0, p)
-    mu2 <- as.numeric(-(Sigma %*% beta_star))
-
-    return(list(
-        support = support,
-        separation = separation,
-        dimension = p,
-        # "erdos_renyi" prevents the identity fast-path in generate_data_from_specification
-        precision_sparsity = "erdos_renyi",
-        rho = NA_real_,
-        precision_matrix = Omega_star,
-        covariance_matrix = Sigma,
-        variance_vector = diag(Sigma),
-        magnitude = magnitude,
-        mu1 = as.numeric(mu1),
-        mu2 = as.numeric(mu2)
-    ))
-}
 
 #' Data Generator Specification for Identity Covariance
 #'
