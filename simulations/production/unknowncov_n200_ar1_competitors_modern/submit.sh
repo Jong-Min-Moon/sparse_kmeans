@@ -3,8 +3,8 @@
 #SBATCH --partition=main
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=4
-#SBATCH --mem=12G
+#SBATCH --cpus-per-task=2
+#SBATCH --mem=3G
 #SBATCH --time=12:00:00
 #SBATCH --array=1-100%16
 

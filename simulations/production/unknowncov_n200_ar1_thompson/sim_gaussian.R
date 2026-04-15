@@ -52,6 +52,8 @@ pval <- 0.01
 n_step_admm <- 3000
 p <- 5000 # Default High-dimensional structural feature parameter
 thompson_step <- 2000
+noise <- "Gaussian"
+
 # Extract dynamically exported values matching the submission wrapper environment
 if (length(args) > 0) {
     for (i in seq_along(args)) {
@@ -100,7 +102,7 @@ K <- 2 # K: Fixed predefined partition mapping structures
 support <- 1:10 # S0: Defining the set of purely informative indices
 
 # Trace executing context gracefully to standard output arrays
-cat(sprintf("--- Simulation Run unknowncov_n200_ar1_thompson (Job ID: %d, Sep: %.1f) ---\n", job_id, separation))
+cat(sprintf("--- Simulation Run unknowncov_n200_ar1_thompson (Noise: %s, Job ID: %d, Sep: %.1f, p: %d) ---\n", noise, job_id, separation, p))
 
 # Secure global pseudo-randomization targeting independent array trajectories
 set.seed(2026 + job_id)
@@ -108,7 +110,7 @@ set.seed(2026 + job_id)
 # ------------------------------------------------------------------------------
 # 5. Data Generation Process (Structural Identity Model)
 # ------------------------------------------------------------------------------
-cat("Instantiating isotropic high-dimensional geometric distributions...\n")
+cat(sprintf("Instantiating isotropic high-dimensional geometric %s distributions...\n", noise))
 
 # Request exact dataset characteristics bounded by the AR(1) generator
 generator_spec <- get_specification_ar1(
@@ -122,7 +124,7 @@ generator_spec <- get_specification_ar1(
 # 5a. Empirical Extrapolation
 # ------------------------------------------------------------------------------
 # Generating empirical normal vectors leveraging the validated structural objects
-data_res <- generate_data_from_specification(generator_spec, n, seed = 2026 + job_id)
+data_res <- generate_data_from_specification(generator_spec, n, seed = 2026 + job_id, noise = noise)
 X <- data_res$X
 true_labels <- data_res$labels
 
@@ -233,7 +235,7 @@ if (!is.null(res)) {
 # 8. Data Output Handlers
 # ------------------------------------------------------------------------------
 # Creates the physical output boundary natively handling file mapping hierarchies dynamically
-out_dir <- sprintf("results_raw/p%d", p)
+out_dir <- sprintf("results_raw/%s/p%d", tolower(noise), p)
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 
 # Generate a cohesive list object encapsulating simulation parameters explicitly
@@ -255,11 +257,12 @@ output_object <- list(
         n = n,
         separation = separation,
         pval = pval,
+        noise = noise,
         n_step_admm = n_step_admm
     )
 )
 
-final_path <- sprintf("%s/sim_id%d_sep%d_pval%s.rds", out_dir, job_id, separation, format(pval, nsmall = 3))
+final_path <- sprintf("%s/sim_id%d_sep%d_pval%s_%s.rds", out_dir, job_id, separation, format(pval, nsmall = 3), tolower(noise))
 
 # Flush binary sequence saving object explicitly tracking for remote extraction mapping
 saveRDS(output_object, file = final_path)

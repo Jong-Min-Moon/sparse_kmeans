@@ -9,7 +9,8 @@ param(
     [string]$Hostname = "discovery.usc.edu",
     [string]$RemoteBase = "~/sparse_kmeans_project",
     [double[]]$Separations = @(4),
-    [int[]]$Dimensions = @(5000, 4000, 3000, 2000, 1000)
+    [int[]]$Dimensions = @(5000, 4000, 3000, 2000, 1000),
+    [string]$Noise = "Laplace"
 )
 
 $ErrorActionPreference = "Stop"
@@ -22,9 +23,9 @@ $CodeDir = "d:\GitHub\sparse_kmeans\code_r"
 Write-Host "Creating remote directories..." -ForegroundColor Cyan
 ssh "${Username}@${Hostname}" "mkdir -p ${RemoteBase}/simulations/production/unknowncov_n200_ar1_thompson && mkdir -p ${RemoteBase}/code_r"
 
-# 2. Transfer Simulation Files (Driver, Submit Script)
+# 2. Transfer Simulation Files (Drivers, Submit Script)
 Write-Host "Transferring simulation files..." -ForegroundColor Cyan
-scp "${SimDir}\driver.R" "${SimDir}\submit.sh" "${Username}@${Hostname}:${RemoteBase}/simulations/production/unknowncov_n200_ar1_thompson/"
+scp "${SimDir}\sim_gaussian.R" "${SimDir}\sim_laplace.R" "${SimDir}\submit.sh" "${Username}@${Hostname}:${RemoteBase}/simulations/production/unknowncov_n200_ar1_thompson/"
 
 # 3. Transfer Library Files and C++ source
 Write-Host "Transferring library dependencies natively..." -ForegroundColor Cyan
@@ -51,10 +52,10 @@ $submittedJobs = @()
 
 foreach ($sep in $Separations) {
     foreach ($p in $Dimensions) {
-        Write-Host "Submitting simulation for sep: $sep, p: $p..."
+        Write-Host "Submitting simulation for noise: $Noise, sep: $sep, p: $p..."
         
-        # Export SEP and P to the submit.sh script automatically 
-        $sbatchCmd = "cd ${RemoteBase}/simulations/production/unknowncov_n200_ar1_thompson && sbatch --export=ALL,SEP=$sep,P=$p submit.sh"
+        # Export SEP, P, NOISE to the submit.sh script automatically 
+        $sbatchCmd = "cd ${RemoteBase}/simulations/production/unknowncov_n200_ar1_thompson && sbatch --export=ALL,SEP=$sep,P=$p,NOISE=$Noise submit.sh"
         
         $maxRetries = 5
         $retryWait = 5
@@ -79,11 +80,11 @@ foreach ($sep in $Separations) {
         if ($success) {
             $jobId = $matches[1]
             Write-Host " -> Successfully submitted Array Job ID: $jobId" -ForegroundColor Green
-            $submittedJobs += [PSCustomObject]@{ Sep = $sep; P = $p; JobID = $jobId; Status = "Success" }
+            $submittedJobs += [PSCustomObject]@{ Noise = $Noise; Sep = $sep; P = $p; JobID = $jobId; Status = "Success" }
         }
         else {
             Write-Error " -> Failed to submit job for separation condition $sep, dimension $p after $maxRetries attempts. Output: $output"
-            $submittedJobs += [PSCustomObject]@{ Sep = $sep; P = $p; JobID = "N/A"; Status = "Failed" }
+            $submittedJobs += [PSCustomObject]@{ Noise = $Noise; Sep = $sep; P = $p; JobID = "N/A"; Status = "Failed" }
         }
         
         # Add a brief pause to prevent SSH connection rate limiting/timeouts on the head node
