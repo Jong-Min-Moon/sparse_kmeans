@@ -9,23 +9,23 @@ param(
     [string]$Hostname = "discovery.usc.edu",
     [string]$RemoteBase = "~/sparse_kmeans_project",
     [double[]]$Separations = @(4),
-    [int[]]$Dimensions = @(5000, 4000, 3000, 2000, 1000),
+    [int[]]$Dimensions = @(27000, 30000),
     [string]$Noise = "Laplace"
 )
 
 $ErrorActionPreference = "Stop"
 
 # Define Local Paths tracking the architecture structure
-$SimDir = "d:\GitHub\sparse_kmeans\simulations\production\unknowncov_n200_ar1_thompson"
+$SimDir = "d:\GitHub\sparse_kmeans\simulations\production\unknowncov_n200_chain_thompson"
 $CodeDir = "d:\GitHub\sparse_kmeans\code_r"
 
 # 1. Create Remote Directories
 Write-Host "Creating remote directories..." -ForegroundColor Cyan
-ssh "${Username}@${Hostname}" "mkdir -p ${RemoteBase}/simulations/production/unknowncov_n200_ar1_thompson && mkdir -p ${RemoteBase}/code_r"
+ssh "${Username}@${Hostname}" "mkdir -p ${RemoteBase}/simulations/production/unknowncov_n200_chain_thompson && mkdir -p ${RemoteBase}/code_r"
 
-# 2. Transfer Simulation Files (Drivers, Submit Script)
+# 2. Transfer Simulation Files (Driver, Submit Script)
 Write-Host "Transferring simulation files..." -ForegroundColor Cyan
-scp "${SimDir}\driver.R" "${SimDir}\submit.sh" "${Username}@${Hostname}:${RemoteBase}/simulations/production/unknowncov_n200_ar1_thompson/"
+scp "${SimDir}\driver.R" "${SimDir}\submit.sh" "${Username}@${Hostname}:${RemoteBase}/simulations/production/unknowncov_n200_chain_thompson/"
 
 # 3. Transfer Library Files and C++ source
 Write-Host "Transferring library dependencies natively..." -ForegroundColor Cyan
@@ -34,7 +34,7 @@ scp "${CodeDir}\*.cpp" "${Username}@${Hostname}:${RemoteBase}/code_r/"
 
 # 4. Clean up, convert line endings recursively, and Submit
 Write-Host "Preparing HPC environment..." -ForegroundColor Cyan
-$prepCmd = "cd ${RemoteBase}/simulations/production/unknowncov_n200_ar1_thompson && rm -rf logs results_raw results_aggregated *.out *.err && mkdir -p logs results_raw results_aggregated && dos2unix *.sh *.R 2>/dev/null && chmod +x *.sh"
+$prepCmd = "cd ${RemoteBase}/simulations/production/unknowncov_n200_chain_thompson && rm -rf logs results_raw results_aggregated *.out *.err && mkdir -p logs results_raw results_aggregated && dos2unix *.sh *.R 2>/dev/null && chmod +x *.sh"
 ssh "${Username}@${Hostname}" $prepCmd
 
 # 5. Compile C++/Rcpp dependencies on the HPC
@@ -52,10 +52,10 @@ $submittedJobs = @()
 
 foreach ($sep in $Separations) {
     foreach ($p in $Dimensions) {
-        Write-Host "Submitting simulation for noise: $Noise, sep: $sep, p: $p..."
+        Write-Host "Submitting simulation for sep: $sep, p: $p..."
         
-        # Export SEP, P, NOISE to the submit.sh script automatically 
-        $sbatchCmd = "cd ${RemoteBase}/simulations/production/unknowncov_n200_ar1_thompson && sbatch --export=ALL,SEP=$sep,P=$p,NOISE=$Noise submit.sh"
+        # Export SEP, P, and NOISE to the submit.sh script automatically 
+        $sbatchCmd = "cd ${RemoteBase}/simulations/production/unknowncov_n200_chain_thompson && sbatch --output=logs/sim_id%a_sep${sep}_p${p}.out --error=logs/sim_id%a_sep${sep}_p${p}.err --export=ALL,SEP=$sep,P=$p,NOISE=$Noise submit.sh"
         
         $maxRetries = 5
         $retryWait = 5
@@ -88,7 +88,7 @@ foreach ($sep in $Separations) {
         }
         
         # Add a brief pause to prevent SSH connection rate limiting/timeouts on the head node
-        Start-Sleep -Seconds 5
+        Start-Sleep -Seconds 15
     }
 }
 

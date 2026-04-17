@@ -1,12 +1,12 @@
 #!/bin/bash
-#SBATCH --job-name=unknowncov_n200_ar1_thompson
+#SBATCH --job-name=unknowncov_n200_chain_thompson
 #SBATCH --partition=main
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=4
-#SBATCH --mem=3G
-#SBATCH --time=23:00:00
-#SBATCH --array=1-100%15
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=16G
+#SBATCH --time=23:59:00
+#SBATCH --array=1-100%50
 
 # Load modules (standard for this HPC env)
 module purge
@@ -16,9 +16,11 @@ module load rstats/4.5.1
 mkdir -p logs
 mkdir -p results_raw/p$P
 
-# Run Driver mapped to exported variables natively matching unified design
+# Run Driver mapped to exported variables
+# Pass the SEPARATION explicitly if provided, otherwise default args inside
 if [ -z "$NOISE" ]; then
-    NOISE="Gaussian"
+    NOISE="Laplace"
 fi
 
+cd $SLURM_SUBMIT_DIR
 Rscript driver.R --job_id $SLURM_ARRAY_TASK_ID --sep $SEP --p $P --pval 0.3 --noise $NOISE
