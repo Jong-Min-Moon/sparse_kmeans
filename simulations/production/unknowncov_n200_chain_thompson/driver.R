@@ -115,17 +115,18 @@ cat(sprintf("--- Simulation Run unknowncov_n200_chain_thompson (Noise: %s, Job I
 set.seed(2026 + job_id)
 
 # ------------------------------------------------------------------------------
-# 5. Data Generation Process (Structural Identity Model)
+# 5. Data Generation Process (Chain Graph Model)
 # ------------------------------------------------------------------------------
-cat("Instantiating isotropic high-dimensional geometric distributions...\n")
+cat("Instantiating chain graph high-dimensional geometric distributions...\n")
 
-# Request exact dataset covariance characteristics bounded by the identity generator
-generator_spec <- get_specification_identity(
-    support = support,
+generator_spec <- get_specification_chaingraph(
+    support = 1:10,
     separation = separation,
-    dimension = p
+    dimension = p,
+    precision_sparsity = 2,
+    conditional_correlation = 0.45,
+    flip = FALSE
 )
-
 # ------------------------------------------------------------------------------
 # 5a. Diagnostic Verification (Validation Against Formal Setting)
 # ------------------------------------------------------------------------------

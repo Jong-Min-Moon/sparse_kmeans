@@ -1,0 +1,26 @@
+#!/bin/bash
+#SBATCH --job-name=unknowncov_n500_chain_thompson
+#SBATCH --partition=main
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=3G
+#SBATCH --time=23:59:00
+#SBATCH --array=1-100%50
+
+# Load modules (standard for this HPC env)
+module purge
+module load rstats/4.5.1
+
+# Directories
+mkdir -p logs
+mkdir -p results_raw/p$P
+
+# Run Driver mapped to exported variables
+# Pass the SEPARATION explicitly if provided, otherwise default args inside
+if [ -z "$NOISE" ]; then
+    NOISE="Laplace"
+fi
+
+cd $SLURM_SUBMIT_DIR
+Rscript driver.R --job_id $SLURM_ARRAY_TASK_ID --sep $SEP --p $P --pval 0.3 --noise $NOISE
