@@ -16,9 +16,9 @@ source("sim_utils.R")
 
 # Fixed parameters mimicking unknowncov_n200_ar1_competitors_modern
 n <- 200
-n_runs <- 100
-separation <- 6
-p_seq      <- c(1000, 2000, 3000, 4000, 5000)
+n_runs <- 10
+separation <- 4
+p_seq <- c(1000, 2000, 3000, 4000, 5000)
 noise_type <- "Laplace"
 methods <- c("scvx")
 
@@ -40,6 +40,7 @@ log_progress(log_file, sprintf(
 
 # Setup parallel backend
 n_cores <- parallel::detectCores() - 1
+if (n_cores > 4) n_cores <- 4
 if (n_cores < 1) n_cores <- 1
 cl <- makeCluster(n_cores)
 registerDoParallel(cl)
@@ -58,7 +59,7 @@ for (p in p_seq) {
     log_progress(log_file, sprintf("\n--- Dimension p = %d ---\n", p))
 
     log_msgs <- foreach(
-        job_id    = 1:n_runs,
+        job_id = 1:n_runs,
         .packages = c(
             "clue", "sparcl", "MASS", "methods",
             "scvxclustr", "cvxclustr", "igraph", "Matrix", "cluster",
@@ -80,8 +81,12 @@ for (p in p_seq) {
                 return(sprintf("Data Generation Error in rep %d, p = %d: %s\n", job_id, p, e$message))
             }
         )
-        if (is.character(data_res)) return(data_res)
-        if (is.null(data_res)) return(NULL)
+        if (is.character(data_res)) {
+            return(data_res)
+        }
+        if (is.null(data_res)) {
+            return(NULL)
+        }
 
         sim_out <- run_simulation_methods(
             X           = data_res$X,
@@ -90,7 +95,7 @@ for (p in p_seq) {
             p           = p,
             n           = n,
             sep         = separation,
-            rho         = 0.45, 
+            rho         = 0.45,
             job_id      = job_id,
             seed        = current_seed,
             methods     = methods
