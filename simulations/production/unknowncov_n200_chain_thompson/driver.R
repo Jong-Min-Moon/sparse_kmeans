@@ -120,7 +120,7 @@ set.seed(2026 + job_id)
 cat("Instantiating chain graph high-dimensional geometric distributions...\n")
 
 generator_spec <- get_specification_chaingraph(
-    support = 1:10,
+    support = support,
     separation = separation,
     dimension = p,
     precision_sparsity = 2,

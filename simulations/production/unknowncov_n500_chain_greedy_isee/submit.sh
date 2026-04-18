@@ -1,0 +1,30 @@
+#!/bin/bash
+#SBATCH --job-name=greedy_isee_n500_chain
+#SBATCH --partition=main
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=5G
+#SBATCH --time=23:00:00
+#SBATCH --array=1-100%20
+
+# Load modules (standard for this HPC env)
+module purge
+module load gcc rstats/4.5.1 || module load r/4.5.1 || module load r
+
+# Directories
+mkdir -p logs
+
+# Run Driver Based on NOISE Export
+if [ -z "$NOISE" ]; then
+    NOISE="laplace"
+fi
+
+cd $SLURM_SUBMIT_DIR
+
+# Using lowercase NOISE to standardise matching
+if [ "${NOISE,,}" == "laplace" ]; then
+    Rscript sim_laplace.R --job_id $SLURM_ARRAY_TASK_ID --sep $SEP --p $P
+else
+    Rscript sim_gaussian.R --job_id $SLURM_ARRAY_TASK_ID --sep $SEP --p $P
+fi
