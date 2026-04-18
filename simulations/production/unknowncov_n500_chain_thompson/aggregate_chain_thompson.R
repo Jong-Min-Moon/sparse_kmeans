@@ -12,22 +12,22 @@ library(purrr)
 # Set directories tracking standard outputs inside the unified sim configuration 
 base_dir <- "."
 output_dir <- file.path(base_dir, "results_raw")
-# Subdirectories to aggregate natively across noise typologies
-noise_types <- list.dirs(output_dir, full.names = FALSE, recursive = FALSE)
+# Subdirectories to aggregate natively across dimension topologies
+p_dirs <- list.dirs(output_dir, full.names = FALSE, recursive = FALSE)
 
-if (length(noise_types) == 0) {
-    stop("No properly isolated noise partitions found in ", output_dir)
+if (length(p_dirs) == 0) {
+    stop("No properly isolated partitions found in ", output_dir)
 }
 
-for (noise in noise_types) {
-    noise_dir <- file.path(output_dir, noise)
-    cat(sprintf("\n--- Aggregating results for Noise Profile: %s ---\n", noise))
+for (p_dir in p_dirs) {
+    p_path <- file.path(output_dir, p_dir)
+    cat(sprintf("\n--- Aggregating results for Dimension Profile: %s ---\n", p_dir))
     
     # Recursively locate all generated outputs matching the expected dataset extension
-    all_files <- list.files(noise_dir, pattern = "\\.rds$", full.names = TRUE, recursive = TRUE)
+    all_files <- list.files(p_path, pattern = "\\.rds$", full.names = TRUE, recursive = TRUE)
     
     if (length(all_files) == 0) {
-        cat(sprintf("   > Skipping... No .rds compiled targets found dynamically for '%s'.\n", noise))
+        cat(sprintf("   > Skipping... No .rds compiled targets found dynamically for '%s'.\n", p_dir))
         next
     }
     
@@ -62,7 +62,7 @@ for (noise in noise_types) {
     
     # Compute descriptive summary statistical metrics representing true method performance behavior mathematically 
     summary_stats <- all_results %>%
-        group_by(separation, p) %>%
+        group_by(noise, separation, p) %>%
         summarize(
             n_reps = n(),
             mean_accuracy = mean(accuracy, na.rm = TRUE),
@@ -75,11 +75,11 @@ for (noise in noise_types) {
             mean_runtime = mean(runtime, na.rm = TRUE),
             .groups = "drop"
         ) %>%
-        arrange(separation, p)
+        arrange(noise, separation, p)
     
-    # Isolate targets appending noise tag suffix sequentially
-    save_rds <- sprintf("all_results_chain_thompson_%s.rds", noise)
-    save_summary_csv <- sprintf("summary_chain_thompson_%s.csv", noise)
+    # Isolate targets appending dimension tag suffix sequentially
+    save_rds <- sprintf("all_results_chain_thompson_%s.rds", p_dir)
+    save_summary_csv <- sprintf("summary_chain_thompson_%s.csv", p_dir)
     
     write.csv(summary_stats, save_summary_csv, row.names = FALSE)
     cat(sprintf("   > Summary aggregation outputs logically compiled into %s\n", save_summary_csv))
@@ -88,8 +88,8 @@ for (noise in noise_types) {
     saveRDS(all_results, save_rds)
     cat(sprintf("   > Raw global database fully encapsulated natively tracking to %s\n", save_rds))
     
-    cat(sprintf("\n=== Simulation 22 %s Performance Summary Evaluator ===\n", toupper(noise)))
+    cat(sprintf("\n=== Simulation 22 %s Performance Summary Evaluator ===\n", toupper(p_dir)))
     print(summary_stats)
 }
 
-cat("\nAggregations iteratively passed effectively matching multi-noise outputs.\n")
+cat("\nAggregations iteratively passed effectively matching multi-dimension outputs.\n")
